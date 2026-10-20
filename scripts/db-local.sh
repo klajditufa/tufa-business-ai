@@ -21,7 +21,7 @@ for f in supabase/migrations/*.sql; do
   psql -q -v ON_ERROR_STOP=1 "$DB_URL" -f "$f"
 done
 # Lokalisht: të drejtat që Supabase i jep automatikisht roleve
-psql -q "$DB_URL" -c "grant all on all tables in schema public to authenticated, service_role; grant all on all sequences in schema public to authenticated, service_role; grant execute on all functions in schema public to authenticated, service_role;"
+# (GRANT-et vijnë nga 0011_grants.sql)
 
 echo "→ seed"
 for f in supabase/seed/*.sql; do
