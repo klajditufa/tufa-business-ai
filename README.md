@@ -41,7 +41,7 @@ cp apps/web/.env.example apps/web/.env.local     # vendos URL + publishable key
 pnpm dev                                         # http://localhost:3000
 ```
 
-Në Supabase: apliko `supabase/migrations/*.sql` me radhë (CLI `supabase db push`, ose SQL editor), pastaj `supabase/seed/01_*.sql` dhe `02_*.sql`. `03_demo.sql` **vetëm** në projekte zhvillimi (krijon përdorues demo me fjalëkalim `Demo1234!`).
+Projekti i prodhimit: `tufa-business-ai` (ref `znqptnmhfbhvwjzborbv`, Frankfurt) — migrations 0001–0010 dhe seed 01–02 të aplikuara më 20.10.2026. Për një projekt të ri: apliko `supabase/migrations/*.sql` me radhë (CLI `supabase db push`, ose SQL editor), pastaj `supabase/seed/01_*.sql` dhe `02_*.sql`. `03_demo.sql` **vetëm** në projekte zhvillimi (krijon përdorues demo me fjalëkalim `Demo1234!`).
 
 Rigjenerimi i tipeve pas çdo migration: `SUPABASE_PROJECT_REF=<ref> pnpm --filter @tufa/web gen:types`.
 
