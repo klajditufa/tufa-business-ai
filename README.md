@@ -25,6 +25,12 @@ scripts/db-local.sh       DB lokale nga zero + teste
 .github/workflows/ci.yml  CI: migrations + teste RLS, lint, typecheck, unit tests, build
 ```
 
+## Prodhimi
+
+- App: https://tufa-business-ai-klajditufa.vercel.app (Vercel, projekt `tufa-business-ai`, root `apps/web`; çdo push në `main` bën deploy automatik)
+- Databaza: Supabase `tufa-business-ai` (ref `znqptnmhfbhvwjzborbv`, Frankfurt), migrations 0001–0011 të aplikuara
+- Rrjedha regjistrim → konfirmim email → onboarding → dashboard u testua në prodhim më 20.10.2026
+
 ## Nisja lokale
 
 Kërkesa: Node 22, pnpm 10, PostgreSQL 16 (vetëm për testet e DB-së).
