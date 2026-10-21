@@ -241,6 +241,17 @@ select pg_temp.check('matrica e studios: A(3) + B(2) = 5 rreshta', (select count
 reset role;
 
 -- =============================================================================
+-- 8. Storage helper thirret nga authenticated (0014)
+-- =============================================================================
+select set_config('request.jwt.claim.sub', :'cli', false);
+set role authenticated;
+select pg_temp.check('storage_company_id thirret nga authenticated',
+  app.storage_company_id('companies/cccccccc-cccc-4ccc-8ccc-cccccccccccc/contract/x.pdf') = :'compB'::uuid);
+select pg_temp.check('storage policy: klienti ka documents.write në B',
+  app.has_permission(app.storage_company_id('companies/cccccccc-cccc-4ccc-8ccc-cccccccccccc/contract/x.pdf'), 'documents', 'write'));
+reset role;
+
+-- =============================================================================
 -- Përmbledhje
 -- =============================================================================
 select name, ok, detail from t_results where not ok;
@@ -251,4 +262,5 @@ begin
   raise notice '==== % / % teste kaluan ====', v_total - v_fail, v_total;
   if v_fail > 0 then raise exception '% teste dështuan', v_fail; end if;
 end $$;
+
 
