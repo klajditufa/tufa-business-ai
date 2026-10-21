@@ -28,7 +28,7 @@ scripts/db-local.sh       DB lokale nga zero + teste
 ## Prodhimi
 
 - App: https://tufa-business-ai-klajditufa.vercel.app (Vercel, projekt `tufa-business-ai`, root `apps/web`; çdo push në `main` bën deploy automatik)
-- Databaza: Supabase `tufa-business-ai` (ref `znqptnmhfbhvwjzborbv`, Frankfurt), migrations 0001–0011 të aplikuara
+- Databaza: Supabase `tufa-business-ai` (ref `znqptnmhfbhvwjzborbv`, Frankfurt), migrations 0001–0013 të aplikuara
 - Rrjedha regjistrim → konfirmim email → onboarding → dashboard u testua në prodhim më 20.10.2026
 
 ## Nisja lokale
@@ -67,14 +67,14 @@ Rigjenerimi i tipeve pas çdo migration: `SUPABASE_PROJECT_REF=<ref> pnpm --filt
 | --- | --- | --- |
 | 1 | Skeleti i projektit, CI, README | ✅ |
 | 2 | Migrations + RLS + audit + seed + 44 teste | ✅ |
-| 3 | Auth (regjistrim, login, callback) · ftesa, MFA | ✅ bazë · ftesa/MFA në vijim |
-| 4 | Organizata + subjekte (onboarding, switcher, settings) | ✅ bazë · editimi në vijim |
+| 3 | Auth (regjistrim, login, callback, rivendosje fjalëkalimi) · ftesa me link + rol · MFA | ✅ · MFA në vijim |
+| 4 | Organizata + subjekte (onboarding, switcher, editim, subjekt i ri, anëtarë/ftesa) | ✅ |
 | 5 | Import faturash Excel/CSV/XML me parapamje | ⏳ |
 | 6 | Regjistri i shitjeve/blerjeve: filtra, kërkim, eksport | ✅ lexim · filtra/eksport në vijim |
 | 7 | Dashboard (KPI, grafik 12 muaj, afate, debitorë) | ✅ |
-| 8 | TVSH bazë | ⏳ (funksioni `vat_summary` ekziston) |
-| 9 | Dokumente (upload, kategori, signed URL) | ⏳ (skema + storage policies ekzistojnë) |
-| 10 | Deklarime: statuset + matrica e studios | ⏳ (skema ekziston) |
+| 8 | TVSH bazë: përmbledhje shitje/blerje sipas normave, normat në fuqi | ✅ |
+| 9 | Dokumente: upload drag&drop, kategori, kërkim, signed URL, soft delete | ✅ |
+| 10 | Deklarime: gjenerim sipas regjimit, statuset me audit, matrica e studios (/studio) | ✅ |
 | 11 | i18n sq/en, dark mode, PWA | ✅ sq + dark/light + manifest · en në vijim |
 
 Integrimet: `manual_import` = functional (parsers vijnë në #5) · `selfcare`, `cats` = pending_integration · `bank` = unavailable.
