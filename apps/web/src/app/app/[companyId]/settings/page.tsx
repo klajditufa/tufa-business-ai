@@ -1,20 +1,25 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCompany, getMyRole } from "@/server/services/companies";
 import { Badge, Card, CardTitle } from "@/components/ui";
+import { CompanyEditForm } from "./company-edit-form";
+import { MembersPanel } from "./members-panel";
 import { t } from "@/lib/i18n";
 
-/** Parametrat e subjektit + statusi i integrimeve (siç është, pa pretenduar lidhje që nuk ekzistojnë). */
 export default async function SettingsPage({ params }: { params: Promise<{ companyId: string }> }) {
   const { companyId } = await params;
   const d = t();
   const supabase = await createClient();
-  const [company, role, { data: integrations }, { data: members }] = await Promise.all([
+  const [company, role, { data: integrations }, { data: members }, { data: invitations }, { data: perms }, { data: me }] = await Promise.all([
     getCompany(companyId),
     getMyRole(companyId),
     supabase.from("integrations").select("provider, status, last_sync_at").eq("company_id", companyId).order("provider"),
-    supabase.from("company_memberships").select("role, users(full_name, email)").eq("company_id", companyId),
+    supabase.from("company_memberships").select("user_id, role, users(full_name, email)").eq("company_id", companyId),
+    supabase.from("invitations").select("id, email, company_role, expires_at, accepted_at").eq("company_id", companyId).is("accepted_at", null).order("created_at", { ascending: false }),
+    supabase.rpc("my_permissions", { p_company_id: companyId }),
+    supabase.auth.getUser(),
   ]);
   if (!company) return null;
+  const canAdmin = (perms ?? []).some((p) => p.module === "companies" && p.action === "admin");
 
   const tone = { functional: "success", demo: "info", pending_integration: "warning", unavailable: "neutral" } as const;
   const providerLabel: Record<string, string> = {
@@ -29,20 +34,25 @@ export default async function SettingsPage({ params }: { params: Promise<{ compa
       <h1 className="text-2xl font-semibold">{d.nav.settings}</h1>
 
       <Card>
-        <CardTitle>Subjekti</CardTitle>
-        <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-          <Row k="NIPT" v={company.nipt} />
-          <Row k="Emri ligjor" v={company.legal_name} />
-          <Row k="Emri tregtar" v={company.trade_name ?? "—"} />
-          <Row k="Forma juridike" v={d.legalForms[company.legal_form]} />
-          <Row k="Administratori" v={company.administrator_name ?? "—"} />
-          <Row k="Qyteti" v={company.city ?? "—"} />
-          <Row k="Regjimi tatimor" v={d.taxRegimes[company.tax_regime]} />
-          <Row k="TVSH" v={company.vat_registered ? "I regjistruar" : "Jo"} />
-          <Row k="Monedha bazë" v={company.base_currency} />
-          <Row k="Roli yt" v={role ?? "—"} />
-        </dl>
-        <p className="mt-3 text-xs text-muted-foreground">Ndryshimi i të dhënave vjen në dorëzimin #4.</p>
+        <CardTitle>Subjekti · {company.nipt}</CardTitle>
+        <div className="mt-3">
+          <CompanyEditForm company={company} canEdit={canAdmin} />
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">Roli yt në këtë subjekt: <b>{role}</b>. NIPT-i nuk ndryshohet; për korrigjim kontakto administratorin e platformës.</p>
+      </Card>
+
+      <Card>
+        <CardTitle>Përdoruesit me akses</CardTitle>
+        <div className="mt-3">
+          <MembersPanel
+            companyId={companyId}
+            members={(members ?? []).map((m) => ({ userId: m.user_id, role: m.role, name: m.users?.full_name || "", email: m.users?.email || "" }))}
+            invitations={(invitations ?? []).map((i) => ({ id: i.id, email: i.email, role: i.company_role ?? "", expiresAt: i.expires_at }))}
+            canAdmin={canAdmin}
+            myUserId={me.user?.id ?? ""}
+            ownerName={role === "org_owner" ? "Ti (pronar i organizatës)" : null}
+          />
+        </div>
       </Card>
 
       <Card>
@@ -60,32 +70,10 @@ export default async function SettingsPage({ params }: { params: Promise<{ compa
         </p>
       </Card>
 
-      <Card>
-        <CardTitle>Përdoruesit me akses</CardTitle>
-        <ul className="mt-3 space-y-2 text-sm">
-          {(members ?? []).map((m, i) => (
-            <li key={i} className="flex items-center justify-between gap-3">
-              <span>{m.users?.full_name || m.users?.email}</span>
-              <Badge>{m.role}</Badge>
-            </li>
-          ))}
-          {(members ?? []).length === 0 && <li className="text-muted-foreground">Vetëm pronari i organizatës.</li>}
-        </ul>
-      </Card>
-
       <Card id="help">
         <CardTitle>{d.nav.help}</CardTitle>
         <p className="mt-2 text-sm text-muted-foreground">Komunikimi me llogaritarin brenda platformës vjen në Fazën 2 (portali i klientit).</p>
       </Card>
-    </div>
-  );
-}
-
-function Row({ k, v }: { k: string; v: string }) {
-  return (
-    <div className="flex justify-between gap-4 border-b border-border py-1.5">
-      <dt className="text-muted-foreground">{k}</dt>
-      <dd className="text-right font-medium">{v}</dd>
     </div>
   );
 }

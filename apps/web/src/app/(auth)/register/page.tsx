@@ -2,14 +2,15 @@ import Link from "next/link";
 import { RegisterForm } from "./register-form";
 import { t } from "@/lib/i18n";
 
-export default function RegisterPage() {
+export default async function RegisterPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+  const { next } = await searchParams;
   const d = t();
   return (
     <div>
       <h2 className="text-2xl font-semibold">{d.auth.register}</h2>
       <p className="mt-1 text-sm text-muted-foreground">{d.app.name}</p>
       <div className="mt-6">
-        <RegisterForm />
+        <RegisterForm next={next} />
       </div>
       <p className="mt-6 text-sm text-muted-foreground">
         {d.auth.hasAccount}{" "}

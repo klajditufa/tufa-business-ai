@@ -47,13 +47,13 @@ export async function registerAction(_prev: ActionResult | null, formData: FormD
     password: parsed.data.password,
     options: {
       data: { full_name: parsed.data.fullName },
-      emailRedirectTo: `${origin}/auth/callback?next=/onboarding`,
+      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(parsed.data.next && parsed.data.next.startsWith("/") ? parsed.data.next : "/onboarding")}`,
     },
   });
   if (error) return { ok: false, error: error.message };
 
   // Nëse konfirmimi i email-it është i çaktivizuar (dev), sesioni ekziston → vazhdo
-  if (data.session) redirect("/onboarding");
+  if (data.session) redirect(parsed.data.next && parsed.data.next.startsWith("/") ? parsed.data.next : "/onboarding");
   return { ok: true, message: "Kontrollo email-in për linkun e konfirmimit." };
 }
 

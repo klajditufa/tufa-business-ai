@@ -871,7 +871,10 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "close_period":
+            "accept_invitation":
+{ Args: { "p_token": string }; Returns: Json
+                           },
+"close_period":
 { Args: { "p_period_id": string }; Returns: undefined
                            },
 "company_turnover":
@@ -917,6 +920,9 @@ isOneToOne: false
                            },
 "gen_salt":
 { Args: { "": string }; Returns: string
+                           },
+"invitation_preview":
+{ Args: { "p_token": string }; Returns: Json
                            },
 "log_audit_event":
 { Args: { "p_action": string,"p_company_id": string,"p_reason"?: string,"p_row_id": string,"p_table": string }; Returns: undefined
