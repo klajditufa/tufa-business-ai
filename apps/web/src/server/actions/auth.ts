@@ -62,3 +62,42 @@ export async function logoutAction() {
   await supabase.auth.signOut();
   redirect("/login");
 }
+
+const emailSchema = z.object({ email: z.string().email("Email i pavlefshëm") });
+
+export async function forgotPasswordAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const parsed = emailSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message, field: "email" };
+  const supabase = await createClient();
+  const origin = (await headers()).get("origin") ?? "";
+  // Linku i email-it kalon nga /auth/callback (PKCE) dhe përfundon te /reset-password
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+    redirectTo: `${origin}/auth/callback?next=/reset-password`,
+  });
+  if (error) return { ok: false, error: error.message };
+  // Mesazh i njëjtë pavarësisht nëse email-i ekziston (nuk zbulojmë llogaritë)
+  return { ok: true, message: "Nëse ky email ka llogari, do të marrësh një link për rivendosjen e fjalëkalimit." };
+}
+
+const newPasswordSchema = z
+  .object({
+    password: z.string().min(8, "Të paktën 8 karaktere"),
+    confirm: z.string(),
+  })
+  .refine((d) => d.password === d.confirm, { message: "Fjalëkalimet nuk përputhen", path: ["confirm"] });
+
+export async function resetPasswordAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const parsed = newPasswordSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    return { ok: false, error: issue.message, field: String(issue.path[0]) };
+  }
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Linku ka skaduar. Kërko një link të ri." };
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+  if (error) return { ok: false, error: error.message };
+  redirect("/app");
+}

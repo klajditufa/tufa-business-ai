@@ -12,7 +12,10 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <div className="mt-6">
         <LoginForm next={next} />
       </div>
-      <p className="mt-6 text-sm text-muted-foreground">
+      <p className="mt-3 text-sm">
+        <Link href="/forgot-password" className="text-accent hover:underline">{d.auth.forgot}</Link>
+      </p>
+      <p className="mt-4 text-sm text-muted-foreground">
         {d.auth.noAccount}{" "}
         <Link href="/register" className="font-medium text-accent hover:underline">
           {d.auth.startNow}
