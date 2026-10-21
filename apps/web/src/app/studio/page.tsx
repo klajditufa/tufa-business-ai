@@ -4,6 +4,7 @@ import { Card, Empty } from "@/components/ui";
 import { KIND_LABELS, StatusBadge, type DeclStatus } from "@/components/app/status-badge";
 import { StatusActions } from "@/components/app/status-actions";
 import { MonthPicker, monthLabelSq, parsePeriod } from "@/components/app/month-picker";
+import { BulkDeclare } from "@/components/app/bulk-declare";
 
 /** Matrica subjekte × deklarime për një muaj, me butonin "Deklaro" dhe progresin mujor. */
 export default async function StudioPage({ searchParams }: { searchParams: Promise<{ period?: string }> }) {
@@ -13,7 +14,9 @@ export default async function StudioPage({ searchParams }: { searchParams: Promi
   const { data: rows, error } = await supabase.rpc("studio_declaration_matrix", { p_year: year, p_month: month });
 
   type Row = NonNullable<typeof rows>[number];
-  const kinds = Array.from(new Set((rows ?? []).map((r) => r.kind!))).sort();
+  const ORDER = ["vat", "payroll_esig25", "withholding", "profit_tax", "simplified", "annual_financial", "other"];
+  const kinds = Array.from(new Set((rows ?? []).map((r) => r.kind!))).sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
+  const periodKey = `${year}-${String(month).padStart(2, "0")}`;
   const companies = new Map<string, { name: string; nipt: string; cells: Map<string, Row> }>();
   for (const r of rows ?? []) {
     if (!companies.has(r.company_id!)) companies.set(r.company_id!, { name: r.company_name!, nipt: r.nipt!, cells: new Map() });
@@ -48,7 +51,16 @@ export default async function StudioPage({ searchParams }: { searchParams: Promi
             <thead className="bg-muted text-left text-xs uppercase text-muted-foreground">
               <tr>
                 <th className="px-4 py-2">Subjekti</th>
-                {kinds.map((k) => <th key={k} className="px-4 py-2">{KIND_LABELS[k] ?? k}</th>)}
+                {kinds.map((k) => (
+                  <th key={k} className="px-4 py-2 align-top">
+                    <div className="mb-1.5">{KIND_LABELS[k] ?? k}</div>
+                    <BulkDeclare
+                      kindLabel={KIND_LABELS[k] ?? k}
+                      revalidate={`/studio?period=${periodKey}`}
+                      items={(rows ?? []).filter((r) => r.kind === k && r.status !== "declared").map((r) => ({ id: r.declaration_id!, label: r.company_name! }))}
+                    />
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
