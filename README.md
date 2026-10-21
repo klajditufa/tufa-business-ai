@@ -27,7 +27,7 @@ scripts/db-local.sh       DB lokale nga zero + teste
 
 ## Prodhimi
 
-- App: https://tufa-business-ai-klajditufa.vercel.app (Vercel, projekt `tufa-business-ai`, root `apps/web`; çdo push në `main` bën deploy automatik)
+- App: https://tufa-business-ai.vercel.app (Vercel, projekt `tufa-business-ai`, root `apps/web`; çdo push në `main` bën deploy automatik)
 - Databaza: Supabase `tufa-business-ai` (ref `znqptnmhfbhvwjzborbv`, Frankfurt), migrations 0001–0013 të aplikuara
 - Rrjedha regjistrim → konfirmim email → onboarding → dashboard u testua në prodhim më 20.10.2026
 
