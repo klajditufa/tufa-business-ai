@@ -888,6 +888,30 @@ isOneToOne: false
 "effective_tax_rule":
 { Args: { "p_code"?: string,"p_company_id"?: string,"p_date": string,"p_kind": Database["public"]['Enums']["tax_rule_kind"] }; Returns: Json
                            },
+"ensure_declarations":
+{ Args: { "p_company_id": string,"p_month": number,"p_year": number }; Returns: {
+              "assigned_to": string | null,
+"company_id": string,
+"computed": NonNullable<Json>,
+"created_at": string,
+"declared_at": string | null,
+"declared_by": string | null,
+"due_date": string,
+"id": string,
+"kind": Database["public"]['Enums']["declaration_kind"],
+"notes": string | null,
+"official": NonNullable<Json>,
+"period_id": string,
+"source_document_id": string | null,
+"status": Database["public"]['Enums']["declaration_status"],
+"updated_at": string
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "tax_declarations"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
 "gen_random_uuid":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -920,6 +944,35 @@ isOneToOne: false
                            },
 "reopen_period":
 { Args: { "p_period_id": string,"p_reason": string }; Returns: undefined
+                           },
+"set_declaration_status":
+{ Args: { "p_id": string,"p_notes"?: string,"p_status": Database["public"]['Enums']["declaration_status"] }; Returns: {
+              "assigned_to": string | null,
+"company_id": string,
+"computed": NonNullable<Json>,
+"created_at": string,
+"declared_at": string | null,
+"declared_by": string | null,
+"due_date": string,
+"id": string,
+"kind": Database["public"]['Enums']["declaration_kind"],
+"notes": string | null,
+"official": NonNullable<Json>,
+"period_id": string,
+"source_document_id": string | null,
+"status": Database["public"]['Enums']["declaration_status"],
+"updated_at": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "tax_declarations"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"studio_declaration_matrix":
+{ Args: { "p_month": number,"p_year": number }; Returns: {
+              "assigned_to": string,"company_id": string,"company_name": string,"declaration_id": string,"declared_at": string,"due_date": string,"effective_status": Database["public"]['Enums']["declaration_status"],"kind": Database["public"]['Enums']["declaration_kind"],"nipt": string,"status": Database["public"]['Enums']["declaration_status"],"vat_registered": boolean
+            }[]
                            },
 "top_creditors":
 { Args: { "p_company_id": string,"p_limit"?: number }; Returns: {

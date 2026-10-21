@@ -213,6 +213,34 @@ select pg_temp.check('asnjë normë para 2015', public.effective_tax_rule('vat_r
 select pg_temp.check('vat_rates_at kthen >= 4 norma', (select count(*) from public.vat_rates_at(current_date)) >= 4);
 
 -- =============================================================================
+-- 7. Deklarimet (0012)
+-- =============================================================================
+select set_config('request.jwt.claim.sub', :'acc', false);
+set role authenticated;
+select pg_temp.check('ensure_declarations krijon 3 rreshta për A (TVSH po)',
+  (select count(*) from public.ensure_declarations(:'compA'::uuid, 2026, 9)) = 3);
+select pg_temp.check('set_declaration_status → declared vendos declared_by',
+  (select declared_by from public.set_declaration_status(
+     (select id from public.tax_declarations where company_id = :'compA'::uuid and kind = 'vat' and period_id = (select id from public.fiscal_periods where company_id = :'compA'::uuid and year = 2026 and month = 9)),
+     'declared', 'test')) = :'acc'::uuid);
+do $$ begin
+  perform public.set_declaration_status((select id from public.tax_declarations where company_id = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc' limit 1), 'declared');
+  perform pg_temp.check('accountant nuk ndryshon deklarime të B', (select id from public.tax_declarations where company_id = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc' limit 1) is null);
+exception when others then
+  perform pg_temp.check('accountant nuk ndryshon deklarime të B', true);
+end $$;
+reset role;
+select set_config('request.jwt.claim.sub', :'cli', false);
+set role authenticated;
+select pg_temp.check('klienti sheh deklarimet e B (2 lloje, pa TVSH)',
+  (select count(*) from public.ensure_declarations(:'compB'::uuid, 2026, 9)) = 0);  -- klienti s'ka write → s'krijohen
+reset role;
+select set_config('request.jwt.claim.sub', :'owner', false);
+set role authenticated;
+select pg_temp.check('matrica e studios: A(3) + B(2) = 5 rreshta', (select count(*) from public.studio_declaration_matrix(2026, 9)) = 5);
+reset role;
+
+-- =============================================================================
 -- Përmbledhje
 -- =============================================================================
 select name, ok, detail from t_results where not ok;
@@ -223,3 +251,4 @@ begin
   raise notice '==== % / % teste kaluan ====', v_total - v_fail, v_total;
   if v_fail > 0 then raise exception '% teste dështuan', v_fail; end if;
 end $$;
+

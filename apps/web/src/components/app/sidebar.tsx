@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, FileInput, FileOutput, Percent, Landmark, FolderArchive, BarChart3, Settings, LifeBuoy,
+  LayoutDashboard, FileInput, FileOutput, Percent, Landmark, FolderArchive, BarChart3, Settings, LifeBuoy, Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
@@ -49,6 +49,11 @@ export function Sidebar({ companyId, role }: { companyId: string; role: string |
           <Link href={`${base}/settings#help`} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sidebar-active/70">
             <LifeBuoy className="h-4 w-4" /> {d.nav.help}
           </Link>
+          {(role === "org_owner" || role === "accountant") && (
+            <Link href="/studio" className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sidebar-active/70">
+              <Building2 className="h-4 w-4" /> Paneli i studios
+            </Link>
+          )}
           {role && <p className="px-3 pt-2 text-xs text-sidebar-foreground/60">Roli: {role}</p>}
         </div>
       </aside>
