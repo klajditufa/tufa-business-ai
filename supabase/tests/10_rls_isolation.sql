@@ -252,6 +252,23 @@ select pg_temp.check('storage policy: klienti ka documents.write në B',
 reset role;
 
 -- =============================================================================
+-- 9. Owner-i fut kompani të re me RETURNING (0015)
+-- =============================================================================
+select set_config('request.jwt.claim.sub', :'owner', false);
+set role authenticated;
+do $$
+declare v_id uuid;
+begin
+  insert into public.companies (organization_id, nipt, legal_name, created_by)
+  values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'T77777777T', 'TEST RETURNING SHPK', auth.uid()) returning id into v_id;
+  perform pg_temp.check('owner fut kompani të re me returning', v_id is not null);
+  perform pg_temp.check('kompania e re ka 4 integrime default', (select count(*) from public.integrations where company_id = v_id) = 4);
+exception when others then
+  perform pg_temp.check('owner fut kompani të re me returning', false, sqlerrm);
+end $$;
+reset role;
+
+-- =============================================================================
 -- Përmbledhje
 -- =============================================================================
 select name, ok, detail from t_results where not ok;
@@ -262,5 +279,6 @@ begin
   raise notice '==== % / % teste kaluan ====', v_total - v_fail, v_total;
   if v_fail > 0 then raise exception '% teste dështuan', v_fail; end if;
 end $$;
+
 
 
