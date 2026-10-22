@@ -19,6 +19,8 @@ export default async function StudioOverviewPage({ searchParams }: { searchParam
   const { period } = await searchParams;
   const { year, month } = parsePeriod(period);
   const supabase = await createClient();
+  // Gjeneron deklarimet e muajit për çdo subjekt (si faqja Deklarimet), që numërimi të jetë i saktë
+  await supabase.rpc("studio_declaration_matrix", { p_year: year, p_month: month });
   const { data, error } = await supabase.rpc("studio_overview", { p_year: year, p_month: month });
   const rows = data ?? [];
   const now = new Date().getTime();
