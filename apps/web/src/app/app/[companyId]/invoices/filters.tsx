@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Download, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Landmark, Search } from "lucide-react";
 import type { InvoiceFilters } from "@/server/services/invoices";
 import { monthLabelSq } from "@/components/app/month-picker";
 
@@ -71,6 +71,9 @@ export function InvoiceFilterBar({ basePath, f }: { basePath: string; f: Invoice
         <a href={`${basePath}/export${qs({})}`} className="inline-flex h-9 items-center gap-1 rounded-lg border border-border px-3 hover:bg-muted" title="Shkarko CSV me filtrat aktualë">
           <Download className="h-4 w-4" /> CSV
         </a>
+        <Link href={`${basePath}/bank`} className="inline-flex h-9 items-center gap-1 rounded-lg border border-border px-3 hover:bg-muted" title="Shëno pagesat nga ekstrakti bankar">
+          <Landmark className="h-4 w-4" /> Banka
+        </Link>
       </form>
     </div>
   );
