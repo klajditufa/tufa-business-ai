@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getCompany } from "@/server/services/companies";
 import { getDashboardData } from "@/server/services/dashboard";
 import { Alert, Badge, Card, CardTitle, Empty } from "@/components/ui";
@@ -78,12 +79,17 @@ export default async function DashboardPage({ params }: { params: Promise<{ comp
             <ul className="mt-3 space-y-2 text-sm">
               {(data.debtors ?? []).map((x, i) => (
                 <li key={i} className="flex items-center justify-between gap-2">
-                  <span className="truncate">{x.customer_name}</span>
+                  {x.customer_id ? (
+                    <Link href={`/app/${companyId}/parties/${x.customer_id}?type=customers`} className="truncate hover:underline">{x.customer_name}</Link>
+                  ) : (
+                    <span className="truncate">{x.customer_name}</span>
+                  )}
                   <span className="tabular font-medium">{money(x.outstanding, currency, 0)}</span>
                 </li>
               ))}
               {(data.debtors ?? []).length === 0 && <li className="text-muted-foreground">Asnjë faturë e papaguar.</li>}
             </ul>
+            <Link href={`/app/${companyId}/parties?type=customers`} className="mt-3 inline-block text-xs text-accent hover:underline">Të gjithë klientët →</Link>
           </Card>
         </div>
       </div>

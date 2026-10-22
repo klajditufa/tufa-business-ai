@@ -471,6 +471,28 @@ select pg_temp.check('accountant i A: id reale e B → "Pa të drejtë"',
 reset role;
 
 -- =============================================================================
+-- 13. Gjendja e palëve (0020)
+-- =============================================================================
+select set_config('request.jwt.claim.sub', :'cli', false);
+set role authenticated;
+select pg_temp.check('party_balances: XM ka mbetje 64.512 (e papaguar)',
+  (select outstanding = 64512 and invoices = 1 and nipt = 'L82224013T' and party_id is not null
+     from public.party_balances(:'compB'::uuid, 'sale') where nipt = 'L82224013T'));
+select pg_temp.check('party_balances: Host AL (CASH) mbetje 0',
+  (select outstanding = 0 and paid = 1195.08 from public.party_balances(:'compB'::uuid, 'sale') where nipt = 'L82309007S'));
+select pg_temp.check('party_balances: furnitori Embedded Systems 9.600 për t''u paguar',
+  (select outstanding = 9600 from public.party_balances(:'compB'::uuid, 'purchase') where nipt = 'L52101183A'));
+select pg_temp.check('party_balances: renditje sipas mbetjes (e para = më e madhja)',
+  (select outstanding from public.party_balances(:'compB'::uuid, 'sale') limit 1)
+   = (select max(outstanding) from public.party_balances(:'compB'::uuid, 'sale')));
+reset role;
+select set_config('request.jwt.claim.sub', :'acc', false);
+set role authenticated;
+select pg_temp.check('accountant i A: party_balances e B → bosh (RLS)',
+  (select count(*) from public.party_balances(:'compB'::uuid, 'sale')) = 0);
+reset role;
+
+-- =============================================================================
 -- Përmbledhje
 -- =============================================================================
 select name, ok, detail from t_results where not ok;

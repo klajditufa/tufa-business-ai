@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, FileInput, FileOutput, Percent, Landmark, FolderArchive, BarChart3, Settings, LifeBuoy, Building2,
+  LayoutDashboard, FileInput, FileOutput, Percent, Landmark, FolderArchive, BarChart3, Settings, LifeBuoy, Building2, Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
@@ -16,6 +16,7 @@ export function Sidebar({ companyId, role }: { companyId: string; role: string |
     { href: `${base}/dashboard`, label: d.nav.dashboard, icon: LayoutDashboard },
     { href: `${base}/invoices?direction=sale`, label: d.nav.sales, icon: FileOutput, match: "/invoices" },
     { href: `${base}/invoices?direction=purchase`, label: d.nav.purchases, icon: FileInput, match: "__never" },
+    { href: `${base}/parties`, label: d.nav.parties, icon: Users, mobile: false },
     { href: `${base}/vat`, label: d.nav.vat, icon: Percent },
     { href: `${base}/declarations`, label: d.nav.declarations, icon: Landmark },
     { href: `${base}/documents`, label: d.nav.documents, icon: FolderArchive },
@@ -60,7 +61,7 @@ export function Sidebar({ companyId, role }: { companyId: string; role: string |
 
       {/* Mobile bottom navigation */}
       <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-border bg-card lg:hidden">
-        {items.slice(0, 5).map((it) => {
+        {items.filter((it) => !("mobile" in it) || it.mobile !== false).slice(0, 5).map((it) => {
           const active = pathname.startsWith(it.match ?? it.href.split("?")[0]);
           return (
             <Link key={it.href} href={it.href} className={cn("flex flex-col items-center gap-1 py-2 text-[10px]", active && it.match !== "__never" ? "text-accent" : "text-muted-foreground")}>

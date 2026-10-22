@@ -9,6 +9,7 @@ export const sq = {
     invoices: "Faturat",
     sales: "Të Ardhurat (Shitjet)",
     purchases: "Shpenzimet (Blerjet)",
+    parties: "Klientët & Furnitorët",
     vat: "TVSH",
     declarations: "Deklarimet Tatimore",
     documents: "Dokumentet (Arkiva)",

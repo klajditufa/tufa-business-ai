@@ -975,6 +975,11 @@ isOneToOne: false
               "amount_due": number,"confirmed_official": boolean,"items": number,"kind": Database["public"]['Enums']["obligation_kind"],"next_due_date": string
             }[]
                            },
+"party_balances":
+{ Args: { "p_as_of"?: string,"p_company_id": string,"p_direction": Database["public"]['Enums']["invoice_direction"] }; Returns: {
+              "days_overdue": number,"invoiced": number,"invoices": number,"last_invoice": string,"name": string,"nipt": string,"oldest_unpaid": string,"outstanding": number,"paid": number,"party_id": string
+            }[]
+                           },
 "reopen_period":
 { Args: { "p_period_id": string,"p_reason": string }; Returns: undefined
                            },
