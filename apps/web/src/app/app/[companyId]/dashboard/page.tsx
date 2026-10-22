@@ -15,7 +15,14 @@ export default async function DashboardPage({ params }: { params: Promise<{ comp
   const hasData = (data.series ?? []).some((m) => Number(m.sales_net) !== 0 || Number(m.purchases_net) !== 0);
 
   const unpaidTotal = (data.obligations ?? []).reduce((acc, o) => acc + Number(o.amount_due ?? 0), 0);
-  const urgent = (data.deadlines ?? []).find((x) => (x.days_left ?? 99) <= 7);
+  // Emrat e deklarimeve (nga enum) në shqip; afatet e kalendarit kanë titullin e tyre
+  const KIND_LABEL: Record<string, string> = {
+    vat: "Deklarata e TVSH-së", payroll_esig25: "Listëpagesa (E-SIG 025)", withholding: "Tatimi në burim",
+    profit_tax: "Tatim fitimi", simplified: "Tatimi i thjeshtuar", annual_financial: "Pasqyrat vjetore", other: "Deklarim",
+  };
+  const label = (x: { title: string | null; source: string | null }) => (x.source === "declaration" ? KIND_LABEL[x.title ?? ""] ?? x.title : x.title) ?? "";
+  const overdue = (data.deadlines ?? []).filter((x) => (x.days_left ?? 0) < 0);
+  const urgent = (data.deadlines ?? []).find((x) => (x.days_left ?? 99) >= 0 && (x.days_left ?? 99) <= 7);
 
   return (
     <div className="space-y-6 pb-20 lg:pb-0">
@@ -25,8 +32,17 @@ export default async function DashboardPage({ params }: { params: Promise<{ comp
       </div>
 
       {data.errors.length > 0 && <Alert tone="danger">{data.errors.join(" · ")}</Alert>}
+      {overdue.length > 0 && (
+        <Alert tone="danger">
+          ⚠️ Afat i kaluar pa u deklaruar:{" "}
+          {overdue.map((x) => `${label(x)} (${date(x.due_date)}, ${-(x.days_left ?? 0)} ditë vonesë)`).join(" · ")}.{" "}
+          <Link href={`/app/${companyId}/declarations`} className="underline">Hap deklarimet</Link>
+        </Alert>
+      )}
       {urgent && (
-        <Alert tone="warning">⚠️ {fmt(d.dashboard.deadlineWarning, { title: urgent.title ?? "", days: urgent.days_left ?? 0 })}</Alert>
+        <Alert tone="warning">
+          ⚠️ {urgent.days_left === 0 ? `Sot është afati për: ${label(urgent)}` : fmt(d.dashboard.deadlineWarning, { title: label(urgent), days: urgent.days_left ?? 0 })}
+        </Alert>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -63,10 +79,10 @@ export default async function DashboardPage({ params }: { params: Promise<{ comp
             <ul className="mt-3 space-y-2 text-sm">
               {(data.deadlines ?? []).slice(0, 6).map((x, i) => (
                 <li key={i} className="flex items-center justify-between gap-2">
-                  <span className="truncate">{x.title}</span>
+                  <span className="truncate">{label(x)}</span>
                   <span className="shrink-0 tabular text-muted-foreground">{date(x.due_date)}</span>
                   <Badge tone={(x.days_left ?? 99) <= 3 ? "danger" : (x.days_left ?? 99) <= 7 ? "warning" : "neutral"}>
-                    {x.days_left} d
+                    {(x.days_left ?? 0) < 0 ? `vonesë ${-(x.days_left ?? 0)} d` : (x.days_left ?? 0) === 0 ? "sot" : `${x.days_left} d`}
                   </Badge>
                 </li>
               ))}
