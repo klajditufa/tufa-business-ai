@@ -1022,6 +1022,30 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"set_vat_official":
+{ Args: { "p_company_id": string,"p_month": number,"p_values": Json,"p_year": number }; Returns: {
+              "assigned_to": string | null,
+"company_id": string,
+"computed": NonNullable<Json>,
+"created_at": string,
+"declared_at": string | null,
+"declared_by": string | null,
+"due_date": string,
+"id": string,
+"kind": Database["public"]['Enums']["declaration_kind"],
+"notes": string | null,
+"official": NonNullable<Json>,
+"period_id": string,
+"source_document_id": string | null,
+"status": Database["public"]['Enums']["declaration_status"],
+"updated_at": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "tax_declarations"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "studio_declaration_matrix":
 { Args: { "p_month": number,"p_year": number }; Returns: {
               "assigned_to": string,"company_id": string,"company_name": string,"declaration_id": string,"declared_at": string,"due_date": string,"effective_status": Database["public"]['Enums']["declaration_status"],"kind": Database["public"]['Enums']["declaration_kind"],"nipt": string,"status": Database["public"]['Enums']["declaration_status"],"vat_registered": boolean
@@ -1049,6 +1073,9 @@ isOneToOne: false
 { Args: { "p_company_id": string,"p_days"?: number }; Returns: {
               "days_left": number,"due_date": string,"kind": Database["public"]['Enums']["declaration_kind"],"source": string,"status": string,"title": string
             }[]
+                           },
+"vat_position":
+{ Args: { "p_company_id": string,"p_month": number,"p_year": number }; Returns: Json
                            },
 "vat_rates_at":
 { Args: { "p_company_id"?: string,"p_date": string }; Returns: {

@@ -382,6 +382,44 @@ select pg_temp.check('klienti i B sheh faturat e veta CIS + sync status',
 reset role;
 
 -- =============================================================================
+-- 11. Pozicioni i TVSH-së (0017): zinxhiri i kreditit + vlerat zyrtare
+-- =============================================================================
+select set_config('request.jwt.claim.sub', :'acc', false);
+set role authenticated;
+-- Rivendosim zinxhirin: kredi zyrtare 0 në dhjetor 2026
+select pg_temp.check('set_vat_official dhjetor 2026 (credit_cf=0)',
+  (select (official ->> 'credit_cf')::numeric from public.set_vat_official(:'compA'::uuid, 2026, 12, '{"credit_cf":"0"}')) = 0);
+insert into public.invoices (company_id, direction, issue_date, subtotal, vat_amount, total) values
+  (:'compA'::uuid, 'sale',     date '2027-01-10',  500, 100,  600),
+  (:'compA'::uuid, 'purchase', date '2027-01-12', 1500, 300, 1800),
+  (:'compA'::uuid, 'sale',     date '2027-02-05', 2500, 500, 3000),
+  (:'compA'::uuid, 'purchase', date '2027-02-07',  500, 100,  600);
+select pg_temp.check('janar 2027: TVSH 100 − 300 → kredi 200 për t''u mbartur',
+  (select (p ->> 'payable')::numeric = 0 and (p ->> 'credit_cf')::numeric = 200 and p ->> 'credit_bf_source' = 'official'
+     from public.vat_position(:'compA'::uuid, 2027, 1) p));
+select pg_temp.check('shkurt 2027: 500 − 100 − 200 (mbartur) = 200 për pagesë',
+  (select (p ->> 'payable')::numeric = 200 and (p ->> 'credit_bf')::numeric = 200 and p ->> 'credit_bf_source' = 'computed'
+     from public.vat_position(:'compA'::uuid, 2027, 2) p));
+-- C@TS deklaroi kredi 250 në janar → shkurti përdor vlerën zyrtare
+select pg_temp.check('set_vat_official janar 2027 ruan official + computed',
+  (select (official ->> 'credit_cf')::numeric = 250 and (computed ->> 'credit_cf')::numeric = 200 and official ? 'recorded_at'
+     from public.set_vat_official(:'compA'::uuid, 2027, 1, '{"output_vat":100,"input_vat":300,"credit_cf":250,"note":"sipas C@TS"}')));
+select pg_temp.check('shkurt 2027 me kredinë zyrtare: 500 − 100 − 250 = 150',
+  (select (p ->> 'payable')::numeric = 150 and p ->> 'credit_bf_source' = 'official'
+     from public.vat_position(:'compA'::uuid, 2027, 2) p));
+do $$ begin
+  perform public.set_vat_official('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 2027, 1, '{"credit_cf":-5}');
+  perform pg_temp.check('vlera negative refuzohet', false);
+exception when others then perform pg_temp.check('vlera negative refuzohet', sqlstate = '22023'); end $$;
+do $$ begin
+  perform public.set_vat_official('cccccccc-cccc-4ccc-8ccc-cccccccccccc', 2027, 1, '{"credit_cf":1}');
+  perform pg_temp.check('accountant NUK regjistron TVSH zyrtare për B', false);
+exception when others then perform pg_temp.check('accountant NUK regjistron TVSH zyrtare për B', true); end $$;
+select pg_temp.check('accountant: vat_position e B → zero (RLS)',
+  (select (p ->> 'output_vat')::numeric = 0 and (p ->> 'sales_count')::int = 0 from public.vat_position(:'compB'::uuid, 2026, 9) p));
+reset role;
+
+-- =============================================================================
 -- Përmbledhje
 -- =============================================================================
 select name, ok, detail from t_results where not ok;
