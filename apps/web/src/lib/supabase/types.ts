@@ -123,6 +123,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"company_api_keys": {
+                  Row: {
+                    "company_id": string,"created_at": string,"created_by": string | null,"id": string,"key_hash": string,"key_prefix": string,"last_used_at": string | null,"name": string,"revoked_at": string | null,"scopes": (string)[]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "company_id": string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"key_hash": string,"key_prefix": string,"last_used_at"?: string | null,"name": string,"revoked_at"?: string | null,"scopes"?: (string)[]
+                  }
+                  Update: {
+                    "company_id"?: string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"key_hash"?: string,"key_prefix"?: string,"last_used_at"?: string | null,"name"?: string,"revoked_at"?: string | null,"scopes"?: (string)[]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "company_api_keys_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "company_api_keys_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "users"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"company_memberships": {
                   Row: {
                     "company_id": string,"created_at": string,"role": Database["public"]['Enums']["company_role"],"user_id": string
@@ -403,14 +429,14 @@ isOneToOne: false
                   ]
                 },"invoices": {
                   Row: {
-                    "company_id": string,"corrects_invoice_id": string | null,"counterparty_name": string | null,"counterparty_nipt": string | null,"created_at": string,"created_by": string | null,"currency": string,"customer_id": string | null,"deleted_at": string | null,"direction": Database["public"]['Enums']["invoice_direction"],"due_date": string | null,"exchange_rate": number,"id": string,"import_batch_id": string | null,"issue_date": string,"nivf": string | null,"notes": string | null,"nslf": string | null,"number": string | null,"paid_amount": number,"paid_at": string | null,"payment_method": Database["public"]['Enums']["payment_method"],"payment_status": Database["public"]['Enums']["payment_status"],"period_id": string | null,"raw": Json | null,"source": Database["public"]['Enums']["invoice_source"],"subtotal": number,"supplier_id": string | null,"total": number,"type": Database["public"]['Enums']["invoice_type"],"updated_at": string,"vat_amount": number,"vat_breakdown": NonNullable<Json>
+                    "business_unit_code": string | null,"company_id": string,"corrects_invoice_id": string | null,"counterparty_name": string | null,"counterparty_nipt": string | null,"created_at": string,"created_by": string | null,"currency": string,"customer_id": string | null,"deleted_at": string | null,"direction": Database["public"]['Enums']["invoice_direction"],"due_date": string | null,"eic": string | null,"exchange_rate": number,"id": string,"import_batch_id": string | null,"is_einvoice": boolean | null,"issue_date": string,"nivf": string | null,"notes": string | null,"nslf": string | null,"number": string | null,"operator_code": string | null,"paid_amount": number,"paid_at": string | null,"payment_method": Database["public"]['Enums']["payment_method"],"payment_status": Database["public"]['Enums']["payment_status"],"period_id": string | null,"raw": Json | null,"source": Database["public"]['Enums']["invoice_source"],"subtotal": number,"supplier_id": string | null,"synced_at": string | null,"tcr_code": string | null,"total": number,"type": Database["public"]['Enums']["invoice_type"],"updated_at": string,"vat_amount": number,"vat_breakdown": NonNullable<Json>
                   }
                   ComputedFields: never
                   Insert: {
-                    "company_id": string,"corrects_invoice_id"?: string | null,"counterparty_name"?: string | null,"counterparty_nipt"?: string | null,"created_at"?: string,"created_by"?: string | null,"currency"?: string,"customer_id"?: string | null,"deleted_at"?: string | null,"direction": Database["public"]['Enums']["invoice_direction"],"due_date"?: string | null,"exchange_rate"?: number,"id"?: string,"import_batch_id"?: string | null,"issue_date": string,"nivf"?: string | null,"notes"?: string | null,"nslf"?: string | null,"number"?: string | null,"paid_amount"?: number,"paid_at"?: string | null,"payment_method"?: Database["public"]['Enums']["payment_method"],"payment_status"?: Database["public"]['Enums']["payment_status"],"period_id"?: string | null,"raw"?: Json | null,"source"?: Database["public"]['Enums']["invoice_source"],"subtotal"?: number,"supplier_id"?: string | null,"total"?: number,"type"?: Database["public"]['Enums']["invoice_type"],"updated_at"?: string,"vat_amount"?: number,"vat_breakdown"?: NonNullable<Json>
+                    "business_unit_code"?: string | null,"company_id": string,"corrects_invoice_id"?: string | null,"counterparty_name"?: string | null,"counterparty_nipt"?: string | null,"created_at"?: string,"created_by"?: string | null,"currency"?: string,"customer_id"?: string | null,"deleted_at"?: string | null,"direction": Database["public"]['Enums']["invoice_direction"],"due_date"?: string | null,"eic"?: string | null,"exchange_rate"?: number,"id"?: string,"import_batch_id"?: string | null,"is_einvoice"?: boolean | null,"issue_date": string,"nivf"?: string | null,"notes"?: string | null,"nslf"?: string | null,"number"?: string | null,"operator_code"?: string | null,"paid_amount"?: number,"paid_at"?: string | null,"payment_method"?: Database["public"]['Enums']["payment_method"],"payment_status"?: Database["public"]['Enums']["payment_status"],"period_id"?: string | null,"raw"?: Json | null,"source"?: Database["public"]['Enums']["invoice_source"],"subtotal"?: number,"supplier_id"?: string | null,"synced_at"?: string | null,"tcr_code"?: string | null,"total"?: number,"type"?: Database["public"]['Enums']["invoice_type"],"updated_at"?: string,"vat_amount"?: number,"vat_breakdown"?: NonNullable<Json>
                   }
                   Update: {
-                    "company_id"?: string,"corrects_invoice_id"?: string | null,"counterparty_name"?: string | null,"counterparty_nipt"?: string | null,"created_at"?: string,"created_by"?: string | null,"currency"?: string,"customer_id"?: string | null,"deleted_at"?: string | null,"direction"?: Database["public"]['Enums']["invoice_direction"],"due_date"?: string | null,"exchange_rate"?: number,"id"?: string,"import_batch_id"?: string | null,"issue_date"?: string,"nivf"?: string | null,"notes"?: string | null,"nslf"?: string | null,"number"?: string | null,"paid_amount"?: number,"paid_at"?: string | null,"payment_method"?: Database["public"]['Enums']["payment_method"],"payment_status"?: Database["public"]['Enums']["payment_status"],"period_id"?: string | null,"raw"?: Json | null,"source"?: Database["public"]['Enums']["invoice_source"],"subtotal"?: number,"supplier_id"?: string | null,"total"?: number,"type"?: Database["public"]['Enums']["invoice_type"],"updated_at"?: string,"vat_amount"?: number,"vat_breakdown"?: NonNullable<Json>
+                    "business_unit_code"?: string | null,"company_id"?: string,"corrects_invoice_id"?: string | null,"counterparty_name"?: string | null,"counterparty_nipt"?: string | null,"created_at"?: string,"created_by"?: string | null,"currency"?: string,"customer_id"?: string | null,"deleted_at"?: string | null,"direction"?: Database["public"]['Enums']["invoice_direction"],"due_date"?: string | null,"eic"?: string | null,"exchange_rate"?: number,"id"?: string,"import_batch_id"?: string | null,"is_einvoice"?: boolean | null,"issue_date"?: string,"nivf"?: string | null,"notes"?: string | null,"nslf"?: string | null,"number"?: string | null,"operator_code"?: string | null,"paid_amount"?: number,"paid_at"?: string | null,"payment_method"?: Database["public"]['Enums']["payment_method"],"payment_status"?: Database["public"]['Enums']["payment_status"],"period_id"?: string | null,"raw"?: Json | null,"source"?: Database["public"]['Enums']["invoice_source"],"subtotal"?: number,"supplier_id"?: string | null,"synced_at"?: string | null,"tcr_code"?: string | null,"total"?: number,"type"?: Database["public"]['Enums']["invoice_type"],"updated_at"?: string,"vat_amount"?: number,"vat_breakdown"?: NonNullable<Json>
                   }
                   Relationships: [
                     {
@@ -882,6 +908,11 @@ isOneToOne: false
               "gross_margin": number,"period_from": string,"period_to": string,"purchases_count": number,"purchases_net": number,"purchases_total": number,"purchases_vat": number,"sales_count": number,"sales_net": number,"sales_total": number,"sales_vat": number,"source": string,"vat_balance": number
             }[]
                            },
+"create_api_key":
+{ Args: { "p_company_id": string,"p_name": string }; Returns: {
+              "id": string,"key": string,"key_prefix": string
+            }[]
+                           },
 "create_organization_with_company":
 { Args: { "p_company": Json,"p_org_name": string,"p_org_type": Database["public"]['Enums']["organization_type"] }; Returns: string
                            },
@@ -921,8 +952,16 @@ isOneToOne: false
 "gen_salt":
 { Args: { "": string }; Returns: string
                            },
+"import_cis_invoices":
+{ Args: { "p_company_id": string,"p_direction": Database["public"]['Enums']["invoice_direction"],"p_invoices": Json,"p_label"?: string }; Returns: Json
+                           },
 "invitation_preview":
 { Args: { "p_token": string }; Returns: Json
+                           },
+"invoice_sync_status":
+{ Args: { "p_company_id": string }; Returns: {
+              "last_batch": Json,"last_sync_at": string,"purchases_count": number,"sales_count": number,"status": Database["public"]['Enums']["integration_status"]
+            }[]
                            },
 "log_audit_event":
 { Args: { "p_action": string,"p_company_id": string,"p_reason"?: string,"p_row_id": string,"p_table": string }; Returns: undefined
@@ -950,6 +989,14 @@ isOneToOne: false
                            },
 "reopen_period":
 { Args: { "p_period_id": string,"p_reason": string }; Returns: undefined
+                           },
+"resolve_api_key":
+{ Args: { "p_key": string,"p_scope": string }; Returns: {
+              "company_id": string,"key_id": string
+            }[]
+                           },
+"revoke_api_key":
+{ Args: { "p_key_id": string }; Returns: undefined
                            },
 "set_declaration_status":
 { Args: { "p_id": string,"p_notes"?: string,"p_status": Database["public"]['Enums']["declaration_status"] }; Returns: {
@@ -979,6 +1026,14 @@ isOneToOne: false
 { Args: { "p_month": number,"p_year": number }; Returns: {
               "assigned_to": string,"company_id": string,"company_name": string,"declaration_id": string,"declared_at": string,"due_date": string,"effective_status": Database["public"]['Enums']["declaration_status"],"kind": Database["public"]['Enums']["declaration_kind"],"nipt": string,"status": Database["public"]['Enums']["declaration_status"],"vat_registered": boolean
             }[]
+                           },
+"sync_check_key":
+{ Args: { "p_key": string }; Returns: {
+              "company_id": string,"legal_name": string,"nipt": string
+            }[]
+                           },
+"sync_cis_invoices":
+{ Args: { "p_direction": Database["public"]['Enums']["invoice_direction"],"p_invoices": Json,"p_key": string,"p_label"?: string }; Returns: Json
                            },
 "top_creditors":
 { Args: { "p_company_id": string,"p_limit"?: number }; Returns: {

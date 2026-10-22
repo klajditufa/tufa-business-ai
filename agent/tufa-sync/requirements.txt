@@ -1,0 +1,4 @@
+cryptography>=3.4
+lxml>=4.6
+certifi
+tzdata; sys_platform == "win32"

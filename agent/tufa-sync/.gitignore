@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.p12
+*.pfx
+*.pem
+*.csv
+!tests/fixtures/selfsigned-test-only.p12

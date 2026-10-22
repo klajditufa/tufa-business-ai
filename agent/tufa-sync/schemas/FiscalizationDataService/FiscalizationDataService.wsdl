@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:al="https://eFiskalizimi.tatime.gov.al/FiscalizationDataService" xmlns:als="https://eFiskalizimi.tatime.gov.al/FiscalizationDataService/schema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="FiscalizationDataService" targetNamespace="https://eFiskalizimi.tatime.gov.al/FiscalizationDataService">
+
+    <wsdl:types>
+        <xsd:schema>
+            <xsd:import namespace="https://eFiskalizimi.tatime.gov.al/FiscalizationDataService/schema" schemaLocation="fiscalizationData.xsd"/>
+        </xsd:schema>
+    </wsdl:types>
+
+    <wsdl:message name="GetInvoicesRequest">
+        <wsdl:documentation>Element representing get invoices request message.</wsdl:documentation>
+        <wsdl:part element="als:GetInvoicesRequest" name="request"/>
+    </wsdl:message>
+
+    <wsdl:message name="GetInvoicesResponse">
+        <wsdl:documentation>Element representing get invoices response message.</wsdl:documentation>
+        <wsdl:part element="als:GetInvoicesResponse" name="response"/>
+    </wsdl:message>
+
+    <wsdl:portType name="FiscalizationDataServicePortType">
+        <wsdl:operation name="getInvoices">
+            <wsdl:input message="al:GetInvoicesRequest"/>
+            <wsdl:output message="al:GetInvoicesResponse"/>
+        </wsdl:operation>
+    </wsdl:portType>
+
+    <wsdl:binding name="FiscalizationDataPortSoap" type="al:FiscalizationDataServicePortType">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <wsdl:operation name="getInvoices">
+            <soap:operation soapAction="https://eFiskalizimi.tatime.gov.al/FiscalizationDataService/GetInvoices"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+
+    <wsdl:service name="FiscalizationDataService">
+        <wsdl:port binding="al:FiscalizationDataPortSoap" name="FiscalizationDataPort">
+            <soap:address location="https://efiskalizimi-test.tatime.gov.al:443/FiscalizationDataService-v1"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>

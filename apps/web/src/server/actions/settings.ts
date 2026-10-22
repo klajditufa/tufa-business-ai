@@ -110,3 +110,29 @@ export async function acceptInvitationAction(token: string): Promise<ActionResul
   }
   return { ok: true, companyId: r.company_id };
 }
+
+// ---------------------------------------------------------------------------
+// Çelësat API për agjentin lokal "TUFA Sync" (vlera shfaqet vetëm një herë)
+// ---------------------------------------------------------------------------
+const apiKeySchema = z.object({ companyId: z.string().uuid(), name: z.string().trim().min(2).max(60) });
+
+export async function createApiKeyAction(
+  _prev: (ActionResult & { key?: string }) | null,
+  formData: FormData,
+): Promise<ActionResult & { key?: string }> {
+  const parsed = apiKeySchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { ok: false, error: "Jep një emër për çelësin (p.sh. 'Kompjuteri i zyrës')", field: "name" };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("create_api_key", { p_company_id: parsed.data.companyId, p_name: parsed.data.name });
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/app/${parsed.data.companyId}/settings`);
+  return { ok: true, key: data?.[0]?.key };
+}
+
+export async function revokeApiKeyAction(companyId: string, keyId: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("revoke_api_key", { p_key_id: keyId });
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/app/${companyId}/settings`);
+  return { ok: true };
+}

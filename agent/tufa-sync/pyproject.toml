@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tufa-sync"
+version = "1.1.0"
+description = "TUFA Sync: read invoices from the Albanian fiscalization system (CIS) with your own certificate and push them to TUFA Business AI."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "cryptography>=3.4",
+    "lxml>=4.6",
+    "certifi",
+    "tzdata; sys_platform == 'win32'",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Office/Business :: Financial :: Accounting",
+]
+
+[project.scripts]
+cis-client = "cis_client.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["cis_client*"]
+
+[tool.setuptools.package-data]
+cis_client = ["web/*"]

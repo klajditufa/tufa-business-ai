@@ -5,7 +5,7 @@
 \set ON_ERROR_STOP on
 
 create temp table t_results (name text, ok boolean, detail text);
-grant all on t_results to authenticated;
+grant all on t_results to authenticated, service_role, anon;
 
 create or replace function pg_temp.check(p_name text, p_ok boolean, p_detail text default null)
 returns void language plpgsql as $$
@@ -266,6 +266,119 @@ begin
 exception when others then
   perform pg_temp.check('owner fut kompani të re me returning', false, sqlerrm);
 end $$;
+reset role;
+
+-- =============================================================================
+-- 10. Importi CIS (0016): çelësa API + import_cis_invoices
+-- =============================================================================
+select set_config('request.jwt.claim.sub', :'acc', false);
+set role authenticated;
+select pg_temp.check('accountant krijon çelës API për A (fillon me tba_)',
+  (select key from public.create_api_key(:'compA'::uuid, 'Mac i zyrës')) like 'tba\_%');
+select pg_temp.check('çelësi ruhet vetëm si hash (pa vlerë)',
+  (select count(*) from public.company_api_keys where company_id = :'compA'::uuid and key_hash ~ '^[0-9a-f]{64}$' and length(key_prefix) = 12) = 1);
+do $$ begin
+  perform public.create_api_key('cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'x');
+  perform pg_temp.check('accountant NUK krijon çelës për B', false);
+exception when others then
+  perform pg_temp.check('accountant NUK krijon çelës për B', true);
+end $$;
+do $$ begin
+  perform public.import_cis_invoices('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'sale', '[]'::jsonb, null);
+  perform pg_temp.check('authenticated NUK thërret import_cis_invoices', false);
+exception when others then
+  perform pg_temp.check('authenticated NUK thërret import_cis_invoices', true);
+end $$;
+reset role;
+
+-- service_role: verifikon çelësin dhe importon (çelës i njohur, futur direkt si hash për testin)
+insert into public.company_api_keys (company_id, name, key_prefix, key_hash)
+values (:'compB'::uuid, 'test', left('tba_' || repeat('ab', 24), 12), encode(digest('tba_' || repeat('ab', 24), 'sha256'), 'hex'));
+set role service_role;
+do $$
+declare v_key text := 'tba_' || repeat('ab', 24); v_company uuid; v_res jsonb; v_inv public.invoices;
+begin
+  select company_id into v_company from public.resolve_api_key(v_key, 'sync:invoices');
+  perform pg_temp.check('resolve_api_key kthen kompaninë e çelësit', v_company = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc');
+  perform pg_temp.check('resolve_api_key refuzon scope të huaj', (select count(*) from public.resolve_api_key(v_key, 'admin')) = 0);
+  perform pg_temp.check('resolve_api_key refuzon çelës të gabuar', (select count(*) from public.resolve_api_key('tba_wrong', 'sync:invoices')) = 0);
+
+  v_res := public.import_cis_invoices(v_company, 'sale', $j$[
+    {"TypeOfInv":"NONCASH","IssueDateTime":"2026-09-02T19:15:11+02:00","InvOrdNum":"280","TCRCode":"","BusinUnitCode":"xx123","OperatorCode":"op1",
+     "TotVATAmt":"0.00","TotPrice":"64512.00","IIC":"ABCDEF0123456789ABCDEF0123456789","FIC":"f17b7558-c28e-42af-a1c3-bac9147b4de4","IsEinvoice":"true",
+     "PayMethods":[{"Type":"ACCOUNT","Amt":"64512.00"}],"Seller":{"IDType":"NUIS","IDNum":"M14618202T","Name":"Klajdi Tufa"},
+     "Buyer":{"IDType":"NUIS","IDNum":"L82224013T","Name":"XM"}},
+    {"TypeOfInv":"CASH","IssueDateTime":"2026-09-30T11:32:00+02:00","InvNum":"7942/2026","TotVATAmt":"199.18","TotPrice":"1195.08","TotPriceWoVAT":"995.90",
+     "FIC":"8a729363-771d-43e6-ab1f-253a582b8a8e","IIC":"00112233445566778899AABBCCDDEEFF",
+     "PayMethods":[{"Type":"BANKNOTE","Amt":"1195.08"}],"Seller":{"IDType":"NUIS","IDNum":"M14618202T","Name":"Klajdi Tufa"},
+     "Buyer":{"IDType":"NUIS","IDNum":"L82309007S","Name":"Host AL"},
+     "SameTaxes":[{"VATRate":"20.00","NumOfItems":"1","PriceBefVAT":"995.90","VATAmt":"199.18"}]},
+    {"TypeOfInv":"NONCASH","IssueDateTime":"2026-09-05T09:00:00+02:00","TotPrice":"10.00","TotVATAmt":"0.00"}
+  ]$j$::jsonb, 'test shtator');
+  perform pg_temp.check('import: 2 të reja, 1 pa FIC e anashkaluar',
+    (v_res ->> 'imported')::int = 2 and (v_res ->> 'skipped')::int = 1 and jsonb_array_length(v_res -> 'errors') = 1);
+  select * into v_inv from public.invoices where company_id = v_company and nivf = 'f17b7558-c28e-42af-a1c3-bac9147b4de4';
+  perform pg_temp.check('mapimi FIC→nivf, IIC→nslf, blerësi, numri nga InvOrdNum',
+    v_inv.nslf = 'ABCDEF0123456789ABCDEF0123456789' and v_inv.counterparty_nipt = 'L82224013T' and v_inv.number = '280'
+    and v_inv.issue_date = date '2026-09-02' and v_inv.total = 64512 and v_inv.subtotal = 64512 and v_inv.payment_method = 'bank'
+    and v_inv.payment_status = 'unpaid' and v_inv.source = 'connector' and v_inv.is_einvoice);
+  select * into v_inv from public.invoices where company_id = v_company and nivf = '8a729363-771d-43e6-ab1f-253a582b8a8e';
+  perform pg_temp.check('fatura CASH → e paguar, breakdown nga SameTaxes 20%',
+    v_inv.payment_status = 'paid' and v_inv.paid_amount = 1195.08 and v_inv.payment_method = 'cash'
+    and (v_inv.vat_breakdown -> 0 ->> 'rate')::numeric = 20 and v_inv.number = '7942/2026');
+  perform pg_temp.check('periudha 2026-09 u krijua automatikisht',
+    exists (select 1 from public.fiscal_periods p where p.company_id = v_company and p.year = 2026 and p.month = 9));
+
+  -- Ri-import: përditësim, jo dublikatë
+  v_res := public.import_cis_invoices(v_company, 'sale', $j$[
+    {"TypeOfInv":"NONCASH","IssueDateTime":"2026-09-02T19:15:11+02:00","InvOrdNum":"280","TotVATAmt":"0.00","TotPrice":"64512.00",
+     "IIC":"ABCDEF0123456789ABCDEF0123456789","FIC":"f17b7558-c28e-42af-a1c3-bac9147b4de4",
+     "PayMethods":[{"Type":"ACCOUNT","Amt":"64512.00"}],"Buyer":{"IDType":"NUIS","IDNum":"L82224013T","Name":"XM SHPK"}}
+  ]$j$::jsonb, null);
+  perform pg_temp.check('ri-import: 0 të reja, 1 e përditësuar, pa dublikatë',
+    (v_res ->> 'imported')::int = 0 and (v_res ->> 'updated')::int = 1
+    and (select count(*) from public.invoices where company_id = v_company and nivf = 'f17b7558-c28e-42af-a1c3-bac9147b4de4') = 1
+    and (select counterparty_name from public.invoices where company_id = v_company and nivf = 'f17b7558-c28e-42af-a1c3-bac9147b4de4') = 'XM SHPK');
+  perform pg_temp.check('integrimi selfcare → functional me last_sync_at',
+    (select status = 'functional' and last_sync_at is not null from public.integrations where company_id = v_company and provider = 'selfcare'));
+  perform pg_temp.check('import_batches ka 2 batch-e done', (select count(*) from public.import_batches where company_id = v_company and status = 'done') = 2);
+end $$;
+reset role;
+
+-- anon (si API-ja e serverit me çelësin publik): sync_check_key / sync_cis_invoices
+set role anon;
+select pg_temp.check('anon: sync_check_key me çelës të mirë kthen B',
+  (select nipt from public.sync_check_key('tba_' || repeat('ab', 24))) is not null);
+select pg_temp.check('anon: sync_check_key me çelës të keq → bosh',
+  (select count(*) from public.sync_check_key('tba_' || repeat('cd', 24))) = 0);
+select pg_temp.check('anon: sync_cis_invoices importon me çelësin e B',
+  (public.sync_cis_invoices('tba_' || repeat('ab', 24), 'purchase',
+     '[{"FIC":"11111111-2222-3333-4444-555555555555","IssueDateTime":"2026-09-03T10:46:00+02:00","InvNum":"18540","TotPrice":"9600.00","TotVATAmt":"1600.00","Seller":{"IDNum":"L52101183A","Name":"Embedded Systems"},"PayMethods":[{"Type":"ACCOUNT"}]}]'::jsonb) ->> 'imported')::int = 1);
+do $$ begin
+  perform public.sync_cis_invoices('tba_' || repeat('cd', 24), 'sale', '[]'::jsonb);
+  perform pg_temp.check('anon: çelës i keq refuzohet', false);
+exception when others then
+  perform pg_temp.check('anon: çelës i keq refuzohet', sqlstate = '28000');
+end $$;
+do $$ begin
+  perform public.import_cis_invoices('cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'sale', '[]'::jsonb, null);
+  perform pg_temp.check('anon NUK thërret import_cis_invoices direkt', false);
+exception when others then
+  perform pg_temp.check('anon NUK thërret import_cis_invoices direkt', true);
+end $$;
+reset role;
+
+-- Izolimi: accountant-i (vetëm A) nuk sheh faturat e importuara të B; klienti i B i sheh
+select set_config('request.jwt.claim.sub', :'acc', false);
+set role authenticated;
+select pg_temp.check('accountant nuk sheh faturat CIS të B',
+  (select count(*) from public.invoices where nivf = 'f17b7558-c28e-42af-a1c3-bac9147b4de4') = 0);
+reset role;
+select set_config('request.jwt.claim.sub', :'cli', false);
+set role authenticated;
+select pg_temp.check('klienti i B sheh faturat e veta CIS + sync status',
+  (select count(*) from public.invoices where nivf = 'f17b7558-c28e-42af-a1c3-bac9147b4de4') = 1
+  and (select sales_count from public.invoice_sync_status(:'compB'::uuid)) = 2);
 reset role;
 
 -- =============================================================================

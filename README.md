@@ -18,17 +18,18 @@ apps/web/                 Next.js — UI, Server Actions, services
   src/lib/supabase/       klientët SSR + types.ts (gjeneruar nga DB)
   src/lib/i18n/           tekstet (sq)
 packages/connectors/      interface Connector + connectors "pending"
-supabase/migrations/      0001–0009 (skema, RLS, triggers, funksione)
+agent/tufa-sync/          agjenti lokal (Python): lexon faturat nga CIS me certifikatën e biznesit → /api/sync/invoices
+supabase/migrations/      0001–0016 (skema, RLS, triggers, funksione, importi CIS)
 supabase/seed/            01 rregullat tatimore · 02 kalendari fiskal · 03 të dhëna DEMO
-supabase/tests/           shim lokal + 44 teste RLS/integriteti
+supabase/tests/           shim lokal + 74 teste RLS/integriteti
 scripts/db-local.sh       DB lokale nga zero + teste
-.github/workflows/ci.yml  CI: migrations + teste RLS, lint, typecheck, unit tests, build
+.github/workflows/ci.yml  CI: migrations + teste RLS, lint, typecheck, build, teste të agjentit
 ```
 
 ## Prodhimi
 
 - App: https://tufa-business-ai.vercel.app (Vercel, projekt `tufa-business-ai`, root `apps/web`; çdo push në `main` bën deploy automatik)
-- Databaza: Supabase `tufa-business-ai` (ref `znqptnmhfbhvwjzborbv`, Frankfurt), migrations 0001–0013 të aplikuara
+- Databaza: Supabase `tufa-business-ai` (ref `znqptnmhfbhvwjzborbv`, Frankfurt), migrations 0001–0016 të aplikuara
 - Rrjedha regjistrim → konfirmim email → onboarding → dashboard u testua në prodhim më 20.10.2026
 
 ## Nisja lokale
@@ -60,21 +61,22 @@ Rigjenerimi i tipeve pas çdo migration: `SUPABASE_PROJECT_REF=<ref> pnpm --filt
 - Periudhat e mbyllura bllokojnë INSERT/UPDATE/DELETE; rihapja vetëm me `reopen_period(id, arsye)` + audit.
 - Normat tatimore jetojnë në `tax_rules` me `valid_from/valid_to`; asnjë normë në kod.
 - Kredencialet e portaleve shtetërore **nuk ruhen** në Fazën 1.
+- Certifikata e fiskalizimit (.p12) **nuk ngarkohet kurrë** në platformë: agjenti TUFA Sync e përdor lokalisht dhe dërgon vetëm faturat, me një çelës API për subjekt (`tba_…`, ruhet vetëm sha256, revokohet nga Cilësimet). Çelësi verifikohet brenda DB-së (`sync_cis_invoices`, SECURITY DEFINER) — pa service_role.
 
 ## Statusi i Fazës 1
 
 | # | Dorëzimi | Statusi |
 | --- | --- | --- |
 | 1 | Skeleti i projektit, CI, README | ✅ |
-| 2 | Migrations + RLS + audit + seed + 44 teste | ✅ |
+| 2 | Migrations + RLS + audit + seed + 74 teste | ✅ |
 | 3 | Auth (regjistrim, login, callback, rivendosje fjalëkalimi) · ftesa me link + rol · MFA | ✅ · MFA në vijim |
 | 4 | Organizata + subjekte (onboarding, switcher, editim, subjekt i ri, anëtarë/ftesa) | ✅ |
-| 5 | Import faturash Excel/CSV/XML me parapamje | ⏳ |
-| 6 | Regjistri i shitjeve/blerjeve: filtra, kërkim, eksport | ✅ lexim · filtra/eksport në vijim |
+| 5 | Import faturash nga fiskalizimi (CIS FiscalizationDataService) me agjentin TUFA Sync · Excel/CSV | ✅ CIS (testuar live 22.10.2026) · Excel në vijim |
+| 6 | Regjistri i shitjeve/blerjeve: filtra, kërkim, eksport | ✅ |
 | 7 | Dashboard (KPI, grafik 12 muaj, afate, debitorë) | ✅ |
 | 8 | TVSH bazë: përmbledhje shitje/blerje sipas normave, normat në fuqi | ✅ |
 | 9 | Dokumente: upload drag&drop, kategori, kërkim, signed URL, soft delete | ✅ |
 | 10 | Deklarime: gjenerim sipas regjimit, statuset me audit, matrica e studios (/studio) | ✅ |
 | 11 | i18n sq/en, dark mode, PWA | ✅ sq + dark/light + manifest · en në vijim |
 
-Integrimet: `manual_import` = functional (parsers vijnë në #5) · `selfcare`, `cats` = pending_integration · `bank` = unavailable.
+Integrimet: `selfcare` (fiskalizimi/CIS) = functional pas sinkronizimit të parë me TUFA Sync · `manual_import` = functional · `cats` = pending_integration (pa API publike) · `bank` = unavailable.
