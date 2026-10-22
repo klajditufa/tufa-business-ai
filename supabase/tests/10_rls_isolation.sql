@@ -595,68 +595,56 @@ select pg_temp.check('studio_overview: accountant i A sheh vetëm A',
 reset role;
 
 -- =============================================================================
--- 18. Listëpagesa (0025)
+-- 18. Listëpagesa nga C@TS (0026)
 -- =============================================================================
--- Llogaritja nga rregullat (2026: paga min 50.000, max 186.416; 9,5%+15%; 1,7%+1,7%; TAP sipas shkallëve)
-select pg_temp.check('pagë 50.000: kontribute 4.750/7.500, shëndet 850/850, TAP 0, neto 44.400',
-  (select (c->>'social_employee')::numeric = 4750 and (c->>'social_employer')::numeric = 7500 and (c->>'health_employee')::numeric = 850
-      and (c->>'health_employer')::numeric = 850 and (c->>'income_tax')::numeric = 0 and (c->>'net')::numeric = 44400
-     from app.payroll_calc(:'compA'::uuid, date '2026-09-01', 50000, 'employee') c));
-select pg_temp.check('pagë 100.000: TAP 13% × 70.000 = 9.100, neto 79.700',
-  (select (c->>'income_tax')::numeric = 9100 and (c->>'net')::numeric = 79700 from app.payroll_calc(:'compA'::uuid, date '2026-09-01', 100000, 'employee') c));
-select pg_temp.check('pagë 250.000: baza shoqërore = paga max 186.416; TAP 22.100 + 23% × 50.000',
-  (select (c->>'social_base')::numeric = 186416 and (c->>'social_employee')::numeric = 17710 and (c->>'social_employer')::numeric = 27962
-      and (c->>'health_employee')::numeric = 4250 and (c->>'income_tax')::numeric = 33600 and (c->>'net')::numeric = 194440
-     from app.payroll_calc(:'compA'::uuid, date '2026-09-01', 250000, 'employee') c));
-select pg_temp.check('pagë 40.000 (nën min): kontributet mbi 50.000',
-  (select (c->>'social_base')::numeric = 50000 and (c->>'net')::numeric = 34400 from app.payroll_calc(:'compA'::uuid, date '2026-09-01', 40000, 'employee') c));
-select pg_temp.check('dhjetor 2025: paga min e vjetër 40.000',
-  (select (c->>'social_employee')::numeric = 3800 from app.payroll_calc(:'compA'::uuid, date '2025-12-01', 40000, 'employee') c));
-select pg_temp.check('pronar i vetëpunësuar: 23% + 3,4% mbi pagën min, pa TAP',
-  (select (c->>'social_employee')::numeric = 11500 and (c->>'health_employee')::numeric = 1700 and (c->>'income_tax')::numeric = 0
-     from app.payroll_calc(:'compA'::uuid, date '2026-09-01', 0, 'owner') c));
-
 select set_config('request.jwt.claim.sub', :'acc', false);
 set role authenticated;
-insert into public.employees (company_id, first_name, last_name, personal_no, gross_salary, start_date) values
-  (:'compA'::uuid, 'Ana', 'Test', 'J00000001A', 50000, date '2026-01-01'),
-  (:'compA'::uuid, 'Beni', 'Test', 'J00000002B', 100000, date '2026-01-01'),
-  (:'compA'::uuid, 'Cimi', 'Ikur', 'J00000003C', 60000, date '2025-01-01');
-update public.employees set end_date = date '2026-06-30' where personal_no = 'J00000003C';
-select pg_temp.check('generate_payroll shtator: 2 punonjës aktivë, totali bruto 150.000',
-  (select (totals->>'employees')::int = 2 and (totals->>'gross')::numeric = 150000 and status = 'draft'
-     from public.generate_payroll(:'compA'::uuid, 2026, 9)));
-select pg_temp.check('update_payroll_line: bruto 60.000 → TAP 3.250',
-  (select income_tax = 3250 from public.update_payroll_line(
-     (select l.id from public.payroll_lines l join public.employees e on e.id = l.employee_id where e.personal_no = 'J00000001A'), 60000, 26)));
-select pg_temp.check('ri-gjenerimi ruan bruton e ndryshuar',
-  (select gross = 60000 from public.payroll_lines l join public.employees e on e.id = l.employee_id
-    where e.personal_no = 'J00000001A' and l.run_id = (select id from public.generate_payroll(:'compA'::uuid, 2026, 9))));
-select set_config('t.run', (select r.id::text from public.payroll_runs r join public.fiscal_periods fp on fp.id = r.period_id
-                            where r.company_id = :'compA'::uuid and fp.year = 2026 and fp.month = 9), false);
-select pg_temp.check('finalize_payroll → final + 3 detyrime me afatin e deklarimit',
-  (select status = 'final' from public.finalize_payroll(current_setting('t.run')::uuid)));
-select pg_temp.check('detyrimet: shoqërore + shëndetësore + TAP = totali për pagesë',
-  (select count(*) = 3 and sum(amount) = (select (totals->>'to_pay')::numeric from public.payroll_runs where id = current_setting('t.run')::uuid)
-     from public.tax_obligations where payroll_run_id = current_setting('t.run')::uuid));
-do $$ begin
-  perform public.update_payroll_line((select id from public.payroll_lines where run_id = current_setting('t.run')::uuid limit 1), 1, 1);
-  perform pg_temp.check('listëpagesa finale nuk ndryshohet', false);
-exception when others then perform pg_temp.check('listëpagesa finale nuk ndryshohet', sqlstate = '22023'); end $$;
-select pg_temp.check('reopen_payroll → draft',
-  (select status = 'draft' from public.reopen_payroll(current_setting('t.run')::uuid)));
-select pg_temp.check('reopen_payroll heq detyrimet e papaguara',
-  not exists (select 1 from public.tax_obligations where payroll_run_id = current_setting('t.run')::uuid));
+select pg_temp.check('import_payroll_declarations: 2 muaj të rinj, 2 deklarime të shënuara',
+  (select (j->>'imported')::int = 2 and (j->>'declarations_marked')::int = 2
+     from public.import_payroll_declarations(:'compA'::uuid, $j$[
+       {"year":2026,"month":9,"model":"Normal","submitted_on":"2026-10-01","due_date":"2026-10-20","employees":1,"gross":0,
+        "social":11500,"health":3400,"income_tax":0,"cats_status":"Deklaratat e regjistruara.","issh_status":"E dërguar","issh_sent_on":"2026-10-07"},
+       {"year":2026,"month":8,"model":"Normal","submitted_on":"2026-09-01","due_date":"2026-10-20","employees":1,"gross":0,
+        "social":"11,500","health":"3,400","income_tax":0,"cats_status":"Aprovuar dhe paguar"}
+     ]$j$::jsonb) j));
+select pg_temp.check('deklarimi E-SIG 025 i shtatorit → declared me datën e C@TS',
+  (select d.status = 'declared' and d.declared_at::date = date '2026-10-01' and (d.official->>'social')::numeric = 11500
+     from public.tax_declarations d join public.fiscal_periods fp on fp.id = d.period_id
+    where d.company_id = :'compA'::uuid and d.kind = 'payroll_esig25' and fp.year = 2026 and fp.month = 9));
+select pg_temp.check('detyrimet zyrtare: shoqërore 11.500 + shëndetësore 3.400, afati 20.10',
+  (select count(*) = 2 and sum(o.amount) = 14900 and bool_and(o.confirmed_official) and bool_and(o.due_date = date '2026-10-20')
+     from public.tax_obligations o join public.payroll_declarations p on p.id = o.payroll_declaration_id
+     join public.fiscal_periods fp on fp.id = p.period_id
+    where o.company_id = :'compA'::uuid and fp.year = 2026 and fp.month = 9));
+select pg_temp.check('"Aprovuar dhe paguar" → detyrimet e gushtit të paguara',
+  (select bool_and(o.paid_amount = o.amount) from public.tax_obligations o join public.payroll_declarations p on p.id = o.payroll_declaration_id
+     join public.fiscal_periods fp on fp.id = p.period_id where o.company_id = :'compA'::uuid and fp.year = 2026 and fp.month = 8));
+select pg_temp.check('ri-importi përditëson, pa dublikata (detyrimet rishkruhen)',
+  (select (j->>'updated')::int = 1 from public.import_payroll_declarations(:'compA'::uuid,
+     '[{"year":2026,"month":9,"model":"Normal","submitted_on":"2026-10-01","due_date":"2026-10-20","employees":1,"social":11500,"health":3400,"income_tax":0}]'::jsonb) j));
+select pg_temp.check('pas ri-importit: 1 përmbledhje dhe 2 detyrime për shtatorin',
+  (select count(*) = 1 from public.payroll_declarations p join public.fiscal_periods fp on fp.id = p.period_id
+    where p.company_id = :'compA'::uuid and fp.year = 2026 and fp.month = 9)
+  and (select count(*) = 2 from public.tax_obligations o join public.payroll_declarations p on p.id = o.payroll_declaration_id
+         join public.fiscal_periods fp on fp.id = p.period_id where o.company_id = :'compA'::uuid and fp.year = 2026 and fp.month = 9));
+select pg_temp.check('import_payroll_lines: rreshti i punonjësit me fushat [9]–[29]',
+  (select (j->>'lines')::int = 1 from public.import_payroll_lines(:'compA'::uuid, 2026, 9, $j$[
+     {"nid":"j01020086i","full_name":"Test Tufa","profession":"2411.02, Kontabilist","category":"3/011(8)","days_worked":22,
+      "gross":0,"social_base":50000,"social_employer":11500,"social_employee":0,"social_total":11500,"social_all":11500,
+      "health_base":100000,"health_total":3400,"tax_base":0,"income_tax":0}]$j$::jsonb) j));
+select pg_temp.check('rreshti ruhet me NID me shkronja të mëdha dhe bazën shëndetësore 100.000',
+  (select nid = 'J01020086I' and health_base = 100000 and health_total = 3400 from public.payroll_declaration_lines where company_id = :'compA'::uuid));
 reset role;
 
--- klienti (company_admin i B) ka vetëm payroll.read
 select set_config('request.jwt.claim.sub', :'cli', false);
 set role authenticated;
 do $$ begin
-  perform public.generate_payroll('cccccccc-cccc-4ccc-8ccc-cccccccccccc', 2026, 9);
-  perform pg_temp.check('company_admin NUK gjeneron listëpagesë', false);
-exception when others then perform pg_temp.check('company_admin NUK gjeneron listëpagesë', sqlstate = '42501'); end $$;
-select pg_temp.check('klienti i B nuk sheh punonjësit e A', (select count(*) from public.employees where company_id = :'compA'::uuid) = 0);
+  perform public.import_payroll_declarations('cccccccc-cccc-4ccc-8ccc-cccccccccccc', '[]'::jsonb);
+  perform pg_temp.check('company_admin NUK importon listëpagesa', false);
+exception when others then perform pg_temp.check('company_admin NUK importon listëpagesa', sqlstate = '42501'); end $$;
+select pg_temp.check('klienti i B nuk sheh listëpagesat e A',
+  (select count(*) from public.payroll_declarations where company_id = :'compA'::uuid) = 0
+  and (select count(*) from public.payroll_declaration_lines where company_id = :'compA'::uuid) = 0);
 reset role;
 
 -- =============================================================================

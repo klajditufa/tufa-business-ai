@@ -1,80 +1,90 @@
 import Link from "next/link";
-import { Download, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getPayroll } from "@/server/services/payroll";
-import { Badge, Card, CardTitle, Empty } from "@/components/ui";
-import { MonthPicker, monthLabelSq, parsePeriod } from "@/components/app/month-picker";
+import { listPayrollDeclarations } from "@/server/services/payroll";
+import { Badge, Card, Empty } from "@/components/ui";
+import { monthLabelSq } from "@/components/app/month-picker";
 import { date, money } from "@/lib/format";
-import { PayrollActions, PayrollTable, type Line } from "./payroll-client";
+import { CatsImport } from "./cats-import";
+
+const statusTone = (s: string | null) =>
+  !s ? "neutral" : /refuz|gabime/i.test(s) ? "danger" : /paguar/i.test(s) && !/papaguar/i.test(s) ? "success" : /regjistruar|aprovuar|dërgua pa gabime/i.test(s) ? "info" : "warning";
 
 /**
- * Listëpagesa mujore (E-SIG 025): llogaritja nga rregullat tatimore të konfirmuara,
- * shumat për pagesë dhe afati i deklarimit; finalizimi krijon detyrimet orientuese.
+ * Listëpagesat siç janë deklaruar në C@TS (importi i eksportit Excel të e-Filing).
+ * Nuk ka llogaritje lokale: vlerat janë ato zyrtare.
  */
-export default async function PayrollPage({ params, searchParams }: { params: Promise<{ companyId: string }>; searchParams: Promise<{ period?: string }> }) {
+export default async function PayrollPage({ params }: { params: Promise<{ companyId: string }> }) {
   const { companyId } = await params;
-  const { year, month } = parsePeriod((await searchParams).period);
   const supabase = await createClient();
-  const [{ run, lines }, { data: perms }, { count: employeeCount }, { data: decl }] = await Promise.all([
-    getPayroll(companyId, year, month),
-    supabase.rpc("my_permissions", { p_company_id: companyId }),
-    supabase.from("employees").select("id", { count: "exact", head: true }).eq("company_id", companyId),
-    supabase.from("tax_declarations_view").select("due_date, status, effective_status").eq("company_id", companyId).eq("kind", "payroll_esig25").eq("year", year).eq("month", month).maybeSingle(),
-  ]);
-  const can = (a: string) => (perms ?? []).some((p) => p.module === "payroll" && p.action === a);
-  const t = run?.totals ?? {};
-  const pk = `${year}-${String(month).padStart(2, "0")}`;
-  const rows: Line[] = lines.map((l) => ({
-    id: l.id, days_worked: l.days_worked, gross: Number(l.gross), social_base: Number(l.social_base),
-    social_employee: Number(l.social_employee), social_employer: Number(l.social_employer),
-    health_employee: Number(l.health_employee), health_employer: Number(l.health_employer),
-    income_tax: Number(l.income_tax), net: Number(l.net),
-    name: `${l.employees?.first_name ?? ""} ${l.employees?.last_name ?? ""}`.trim(),
-    personal_no: l.employees?.personal_no ?? null, kind: l.employees?.kind ?? "employee", position: l.employees?.position ?? null,
-  }));
+  const [{ rows, error }, { data: perms }] = await Promise.all([listPayrollDeclarations(companyId), supabase.rpc("my_permissions", { p_company_id: companyId })]);
+  const canWrite = (perms ?? []).some((p) => p.module === "payroll" && p.action === "write");
+  const year = new Date().getFullYear();
+  const ytd = rows.filter((r) => r.year === year);
+  const sum = (k: "social" | "health" | "income_tax") => ytd.reduce((a, r) => a + Number(r[k]), 0);
 
   return (
     <div className="space-y-6 pb-20 lg:pb-0">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-semibold">Listëpagesa · {monthLabelSq(year, month)}</h1>
-          {run && <Badge tone={run.status === "final" ? "success" : "warning"}>{run.status === "final" ? "e finalizuar" : "draft"}</Badge>}
-        </div>
-        <div className="no-print flex items-center gap-2">
-          <MonthPicker year={year} month={month} basePath={`/app/${companyId}/payroll`} />
-          <Link href={`/app/${companyId}/payroll/employees`} className="inline-flex h-8 items-center gap-1 rounded-lg border border-border px-3 text-sm hover:bg-muted"><Users className="h-4 w-4" /> Punonjësit ({employeeCount ?? 0})</Link>
-          {run && <a href={`/app/${companyId}/payroll/export?period=${pk}`} className="inline-flex h-8 items-center gap-1 rounded-lg border border-border px-3 text-sm hover:bg-muted"><Download className="h-4 w-4" /> CSV</a>}
-        </div>
+      <div>
+        <h1 className="text-2xl font-semibold">Listëpagesa (E-SIG 025)</h1>
+        <p className="text-sm text-muted-foreground">Vlerat zyrtare nga C@TS. Importi shënon edhe deklarimin e muajit si “deklaruar” dhe shton detyrimet me afatin nga e-Filing.</p>
       </div>
 
-      <PayrollActions companyId={companyId} year={year} month={month} runId={run?.id ?? null} status={run?.status ?? null} canWrite={can("write")} canApprove={can("approve")} />
+      <CatsImport companyId={companyId} canWrite={canWrite} />
+      {error && <p className="text-sm text-danger">{error.message}</p>}
 
-      {!run ? (
-        <Empty
-          title={employeeCount ? "Listëpagesa e këtij muaji nuk është përgatitur." : "Ende pa punonjës."}
-          hint={employeeCount ? "Kliko “Përgatit listëpagesën”: merren punonjësit aktivë dhe llogariten kontributet dhe TAP." : "Shto punonjësit (dhe pronarin, nëse paguan kontribute si i vetëpunësuar) te “Punonjësit”."}
-        />
+      {rows.length === 0 ? (
+        <Empty title="Ende pa listëpagesa." hint="Ngarko eksportin “Listëpagesa të Dorëzuara” nga e-Filing (zgjidh “Shfaq 1000” para eksportit që të vijnë të gjithë muajt)." />
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Card className="p-3"><div className="text-xs text-muted-foreground">Fondi i pagave (bruto)</div><div className="text-lg font-semibold tabular">{money(t.gross ?? 0, "ALL", 0)}</div><div className="text-xs text-muted-foreground">{t.employees ?? 0} persona</div></Card>
-            <Card className="p-3"><div className="text-xs text-muted-foreground">Kontribute (shoq. + shënd.)</div><div className="text-lg font-semibold tabular">{money((t.social_employee ?? 0) + (t.social_employer ?? 0) + (t.health_employee ?? 0) + (t.health_employer ?? 0), "ALL", 0)}</div></Card>
-            <Card className="p-3"><div className="text-xs text-muted-foreground">TAP</div><div className="text-lg font-semibold tabular">{money(t.income_tax ?? 0, "ALL", 0)}</div></Card>
-            <Card className="p-3">
-              <div className="text-xs text-muted-foreground">Për pagesë në DPT</div>
-              <div className="text-lg font-semibold tabular text-warning">{money(t.to_pay ?? 0, "ALL", 0)}</div>
-              {decl?.due_date && <div className="text-xs text-muted-foreground">afati {date(decl.due_date)}{decl.effective_status === "declared" ? " · deklaruar" : decl.effective_status === "late" ? " · me vonesë" : ""}</div>}
-            </Card>
+            <Card className="p-3"><div className="text-xs text-muted-foreground">Muaj të deklaruar {year}</div><div className="text-lg font-semibold tabular">{ytd.length}</div></Card>
+            <Card className="p-3"><div className="text-xs text-muted-foreground">Sig. shoqërore {year}</div><div className="text-lg font-semibold tabular">{money(sum("social"), "ALL", 0)}</div></Card>
+            <Card className="p-3"><div className="text-xs text-muted-foreground">Sig. shëndetësore {year}</div><div className="text-lg font-semibold tabular">{money(sum("health"), "ALL", 0)}</div></Card>
+            <Card className="p-3"><div className="text-xs text-muted-foreground">TAP {year}</div><div className="text-lg font-semibold tabular">{money(sum("income_tax"), "ALL", 0)}</div></Card>
           </div>
-          <PayrollTable companyId={companyId} lines={rows} editable={can("write") && run.status === "draft"} />
-          <Card>
-            <CardTitle>Si llogaritet</CardTitle>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
-              <li>Sigurimet shoqërore: mbi pagën bruto, jo më pak se paga minimale dhe jo më shumë se paga maksimale e muajit.</li>
-              <li>Sigurimet shëndetësore: mbi pagën bruto (minimumi paga minimale).</li>
-              <li>TAP: sipas shkallëve të tatimit mbi pagën; pronari i vetëpunësuar paguan kontributet si i vetëpunësuar, pa TAP.</li>
-              <li>Të gjitha normat dhe pragjet lexohen nga Rregullat tatimore për muajin e listëpagesës; shumat rrumbullakohen në lekë.</li>
-            </ul>
+
+          <Card className="overflow-x-auto p-0">
+            <table className="w-full text-sm">
+              <thead className="bg-muted text-left text-[11px] uppercase text-muted-foreground">
+                <tr>
+                  <th className="px-3 py-2">Periudha</th>
+                  <th className="px-3 py-2">Dorëzuar</th>
+                  <th className="px-3 py-2">Afati</th>
+                  <th className="px-3 py-2 text-right">Punëm.</th>
+                  <th className="px-3 py-2 text-right">Pagat</th>
+                  <th className="px-3 py-2 text-right">Sig. shoq.</th>
+                  <th className="px-3 py-2 text-right">Sig. shënd.</th>
+                  <th className="px-3 py-2 text-right">TAP</th>
+                  <th className="px-3 py-2 text-right">Për pagesë</th>
+                  <th className="px-3 py-2">Statusi C@TS</th>
+                  <th className="px-3 py-2">ISSH</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => {
+                  const pk = `${r.year}-${String(r.month).padStart(2, "0")}`;
+                  return (
+                    <tr key={r.id} className="border-t border-border">
+                      <td className="whitespace-nowrap px-3 py-2">
+                        <Link href={`/app/${companyId}/payroll/${pk}`} className="font-medium hover:underline">{monthLabelSq(r.year, r.month)}</Link>
+                        {r.model !== "Normal" && <div className="text-[11px] text-warning">{r.model}</div>}
+                        {r.hasLines && <div className="text-[11px] text-muted-foreground">me detaje</div>}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2 tabular">{r.submitted_on ? date(r.submitted_on) : "—"}</td>
+                      <td className="whitespace-nowrap px-3 py-2 tabular">{r.due_date ? date(r.due_date) : "—"}</td>
+                      <td className="px-3 py-2 text-right tabular">{r.employees}</td>
+                      <td className="px-3 py-2 text-right tabular">{money(r.gross, "ALL", 0)}</td>
+                      <td className="px-3 py-2 text-right tabular">{money(r.social, "ALL", 0)}</td>
+                      <td className="px-3 py-2 text-right tabular">{money(r.health, "ALL", 0)}</td>
+                      <td className="px-3 py-2 text-right tabular">{money(r.income_tax, "ALL", 0)}</td>
+                      <td className="px-3 py-2 text-right font-medium tabular">{money(Number(r.social) + Number(r.health) + Number(r.income_tax), "ALL", 0)}</td>
+                      <td className="px-3 py-2"><Badge tone={statusTone(r.cats_status)}>{r.cats_status?.replace(/\.$/, "") ?? "—"}</Badge></td>
+                      <td className="whitespace-nowrap px-3 py-2 text-xs">{r.issh_status ?? "—"}{r.issh_sent_on ? ` · ${date(r.issh_sent_on)}` : ""}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </Card>
         </>
       )}
