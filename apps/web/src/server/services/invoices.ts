@@ -10,7 +10,7 @@ export type InvoiceFilters = {
 };
 
 export const INVOICE_COLUMNS =
-  "id, number, nivf, nslf, eic, issue_date, due_date, counterparty_name, counterparty_nipt, subtotal, vat_amount, total, currency, type, payment_status, payment_method, source, is_einvoice, vat_breakdown, synced_at";
+  "id, number, nivf, nslf, eic, issue_date, due_date, counterparty_name, counterparty_nipt, subtotal, vat_amount, total, currency, type, payment_status, payment_method, source, is_einvoice, vat_breakdown, synced_at, paid_amount, paid_at";
 
 /** Normalizon parametrat e URL-së në filtra; default: muaji i kaluar nuk vendoset — "all" tregon gjithçka. */
 export function parseInvoiceFilters(sp: Record<string, string | undefined>): InvoiceFilters {

@@ -420,6 +420,57 @@ select pg_temp.check('accountant: vat_position e B → zero (RLS)',
 reset role;
 
 -- =============================================================================
+-- 12. Palët automatike + pagesat (0019)
+-- =============================================================================
+select set_config('request.jwt.claim.sub', :'cli', false);
+set role authenticated;
+select pg_temp.check('fatura CIS lidhet me klientin sipas NIPT-it',
+  (select c.nipt = 'L82224013T' from public.invoices i join public.customers c on c.id = i.customer_id
+    where i.nivf = 'f17b7558-c28e-42af-a1c3-bac9147b4de4'));
+select pg_temp.check('blerja CIS lidhet me furnitorin sipas NIPT-it',
+  (select s.nipt = 'L52101183A' from public.invoices i join public.suppliers s on s.id = i.supplier_id
+    where i.nivf = '11111111-2222-3333-4444-555555555555'));
+select pg_temp.check('ri-importi nuk dublikon klientin',
+  (select count(*) from public.customers where company_id = :'compB'::uuid and nipt = 'L82224013T') = 1);
+select pg_temp.check('set_invoices_payment → paid kthen ok',
+  (select bool_and(ok) from public.set_invoices_payment(
+     array[(select id from public.invoices where nivf = 'f17b7558-c28e-42af-a1c3-bac9147b4de4')], 'paid', date '2026-09-25', 'bank')));
+select pg_temp.check('fatura e paguar: paid_amount = total, data e pagesës',
+  (select paid_amount = 64512 and paid_at = date '2026-09-25' and payment_status = 'paid'
+     from public.invoices where nivf = 'f17b7558-c28e-42af-a1c3-bac9147b4de4'));
+select pg_temp.check('top_debtors nuk e përfshin më faturën e paguar',
+  not exists (select 1 from public.top_debtors(:'compB'::uuid, 50) where customer_name in ('XM', 'XM SHPK')));
+select pg_temp.check('set_invoices_payment → unpaid kthen ok',
+  (select bool_and(ok) from public.set_invoices_payment(
+     array[(select id from public.invoices where nivf = 'f17b7558-c28e-42af-a1c3-bac9147b4de4')], 'unpaid')));
+select pg_temp.check('fatura e papaguar: paid_amount 0, pa datë',
+  (select paid_amount = 0 and paid_at is null from public.invoices where nivf = 'f17b7558-c28e-42af-a1c3-bac9147b4de4'));
+reset role;
+select set_config('request.jwt.claim.sub', :'acc', false);
+set role authenticated;
+select pg_temp.check('accountant i A NUK shënon pagesë për faturë të B',
+  (select not ok from public.set_invoices_payment(array['00000000-0000-4000-8000-000000000000'::uuid], 'paid')));
+reset role;
+select set_config('request.jwt.claim.sub', :'acc', false);
+set role authenticated;
+-- accountant-i i A nuk e sheh faturën e B (RLS), por funksioni është SECURITY DEFINER → duhet të refuzojë vetë
+do $$
+declare v_ok boolean; v_err text;
+begin
+  select ok, error into v_ok, v_err from public.set_invoices_payment(
+    array[(select id from public.invoices where company_id = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc' and nivf is not null limit 1)], 'paid');
+  perform pg_temp.check('accountant i A: fatura e B → ok=false', v_ok = false, coalesce(v_err, 'null'));
+end $$;
+reset role;
+-- me id-në reale (e marrë si superuser) — kontrolli i të drejtës brenda funksionit
+select set_config('t.b_inv', (select id::text from public.invoices where nivf = 'f17b7558-c28e-42af-a1c3-bac9147b4de4'), false);
+select set_config('request.jwt.claim.sub', :'acc', false);
+set role authenticated;
+select pg_temp.check('accountant i A: id reale e B → "Pa të drejtë"',
+  (select not ok and error = 'Pa të drejtë' from public.set_invoices_payment(array[current_setting('t.b_inv')::uuid], 'paid')));
+reset role;
+
+-- =============================================================================
 -- Përmbledhje
 -- =============================================================================
 select name, ok, detail from t_results where not ok;

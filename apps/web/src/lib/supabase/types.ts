@@ -916,9 +916,6 @@ isOneToOne: false
 "create_organization_with_company":
 { Args: { "p_company": Json,"p_org_name": string,"p_org_type": Database["public"]['Enums']["organization_type"] }; Returns: string
                            },
-"dearmor":
-{ Args: { "": string }; Returns: string
-                           },
 "effective_tax_rule":
 { Args: { "p_code"?: string,"p_company_id"?: string,"p_date": string,"p_kind": Database["public"]['Enums']["tax_rule_kind"] }; Returns: Json
                            },
@@ -946,12 +943,6 @@ isOneToOne: false
         isOneToOne: false
         isSetofReturn: true
       } },
-"gen_random_uuid":
-{ Args: Record<PropertyKey, never>; Returns: string
-                           },
-"gen_salt":
-{ Args: { "": string }; Returns: string
-                           },
 "import_cis_invoices":
 { Args: { "p_company_id": string,"p_direction": Database["public"]['Enums']["invoice_direction"],"p_invoices": Json,"p_label"?: string }; Returns: Json
                            },
@@ -983,9 +974,6 @@ isOneToOne: false
 { Args: { "p_company_id": string }; Returns: {
               "amount_due": number,"confirmed_official": boolean,"items": number,"kind": Database["public"]['Enums']["obligation_kind"],"next_due_date": string
             }[]
-                           },
-"pgp_armor_headers":
-{ Args: { "": string }; Returns: Record<string, unknown>[]
                            },
 "reopen_period":
 { Args: { "p_period_id": string,"p_reason": string }; Returns: undefined
@@ -1022,6 +1010,11 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"set_invoices_payment":
+{ Args: { "p_ids": (string)[],"p_method"?: Database["public"]['Enums']["payment_method"],"p_paid_at"?: string,"p_status": Database["public"]['Enums']["payment_status"] }; Returns: {
+              "error": string,"id": string,"ok": boolean
+            }[]
+                           },
 "set_vat_official":
 { Args: { "p_company_id": string,"p_month": number,"p_values": Json,"p_year": number }; Returns: {
               "assigned_to": string | null,
