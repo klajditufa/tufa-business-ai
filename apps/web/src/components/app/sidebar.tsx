@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, FileInput, FileOutput, Percent, Landmark, FolderArchive, BarChart3, Settings, LifeBuoy, Building2, Users, Scale,
+  LayoutDashboard, FileInput, FileOutput, Percent, Landmark, FolderArchive, BarChart3, Settings, LifeBuoy, Building2, Users, Scale, Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
@@ -18,6 +18,7 @@ export function Sidebar({ companyId, role, isSuperAdmin = false }: { companyId: 
     { href: `${base}/invoices?direction=purchase`, label: d.nav.purchases, icon: FileInput, match: "__never" },
     { href: `${base}/parties`, label: d.nav.parties, icon: Users, mobile: false },
     { href: `${base}/vat`, label: d.nav.vat, icon: Percent },
+    { href: `${base}/payroll`, label: d.nav.payroll, icon: Wallet, mobile: false },
     { href: `${base}/declarations`, label: d.nav.declarations, icon: Landmark },
     { href: `${base}/documents`, label: d.nav.documents, icon: FolderArchive },
     { href: `${base}/reports`, label: d.nav.reports, icon: BarChart3 },

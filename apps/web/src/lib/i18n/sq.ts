@@ -11,6 +11,7 @@ export const sq = {
     purchases: "Shpenzimet (Blerjet)",
     parties: "Klientët & Furnitorët",
     vat: "TVSH",
+    payroll: "Listëpagesa",
     declarations: "Deklarimet Tatimore",
     documents: "Dokumentet (Arkiva)",
     reports: "Raportet",

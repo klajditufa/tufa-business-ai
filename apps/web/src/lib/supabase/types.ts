@@ -227,6 +227,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"employees": {
+                  Row: {
+                    "company_id": string,"created_at": string,"end_date": string | null,"first_name": string,"gross_salary": number,"id": string,"kind": Database["public"]['Enums']["employee_kind"],"last_name": string,"notes": string | null,"personal_no": string | null,"position": string | null,"start_date": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "company_id": string,"created_at"?: string,"end_date"?: string | null,"first_name": string,"gross_salary"?: number,"id"?: string,"kind"?: Database["public"]['Enums']["employee_kind"],"last_name": string,"notes"?: string | null,"personal_no"?: string | null,"position"?: string | null,"start_date": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "company_id"?: string,"created_at"?: string,"end_date"?: string | null,"first_name"?: string,"gross_salary"?: number,"id"?: string,"kind"?: Database["public"]['Enums']["employee_kind"],"last_name"?: string,"notes"?: string | null,"personal_no"?: string | null,"position"?: string | null,"start_date"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "employees_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"fiscal_periods": {
                   Row: {
                     "closed_at": string | null,"closed_by": string | null,"company_id": string,"created_at": string,"id": string,"month": number,"reopen_reason": string | null,"reopened_at": string | null,"reopened_by": string | null,"status": Database["public"]['Enums']["period_status"],"updated_at": string,"year": number
@@ -555,6 +575,70 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"payroll_lines": {
+                  Row: {
+                    "company_id": string,"days_worked": number,"employee_id": string,"gross": number,"health_base": number,"health_employee": number,"health_employer": number,"id": string,"income_tax": number,"net": number,"rules": NonNullable<Json>,"run_id": string,"social_base": number,"social_employee": number,"social_employer": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "company_id": string,"days_worked"?: number,"employee_id": string,"gross": number,"health_base"?: number,"health_employee"?: number,"health_employer"?: number,"id"?: string,"income_tax"?: number,"net"?: number,"rules"?: NonNullable<Json>,"run_id": string,"social_base"?: number,"social_employee"?: number,"social_employer"?: number
+                  }
+                  Update: {
+                    "company_id"?: string,"days_worked"?: number,"employee_id"?: string,"gross"?: number,"health_base"?: number,"health_employee"?: number,"health_employer"?: number,"id"?: string,"income_tax"?: number,"net"?: number,"rules"?: NonNullable<Json>,"run_id"?: string,"social_base"?: number,"social_employee"?: number,"social_employer"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payroll_lines_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "payroll_lines_employee_id_fkey"
+      columns: ["employee_id"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "payroll_lines_run_id_fkey"
+      columns: ["run_id"]
+isOneToOne: false
+      referencedRelation: "payroll_runs"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"payroll_runs": {
+                  Row: {
+                    "company_id": string,"created_at": string,"finalized_at": string | null,"finalized_by": string | null,"id": string,"period_id": string,"status": Database["public"]['Enums']["payroll_status"],"totals": NonNullable<Json>,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "company_id": string,"created_at"?: string,"finalized_at"?: string | null,"finalized_by"?: string | null,"id"?: string,"period_id": string,"status"?: Database["public"]['Enums']["payroll_status"],"totals"?: NonNullable<Json>,"updated_at"?: string
+                  }
+                  Update: {
+                    "company_id"?: string,"created_at"?: string,"finalized_at"?: string | null,"finalized_by"?: string | null,"id"?: string,"period_id"?: string,"status"?: Database["public"]['Enums']["payroll_status"],"totals"?: NonNullable<Json>,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payroll_runs_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "payroll_runs_finalized_by_fkey"
+      columns: ["finalized_by"]
+isOneToOne: false
+      referencedRelation: "users"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "payroll_runs_period_id_fkey"
+      columns: ["period_id"]
+isOneToOne: false
+      referencedRelation: "fiscal_periods"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"permissions": {
                   Row: {
                     "action": string,"allowed": boolean,"module": string,"role": string
@@ -777,14 +861,14 @@ isOneToOne: false
                   ]
                 },"tax_obligations": {
                   Row: {
-                    "amount": number,"company_id": string,"confirmed_official": boolean,"created_at": string,"currency": string,"declaration_id": string | null,"description": string | null,"due_date": string,"id": string,"kind": Database["public"]['Enums']["obligation_kind"],"paid_amount": number,"paid_at": string | null,"payment_order_document_id": string | null,"updated_at": string
+                    "amount": number,"company_id": string,"confirmed_official": boolean,"created_at": string,"currency": string,"declaration_id": string | null,"description": string | null,"due_date": string,"id": string,"kind": Database["public"]['Enums']["obligation_kind"],"paid_amount": number,"paid_at": string | null,"payment_order_document_id": string | null,"payroll_run_id": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "amount": number,"company_id": string,"confirmed_official"?: boolean,"created_at"?: string,"currency"?: string,"declaration_id"?: string | null,"description"?: string | null,"due_date": string,"id"?: string,"kind": Database["public"]['Enums']["obligation_kind"],"paid_amount"?: number,"paid_at"?: string | null,"payment_order_document_id"?: string | null,"updated_at"?: string
+                    "amount": number,"company_id": string,"confirmed_official"?: boolean,"created_at"?: string,"currency"?: string,"declaration_id"?: string | null,"description"?: string | null,"due_date": string,"id"?: string,"kind": Database["public"]['Enums']["obligation_kind"],"paid_amount"?: number,"paid_at"?: string | null,"payment_order_document_id"?: string | null,"payroll_run_id"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "amount"?: number,"company_id"?: string,"confirmed_official"?: boolean,"created_at"?: string,"currency"?: string,"declaration_id"?: string | null,"description"?: string | null,"due_date"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["obligation_kind"],"paid_amount"?: number,"paid_at"?: string | null,"payment_order_document_id"?: string | null,"updated_at"?: string
+                    "amount"?: number,"company_id"?: string,"confirmed_official"?: boolean,"created_at"?: string,"currency"?: string,"declaration_id"?: string | null,"description"?: string | null,"due_date"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["obligation_kind"],"paid_amount"?: number,"paid_at"?: string | null,"payment_order_document_id"?: string | null,"payroll_run_id"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -810,6 +894,12 @@ isOneToOne: false
       columns: ["declaration_id"]
 isOneToOne: false
       referencedRelation: "tax_declarations_view"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tax_obligations_payroll_run_id_fkey"
+      columns: ["payroll_run_id"]
+isOneToOne: false
+      referencedRelation: "payroll_runs"
       referencedColumns: ["id"]
     }
                   ]
@@ -998,6 +1088,42 @@ isOneToOne: false
         isOneToOne: false
         isSetofReturn: true
       } },
+"finalize_payroll":
+{ Args: { "p_run_id": string }; Returns: {
+              "company_id": string,
+"created_at": string,
+"finalized_at": string | null,
+"finalized_by": string | null,
+"id": string,
+"period_id": string,
+"status": Database["public"]['Enums']["payroll_status"],
+"totals": NonNullable<Json>,
+"updated_at": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "payroll_runs"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"generate_payroll":
+{ Args: { "p_company_id": string,"p_month": number,"p_year": number }; Returns: {
+              "company_id": string,
+"created_at": string,
+"finalized_at": string | null,
+"finalized_by": string | null,
+"id": string,
+"period_id": string,
+"status": Database["public"]['Enums']["payroll_status"],
+"totals": NonNullable<Json>,
+"updated_at": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "payroll_runs"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "import_cis_invoices":
 { Args: { "p_company_id": string,"p_direction": Database["public"]['Enums']["invoice_direction"],"p_invoices": Json,"p_label"?: string }; Returns: Json
                            },
@@ -1035,6 +1161,27 @@ isOneToOne: false
               "days_overdue": number,"invoiced": number,"invoices": number,"last_invoice": string,"name": string,"nipt": string,"oldest_unpaid": string,"outstanding": number,"paid": number,"party_id": string
             }[]
                            },
+"remove_payroll_line":
+{ Args: { "p_line_id": string }; Returns: undefined
+                           },
+"reopen_payroll":
+{ Args: { "p_run_id": string }; Returns: {
+              "company_id": string,
+"created_at": string,
+"finalized_at": string | null,
+"finalized_by": string | null,
+"id": string,
+"period_id": string,
+"status": Database["public"]['Enums']["payroll_status"],
+"totals": NonNullable<Json>,
+"updated_at": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "payroll_runs"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "reopen_period":
 { Args: { "p_period_id": string,"p_reason": string }; Returns: undefined
                            },
@@ -1155,6 +1302,30 @@ isOneToOne: false
               "days_left": number,"due_date": string,"kind": Database["public"]['Enums']["declaration_kind"],"source": string,"status": string,"title": string
             }[]
                            },
+"update_payroll_line":
+{ Args: { "p_days"?: number,"p_gross": number,"p_line_id": string }; Returns: {
+              "company_id": string,
+"days_worked": number,
+"employee_id": string,
+"gross": number,
+"health_base": number,
+"health_employee": number,
+"health_employer": number,
+"id": string,
+"income_tax": number,
+"net": number,
+"rules": NonNullable<Json>,
+"run_id": string,
+"social_base": number,
+"social_employee": number,
+"social_employer": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "payroll_lines"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "vat_position":
 { Args: { "p_company_id": string,"p_month": number,"p_year": number }; Returns: Json
                            },
@@ -1170,7 +1341,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "company_role": "accountant"|"company_admin"|"finance_manager"|"operator"|"viewer","declaration_kind": "vat"|"payroll_esig25"|"withholding"|"profit_tax"|"simplified"|"annual_financial"|"other","declaration_status": "pending"|"in_process"|"for_review"|"suspended"|"declared"|"late","document_category": "invoice"|"contract"|"bank"|"declaration"|"customs"|"employee"|"business"|"report"|"other","import_format": "xlsx"|"csv"|"xml"|"pdf"|"json","import_row_status": "new"|"duplicate"|"error"|"imported"|"skipped","import_status": "queued"|"parsing"|"preview"|"importing"|"done"|"failed"|"reverted","integration_provider": "manual_import"|"selfcare"|"cats"|"bank","integration_status": "functional"|"demo"|"pending_integration"|"unavailable","invoice_direction": "sale"|"purchase","invoice_source": "manual"|"import"|"connector","invoice_type": "normal"|"corrective"|"cancelled"|"summary","job_status": "queued"|"running"|"done"|"failed","legal_form": "pf"|"shpk"|"sha"|"ojf"|"tjeter","obligation_kind": "vat"|"profit_tax"|"simplified_tax"|"withholding"|"social"|"health"|"income_tax"|"local_tax"|"penalty"|"other","ocr_status": "none"|"queued"|"done"|"failed","org_role": "org_owner"|"accountant","organization_type": "studio"|"single"|"demo","payment_method": "cash"|"bank"|"card"|"compensation"|"other"|"unknown","payment_status": "unpaid"|"partial"|"paid"|"void","period_status": "open"|"closing"|"closed","subscription_status": "trialing"|"active"|"past_due"|"cancelled"|"unpaid","task_status": "open"|"in_progress"|"blocked"|"done"|"cancelled","tax_regime": "standard"|"simplified"|"exempt","tax_rule_kind": "vat_rate"|"vat_exempt"|"profit_tax"|"simplified_tax"|"withholding"|"social_contrib"|"health_contrib"|"min_wage"|"max_wage"|"payroll_tax_bracket"|"dividend_tax"
+            "company_role": "accountant"|"company_admin"|"finance_manager"|"operator"|"viewer","declaration_kind": "vat"|"payroll_esig25"|"withholding"|"profit_tax"|"simplified"|"annual_financial"|"other","declaration_status": "pending"|"in_process"|"for_review"|"suspended"|"declared"|"late","document_category": "invoice"|"contract"|"bank"|"declaration"|"customs"|"employee"|"business"|"report"|"other","employee_kind": "employee"|"owner","import_format": "xlsx"|"csv"|"xml"|"pdf"|"json","import_row_status": "new"|"duplicate"|"error"|"imported"|"skipped","import_status": "queued"|"parsing"|"preview"|"importing"|"done"|"failed"|"reverted","integration_provider": "manual_import"|"selfcare"|"cats"|"bank","integration_status": "functional"|"demo"|"pending_integration"|"unavailable","invoice_direction": "sale"|"purchase","invoice_source": "manual"|"import"|"connector","invoice_type": "normal"|"corrective"|"cancelled"|"summary","job_status": "queued"|"running"|"done"|"failed","legal_form": "pf"|"shpk"|"sha"|"ojf"|"tjeter","obligation_kind": "vat"|"profit_tax"|"simplified_tax"|"withholding"|"social"|"health"|"income_tax"|"local_tax"|"penalty"|"other","ocr_status": "none"|"queued"|"done"|"failed","org_role": "org_owner"|"accountant","organization_type": "studio"|"single"|"demo","payment_method": "cash"|"bank"|"card"|"compensation"|"other"|"unknown","payment_status": "unpaid"|"partial"|"paid"|"void","payroll_status": "draft"|"final","period_status": "open"|"closing"|"closed","subscription_status": "trialing"|"active"|"past_due"|"cancelled"|"unpaid","task_status": "open"|"in_progress"|"blocked"|"done"|"cancelled","tax_regime": "standard"|"simplified"|"exempt","tax_rule_kind": "vat_rate"|"vat_exempt"|"profit_tax"|"simplified_tax"|"withholding"|"social_contrib"|"health_contrib"|"min_wage"|"max_wage"|"payroll_tax_bracket"|"dividend_tax"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1286,7 +1457,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "company_role": ["accountant", "company_admin", "finance_manager", "operator", "viewer"],"declaration_kind": ["vat", "payroll_esig25", "withholding", "profit_tax", "simplified", "annual_financial", "other"],"declaration_status": ["pending", "in_process", "for_review", "suspended", "declared", "late"],"document_category": ["invoice", "contract", "bank", "declaration", "customs", "employee", "business", "report", "other"],"import_format": ["xlsx", "csv", "xml", "pdf", "json"],"import_row_status": ["new", "duplicate", "error", "imported", "skipped"],"import_status": ["queued", "parsing", "preview", "importing", "done", "failed", "reverted"],"integration_provider": ["manual_import", "selfcare", "cats", "bank"],"integration_status": ["functional", "demo", "pending_integration", "unavailable"],"invoice_direction": ["sale", "purchase"],"invoice_source": ["manual", "import", "connector"],"invoice_type": ["normal", "corrective", "cancelled", "summary"],"job_status": ["queued", "running", "done", "failed"],"legal_form": ["pf", "shpk", "sha", "ojf", "tjeter"],"obligation_kind": ["vat", "profit_tax", "simplified_tax", "withholding", "social", "health", "income_tax", "local_tax", "penalty", "other"],"ocr_status": ["none", "queued", "done", "failed"],"org_role": ["org_owner", "accountant"],"organization_type": ["studio", "single", "demo"],"payment_method": ["cash", "bank", "card", "compensation", "other", "unknown"],"payment_status": ["unpaid", "partial", "paid", "void"],"period_status": ["open", "closing", "closed"],"subscription_status": ["trialing", "active", "past_due", "cancelled", "unpaid"],"task_status": ["open", "in_progress", "blocked", "done", "cancelled"],"tax_regime": ["standard", "simplified", "exempt"],"tax_rule_kind": ["vat_rate", "vat_exempt", "profit_tax", "simplified_tax", "withholding", "social_contrib", "health_contrib", "min_wage", "max_wage", "payroll_tax_bracket", "dividend_tax"]
+            "company_role": ["accountant", "company_admin", "finance_manager", "operator", "viewer"],"declaration_kind": ["vat", "payroll_esig25", "withholding", "profit_tax", "simplified", "annual_financial", "other"],"declaration_status": ["pending", "in_process", "for_review", "suspended", "declared", "late"],"document_category": ["invoice", "contract", "bank", "declaration", "customs", "employee", "business", "report", "other"],"employee_kind": ["employee", "owner"],"import_format": ["xlsx", "csv", "xml", "pdf", "json"],"import_row_status": ["new", "duplicate", "error", "imported", "skipped"],"import_status": ["queued", "parsing", "preview", "importing", "done", "failed", "reverted"],"integration_provider": ["manual_import", "selfcare", "cats", "bank"],"integration_status": ["functional", "demo", "pending_integration", "unavailable"],"invoice_direction": ["sale", "purchase"],"invoice_source": ["manual", "import", "connector"],"invoice_type": ["normal", "corrective", "cancelled", "summary"],"job_status": ["queued", "running", "done", "failed"],"legal_form": ["pf", "shpk", "sha", "ojf", "tjeter"],"obligation_kind": ["vat", "profit_tax", "simplified_tax", "withholding", "social", "health", "income_tax", "local_tax", "penalty", "other"],"ocr_status": ["none", "queued", "done", "failed"],"org_role": ["org_owner", "accountant"],"organization_type": ["studio", "single", "demo"],"payment_method": ["cash", "bank", "card", "compensation", "other", "unknown"],"payment_status": ["unpaid", "partial", "paid", "void"],"payroll_status": ["draft", "final"],"period_status": ["open", "closing", "closed"],"subscription_status": ["trialing", "active", "past_due", "cancelled", "unpaid"],"task_status": ["open", "in_progress", "blocked", "done", "cancelled"],"tax_regime": ["standard", "simplified", "exempt"],"tax_rule_kind": ["vat_rate", "vat_exempt", "profit_tax", "simplified_tax", "withholding", "social_contrib", "health_contrib", "min_wage", "max_wage", "payroll_tax_bracket", "dividend_tax"]
           }
         }
 } as const
