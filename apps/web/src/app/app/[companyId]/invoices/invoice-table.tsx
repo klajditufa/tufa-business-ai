@@ -25,6 +25,8 @@ export type InvoiceRow = {
   payment_status: string;
   source: string;
   is_einvoice: boolean | null;
+  original_currency: string | null;
+  original_exchange_rate: number | null;
 };
 
 const sourceLabel: Record<string, string> = { connector: "CIS", import: "Import", manual: "Manuale" };
@@ -168,7 +170,14 @@ export function InvoiceTable({
                   </td>
                   <td className="px-4 py-2 text-right tabular">{money(r.subtotal, cur)}</td>
                   <td className="px-4 py-2 text-right tabular">{money(r.vat_amount, cur)}</td>
-                  <td className="px-4 py-2 text-right font-medium tabular">{money(r.total, cur)}</td>
+                  <td className="px-4 py-2 text-right font-medium tabular">
+                    {money(r.total, cur)}
+                    {r.original_currency && r.original_exchange_rate ? (
+                      <div className="text-[11px] font-normal text-muted-foreground" title={`Kursi ${r.original_exchange_rate}`}>
+                        {money(Number(r.total) / Number(r.original_exchange_rate), r.original_currency.trim())}
+                      </div>
+                    ) : null}
+                  </td>
                   <td className="px-4 py-2">
                     <Badge tone={r.payment_status === "paid" ? "success" : r.payment_status === "partial" ? "warning" : "danger"}>
                       {r.payment_status === "paid" ? "E paguar" : r.payment_status === "partial" ? "Pjesërisht" : "E papaguar"}

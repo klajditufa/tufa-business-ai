@@ -493,6 +493,22 @@ select pg_temp.check('accountant i A: party_balances e B → bosh (RLS)',
 reset role;
 
 -- =============================================================================
+-- 14. Fatura CIS në valutë (0021): shumat mbeten në lekë
+-- =============================================================================
+set role service_role;
+select pg_temp.check('import EUR: 1 e re',
+  (public.import_cis_invoices(:'compB'::uuid, 'sale', $j$[
+    {"TypeOfInv":"NONCASH","IssueDateTime":"2026-07-20T10:00:00+02:00","InvOrdNum":"250","TotPrice":"374120.00","TotVATAmt":"0.00",
+     "FIC":"eeeeeeee-0000-4000-8000-000000000250","IIC":"EUR250","Currency":{"Code":"EUR","ExRate":"93.53"},
+     "Buyer":{"IDType":"VAT","IDNum":"BE0788949696","Name":"ILIAD bv"}}]$j$::jsonb) ->> 'imported')::int = 1);
+reset role;
+select pg_temp.check('valuta: currency=ALL, kurs 1, origjinali EUR 93.53',
+  (select currency = 'ALL' and exchange_rate = 1 and original_currency = 'EUR' and original_exchange_rate = 93.53 and total = 374120
+     from public.invoices where nivf = 'eeeeeeee-0000-4000-8000-000000000250'));
+select pg_temp.check('monthly_series nuk e fryn faturën në valutë',
+  (select sum(sales_net) from public.monthly_series(:'compB'::uuid, 120) where month = date '2026-07-01') < 1000000);
+
+-- =============================================================================
 -- Përmbledhje
 -- =============================================================================
 select name, ok, detail from t_results where not ok;

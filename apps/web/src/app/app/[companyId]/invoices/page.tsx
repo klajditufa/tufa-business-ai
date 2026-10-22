@@ -73,7 +73,7 @@ export default async function InvoicesPage({
 
           <InvoiceTable
             companyId={companyId}
-            rows={list.map((r) => ({ ...r, subtotal: Number(r.subtotal), vat_amount: Number(r.vat_amount), total: Number(r.total), paid_amount: Number(r.paid_amount) }))}
+            rows={list.map((r) => ({ ...r, subtotal: Number(r.subtotal), vat_amount: Number(r.vat_amount), total: Number(r.total), paid_amount: Number(r.paid_amount), original_exchange_rate: r.original_exchange_rate == null ? null : Number(r.original_exchange_rate) }))}
             direction={f.direction}
             currency={currency}
             canWrite={canWrite}
