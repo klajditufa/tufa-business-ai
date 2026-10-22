@@ -31,7 +31,7 @@ export default async function CompanyLayout({
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar companyId={companyId} role={role} />
+      <Sidebar companyId={companyId} role={role} isSuperAdmin={!!(profile && "is_super_admin" in profile && profile.is_super_admin)} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Header company={company} companies={companies} userName={profile?.full_name || profile?.email || ""} role={role} />
         <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>

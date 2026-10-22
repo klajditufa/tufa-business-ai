@@ -534,6 +534,44 @@ select pg_temp.check('accountant i A: raporti i B pa shifra (RLS)',
 reset role;
 
 -- =============================================================================
+-- 16. Rregullat tatimore globale (0023): vetëm super admin
+-- =============================================================================
+select set_config('t.rule_vat', (select id::text from public.tax_rules where kind = 'vat_exempt' and code = 'threshold' and company_id is null order by valid_from desc limit 1), false);
+select set_config('request.jwt.claim.sub', :'acc', false);
+set role authenticated;
+do $$ begin
+  perform public.confirm_tax_rule(current_setting('t.rule_vat')::uuid);
+  perform pg_temp.check('jo-admin NUK konfirmon rregull global', false);
+exception when others then perform pg_temp.check('jo-admin NUK konfirmon rregull global', sqlstate = '42501'); end $$;
+do $$ begin
+  perform public.supersede_tax_rule(current_setting('t.rule_vat')::uuid, '{"annual_turnover":1}', date '2027-01-01', 'x');
+  perform pg_temp.check('jo-admin NUK ndryshon pragun', false);
+exception when others then perform pg_temp.check('jo-admin NUK ndryshon pragun', sqlstate = '42501'); end $$;
+reset role;
+
+update public.users set is_super_admin = true where id = :'owner'::uuid;
+select set_config('request.jwt.claim.sub', :'owner', false);
+set role authenticated;
+select pg_temp.check('super admin konfirmon rregullin',
+  (select confirmed and confirmed_by = :'owner'::uuid from public.confirm_tax_rule(current_setting('t.rule_vat')::uuid)));
+select pg_temp.check('supersede: rregull i ri nga 2027-01-01',
+  (select valid_from = date '2027-01-01' and confirmed and (params ->> 'annual_turnover')::numeric = 12000000
+     from public.supersede_tax_rule(current_setting('t.rule_vat')::uuid, '{"annual_turnover":12000000,"currency":"ALL","label":"Pragu TVSH (test)"}', date '2027-01-01', 'VKM test')));
+select pg_temp.check('supersede: i vjetri mbyllet më 2026-12-31',
+  (select valid_to = date '2026-12-31' from public.tax_rules where id = current_setting('t.rule_vat')::uuid));
+select pg_temp.check('2026 përdor pragun e vjetër, 2027 të riun',
+  (public.effective_tax_rule('vat_exempt', date '2026-06-30', 'threshold') ->> 'annual_turnover')::numeric = 10000000
+  and (public.effective_tax_rule('vat_exempt', date '2027-06-30', 'threshold') ->> 'annual_turnover')::numeric = 12000000);
+do $$ begin
+  perform public.supersede_tax_rule(current_setting('t.rule_vat')::uuid, '{"annual_turnover":1}', date '2020-01-01', 'x');
+  perform pg_temp.check('supersede me datë të hershme refuzohet', false);
+exception when others then perform pg_temp.check('supersede me datë të hershme refuzohet', sqlstate = '22023'); end $$;
+select pg_temp.check('ndryshimi i rregullit regjistrohet në audit',
+  exists (select 1 from public.audit_logs where table_name = 'tax_rules' and row_id = current_setting('t.rule_vat')));
+reset role;
+update public.users set is_super_admin = false where id = :'owner'::uuid;
+
+-- =============================================================================
 -- Përmbledhje
 -- =============================================================================
 select name, ok, detail from t_results where not ok;

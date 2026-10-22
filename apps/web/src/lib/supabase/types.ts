@@ -815,14 +815,14 @@ isOneToOne: false
                   ]
                 },"tax_rules": {
                   Row: {
-                    "code": string,"company_id": string | null,"confirmed": boolean,"created_at": string,"created_by": string | null,"id": string,"kind": Database["public"]['Enums']["tax_rule_kind"],"params": NonNullable<Json>,"scope": string,"source": string | null,"valid_from": string,"valid_to": string | null
+                    "code": string,"company_id": string | null,"confirmed": boolean,"confirmed_at": string | null,"confirmed_by": string | null,"created_at": string,"created_by": string | null,"id": string,"kind": Database["public"]['Enums']["tax_rule_kind"],"params": NonNullable<Json>,"scope": string,"source": string | null,"valid_from": string,"valid_to": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "code"?: string,"company_id"?: string | null,"confirmed"?: boolean,"created_at"?: string,"created_by"?: string | null,"id"?: string,"kind": Database["public"]['Enums']["tax_rule_kind"],"params": NonNullable<Json>,"scope"?: string,"source"?: string | null,"valid_from": string,"valid_to"?: string | null
+                    "code"?: string,"company_id"?: string | null,"confirmed"?: boolean,"confirmed_at"?: string | null,"confirmed_by"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: string,"kind": Database["public"]['Enums']["tax_rule_kind"],"params": NonNullable<Json>,"scope"?: string,"source"?: string | null,"valid_from": string,"valid_to"?: string | null
                   }
                   Update: {
-                    "code"?: string,"company_id"?: string | null,"confirmed"?: boolean,"created_at"?: string,"created_by"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["tax_rule_kind"],"params"?: NonNullable<Json>,"scope"?: string,"source"?: string | null,"valid_from"?: string,"valid_to"?: string | null
+                    "code"?: string,"company_id"?: string | null,"confirmed"?: boolean,"confirmed_at"?: string | null,"confirmed_by"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["tax_rule_kind"],"params"?: NonNullable<Json>,"scope"?: string,"source"?: string | null,"valid_from"?: string,"valid_to"?: string | null
                   }
                   Relationships: [
                     {
@@ -830,6 +830,12 @@ isOneToOne: false
       columns: ["company_id"]
 isOneToOne: false
       referencedRelation: "companies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tax_rules_confirmed_by_fkey"
+      columns: ["confirmed_by"]
+isOneToOne: false
+      referencedRelation: "users"
       referencedColumns: ["id"]
     }
                   ]
@@ -911,6 +917,52 @@ isOneToOne: false
               "gross_margin": number,"period_from": string,"period_to": string,"purchases_count": number,"purchases_net": number,"purchases_total": number,"purchases_vat": number,"sales_count": number,"sales_net": number,"sales_total": number,"sales_vat": number,"source": string,"vat_balance": number
             }[]
                            },
+"confirm_tax_rule":
+{ Args: { "p_id": string }; Returns: {
+              "code": string,
+"company_id": string | null,
+"confirmed": boolean,
+"confirmed_at": string | null,
+"confirmed_by": string | null,
+"created_at": string,
+"created_by": string | null,
+"id": string,
+"kind": Database["public"]['Enums']["tax_rule_kind"],
+"params": NonNullable<Json>,
+"scope": string,
+"source": string | null,
+"valid_from": string,
+"valid_to": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "tax_rules"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"correct_tax_rule":
+{ Args: { "p_id": string,"p_params": Json,"p_source"?: string }; Returns: {
+              "code": string,
+"company_id": string | null,
+"confirmed": boolean,
+"confirmed_at": string | null,
+"confirmed_by": string | null,
+"created_at": string,
+"created_by": string | null,
+"id": string,
+"kind": Database["public"]['Enums']["tax_rule_kind"],
+"params": NonNullable<Json>,
+"scope": string,
+"source": string | null,
+"valid_from": string,
+"valid_to": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "tax_rules"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "create_api_key":
 { Args: { "p_company_id": string,"p_name": string }; Returns: {
               "id": string,"key": string,"key_prefix": string
@@ -1052,6 +1104,29 @@ isOneToOne: false
               "assigned_to": string,"company_id": string,"company_name": string,"declaration_id": string,"declared_at": string,"due_date": string,"effective_status": Database["public"]['Enums']["declaration_status"],"kind": Database["public"]['Enums']["declaration_kind"],"nipt": string,"status": Database["public"]['Enums']["declaration_status"],"vat_registered": boolean
             }[]
                            },
+"supersede_tax_rule":
+{ Args: { "p_id": string,"p_params": Json,"p_source": string,"p_valid_from": string }; Returns: {
+              "code": string,
+"company_id": string | null,
+"confirmed": boolean,
+"confirmed_at": string | null,
+"confirmed_by": string | null,
+"created_at": string,
+"created_by": string | null,
+"id": string,
+"kind": Database["public"]['Enums']["tax_rule_kind"],
+"params": NonNullable<Json>,
+"scope": string,
+"source": string | null,
+"valid_from": string,
+"valid_to": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "tax_rules"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "sync_check_key":
 { Args: { "p_key": string }; Returns: {
               "company_id": string,"legal_name": string,"nipt": string
