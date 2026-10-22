@@ -572,6 +572,29 @@ reset role;
 update public.users set is_super_admin = false where id = :'owner'::uuid;
 
 -- =============================================================================
+-- 17. Pasqyra e studios (0024)
+-- =============================================================================
+select set_config('request.jwt.claim.sub', :'owner', false);
+set role authenticated;
+select pg_temp.check('studio_overview: owner sheh A dhe B',
+  (select count(*) from public.studio_overview(2026, 9) where company_id in (:'compA'::uuid, :'compB'::uuid)) = 2);
+select pg_temp.check('studio_overview: B shtator — shitjet e muajit dhe sinkronizimi',
+  (select sales_count >= 2 and sync_status = 'functional' and last_sync_at is not null and vat_payable is null
+     from public.studio_overview(2026, 9) where company_id = :'compB'::uuid));
+select pg_temp.check('studio_overview: A (TVSH) shkurt 2027 → 150 për pagesë',
+  (select vat_payable = 150 from public.studio_overview(2027, 2) where company_id = :'compA'::uuid));
+select pg_temp.check('studio_overview: pragjet nga tax_rules',
+  (select vat_threshold = 10000000 and small_threshold = 14000000 from public.studio_overview(2026, 9) where company_id = :'compB'::uuid));
+select pg_temp.check('studio_overview: arkëtimet e B përfshijnë XM 64.512',
+  (select receivables >= 64512 from public.studio_overview(2026, 9) where company_id = :'compB'::uuid));
+reset role;
+select set_config('request.jwt.claim.sub', :'acc', false);
+set role authenticated;
+select pg_temp.check('studio_overview: accountant i A sheh vetëm A',
+  (select array_agg(company_id) from public.studio_overview(2026, 9)) = array[:'compA'::uuid]);
+reset role;
+
+-- =============================================================================
 -- Përmbledhje
 -- =============================================================================
 select name, ok, detail from t_results where not ok;

@@ -15,6 +15,7 @@ export default async function StudioLayout({ children }: { children: React.React
       <header className="sticky top-0 z-10 flex items-center gap-4 border-b border-border bg-card/90 px-4 py-3 backdrop-blur sm:px-6">
         <Link href="/studio" className="font-semibold">{d.app.name} · Paneli i studios</Link>
         <nav className="hidden gap-3 text-sm sm:flex">
+          <Link href="/studio/overview" className="hover:underline">Pasqyra</Link>
           <Link href="/studio" className="hover:underline">Deklarimet</Link>
           <Link href="/studio/companies" className="hover:underline">Subjektet</Link>
         </nav>

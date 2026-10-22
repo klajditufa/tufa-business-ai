@@ -1104,6 +1104,11 @@ isOneToOne: false
               "assigned_to": string,"company_id": string,"company_name": string,"declaration_id": string,"declared_at": string,"due_date": string,"effective_status": Database["public"]['Enums']["declaration_status"],"kind": Database["public"]['Enums']["declaration_kind"],"nipt": string,"status": Database["public"]['Enums']["declaration_status"],"vat_registered": boolean
             }[]
                            },
+"studio_overview":
+{ Args: { "p_month": number,"p_year": number }; Returns: {
+              "company_id": string,"decl_late": number,"decl_open": number,"last_sync_at": string,"name": string,"nipt": string,"overdue_30": number,"purchases_net": number,"receivables": number,"sales_count": number,"sales_net": number,"small_threshold": number,"sync_status": string,"vat_credit_cf": number,"vat_payable": number,"vat_registered": boolean,"vat_threshold": number,"ytd_turnover": number
+            }[]
+                           },
 "supersede_tax_rule":
 { Args: { "p_id": string,"p_params": Json,"p_source": string,"p_valid_from": string }; Returns: {
               "code": string,
