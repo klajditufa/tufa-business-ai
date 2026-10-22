@@ -23,7 +23,7 @@ import urllib.error
 import urllib.request
 import uuid
 from dataclasses import dataclass
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable
 
 from lxml import etree
 
@@ -54,10 +54,20 @@ class Service:
         return f"https://{host}/{self.path}"
 
 
-SERVICES: Dict[str, Service] = {
-    "data": Service("FiscalizationDataService-v1", "https://eFiskalizimi.tatime.gov.al/FiscalizationDataService", "efiskalizimi.tatime.gov.al"),
-    "fiscalization": Service("FiscalizationService-v3", "https://eFiskalizimi.tatime.gov.al/FiscalizationService", "efiskalizimi.tatime.gov.al"),
-    "einvoice": Service("EinvoiceService-v1", "https://Einvoice.tatime.gov.al/EinvoiceService", "einvoice.tatime.gov.al"),
+SERVICES: dict[str, Service] = {
+    "data": Service(
+        "FiscalizationDataService-v1",
+        "https://eFiskalizimi.tatime.gov.al/FiscalizationDataService",
+        "efiskalizimi.tatime.gov.al",
+    ),
+    "fiscalization": Service(
+        "FiscalizationService-v3",
+        "https://eFiskalizimi.tatime.gov.al/FiscalizationService",
+        "efiskalizimi.tatime.gov.al",
+    ),
+    "einvoice": Service(
+        "EinvoiceService-v1", "https://Einvoice.tatime.gov.al/EinvoiceService", "einvoice.tatime.gov.al"
+    ),
 }
 
 
@@ -88,7 +98,7 @@ def local_name(node: etree._Element) -> str:
     return etree.QName(node).localname if isinstance(node.tag, str) else ""
 
 
-def child(node: etree._Element, name: str) -> Optional[etree._Element]:
+def child(node: etree._Element, name: str) -> etree._Element | None:
     """First child with the given local name, ignoring namespaces."""
     for item in node:
         if local_name(item) == name:
@@ -99,10 +109,10 @@ def child(node: etree._Element, name: str) -> Optional[etree._Element]:
 def build_request(
     operation: Operation,
     certificate: Certificate,
-    add_body: Optional[BodyBuilder] = None,
-    request_uuid: Optional[str] = None,
-    send_datetime: Optional[str] = None,
-) -> Tuple[bytes, str]:
+    add_body: BodyBuilder | None = None,
+    request_uuid: str | None = None,
+    send_datetime: str | None = None,
+) -> tuple[bytes, str]:
     """Return the signed SOAP envelope and the request UUID it carries.
 
     ``request_uuid`` and ``send_datetime`` exist for reproducible tests; leave
@@ -177,7 +187,7 @@ def _ssl_context(verify: bool) -> ssl.SSLContext:
 
 
 # Sends (url, body, headers, timeout) and returns (HTTP status, response body).
-Poster = Callable[[str, bytes, Dict[str, str], float], Tuple[int, bytes]]
+Poster = Callable[[str, bytes, dict[str, str], float], tuple[int, bytes]]
 
 
 class SoapTransport:
@@ -190,7 +200,7 @@ class SoapTransport:
         timeout: float = 60.0,
         retries: int = 2,
         verify_tls: bool = True,
-        poster: Optional[Poster] = None,
+        poster: Poster | None = None,
     ):
         if environment not in ENVIRONMENTS:
             raise ValidationError(f"environment must be one of: {', '.join(ENVIRONMENTS)}", "environment")
@@ -204,7 +214,7 @@ class SoapTransport:
         context = _ssl_context(verify_tls)
         opener = urllib.request.build_opener(urllib.request.HTTPSHandler(context=context))
 
-        def post(url: str, body: bytes, headers: Dict[str, str], timeout: float) -> Tuple[int, bytes]:
+        def post(url: str, body: bytes, headers: dict[str, str], timeout: float) -> tuple[int, bytes]:
             request = urllib.request.Request(url, data=body, headers=headers, method="POST")
             try:
                 with opener.open(request, timeout=timeout) as response:
@@ -215,7 +225,7 @@ class SoapTransport:
 
         return post
 
-    def call(self, operation: Operation, add_body: Optional[BodyBuilder] = None) -> etree._Element:
+    def call(self, operation: Operation, add_body: BodyBuilder | None = None) -> etree._Element:
         url = SERVICES[operation.service].url(self.environment)
         attempt = 0
         while True:

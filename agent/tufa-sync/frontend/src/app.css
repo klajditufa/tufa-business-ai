@@ -1,0 +1,67 @@
+/* The few rules Mantine's components and props do not cover. */
+
+body {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Page background a step darker (light) / lighter (dark) than cards and tables, so they stand out. */
+:root[data-mantine-color-scheme="light"] body {
+  background-color: #f4f5f7;
+}
+
+:root[data-mantine-color-scheme="dark"] body {
+  background-color: #1a1a1a;
+}
+
+/* Main tabs: a hairline under the list, a 2px line under the open tab. */
+.app-tabs {
+  --tabs-list-border-width: 1px;
+}
+
+.app-tabs .mantine-Tabs-list::before {
+  border-width: 0 0 1px;
+  border-color: var(--mantine-color-default-border);
+}
+
+.app-tabs .mantine-Tabs-tab[data-active] {
+  box-shadow: inset 0 -1px 0 var(--tabs-color);
+}
+
+/* On narrow screens the tabs stay on one line and scroll sideways. */
+@media (max-width: 48em) {
+  .app-tabs .mantine-Tabs-list {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .app-tabs .mantine-Tabs-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-tabs .mantine-Tabs-tab {
+    flex: none;
+    padding-inline: var(--mantine-spacing-sm);
+  }
+}
+
+/* Rows that open something show it with the pointer. */
+.clickable-rows tbody tr {
+  cursor: pointer;
+}
+
+/* Long codes (FIC, IIC, EIC) wrap anywhere rather than overflow on narrow screens... */
+.code-value {
+  overflow-wrap: anywhere;
+}
+
+/* ...but never inside a table cell, where a code stays on one line (the table scrolls instead). */
+.mantine-Table-td .code-value {
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+/* Inputs that hold codes (FIC) use the code font for the value only, not the label. */
+.mono-input input {
+  font-family: var(--mantine-font-family-monospace);
+}

@@ -55,10 +55,17 @@ class LoadingTest(unittest.TestCase):
 
     def test_pem_bundle(self) -> None:
         certificate = load_test_certificate()
-        key_pem = test_key().private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,
-                                           serialization.BestAvailableEncryption(b"pem-pass"))
+        key_pem = test_key().private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.PKCS8,
+            serialization.BestAvailableEncryption(b"pem-pass"),
+        )
         cert = make_x509([x509.NameAttribute(NameOID.COMMON_NAME, "Pem")])
-        bundle = certificate.x509.public_bytes(serialization.Encoding.PEM) + cert.public_bytes(serialization.Encoding.PEM) + key_pem
+        bundle = (
+            certificate.x509.public_bytes(serialization.Encoding.PEM)
+            + cert.public_bytes(serialization.Encoding.PEM)
+            + key_pem
+        )
         loaded = Certificate.from_bytes(bundle, "pem-pass")
         self.assertEqual(loaded.common_name, "Pem")  # picks the certificate that matches the key
         self.assertEqual(len(loaded.chain), 1)
@@ -78,9 +85,16 @@ class LoadingTest(unittest.TestCase):
     def test_rsa_required(self) -> None:
         key = ec.generate_private_key(ec.SECP256R1())
         name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "EC")])
-        cert = (x509.CertificateBuilder().subject_name(name).issuer_name(name).public_key(key.public_key())
-                .serial_number(1).not_valid_before(datetime(2020, 1, 1, tzinfo=timezone.utc))
-                .not_valid_after(datetime(2040, 1, 1, tzinfo=timezone.utc)).sign(key, hashes.SHA256()))
+        cert = (
+            x509.CertificateBuilder()
+            .subject_name(name)
+            .issuer_name(name)
+            .public_key(key.public_key())
+            .serial_number(1)
+            .not_valid_before(datetime(2020, 1, 1, tzinfo=timezone.utc))
+            .not_valid_after(datetime(2040, 1, 1, tzinfo=timezone.utc))
+            .sign(key, hashes.SHA256())
+        )
         data = pkcs12.serialize_key_and_certificates(b"x", key, cert, None, serialization.NoEncryption())
         with self.assertRaisesRegex(CertificateError, "RSA"):
             Certificate.from_bytes(data)
@@ -98,7 +112,9 @@ class DetailsTest(unittest.TestCase):
         nais = make_certificate("Shop Fiskalizimi1", SURNAME="M12345678N", SERIAL_NUMBER="MSHP1", TITLE="Test")
         self.assertEqual(nais.nipt, "M12345678N")
         self.assertEqual(nais.suggested_environment, "test")
-        self.assertEqual(make_certificate("Shop", SURNAME="M12345678N", TITLE="Fiskalizim").suggested_environment, "production")
+        self.assertEqual(
+            make_certificate("Shop", SURNAME="M12345678N", TITLE="Fiskalizim").suggested_environment, "production"
+        )
         self.assertEqual(make_certificate("K12345678A").nipt, "K12345678A")
         self.assertEqual(make_certificate("Shop", SERIAL_NUMBER="l12345678b").nipt, "L12345678B")
         org_id = x509.NameAttribute(x509.ObjectIdentifier("2.5.4.97"), "VATAL-M12345678C")
@@ -108,8 +124,12 @@ class DetailsTest(unittest.TestCase):
         self.assertIsNone(make_certificate("AK12345678AB").nipt)  # embedded in a longer token
 
     def test_expired(self) -> None:
-        cert = Certificate(test_key(), make_x509([x509.NameAttribute(NameOID.COMMON_NAME, "Old")],
-                                                 not_after=datetime(2021, 1, 1, tzinfo=timezone.utc)))
+        cert = Certificate(
+            test_key(),
+            make_x509(
+                [x509.NameAttribute(NameOID.COMMON_NAME, "Old")], not_after=datetime(2021, 1, 1, tzinfo=timezone.utc)
+            ),
+        )
         self.assertTrue(cert.is_expired)
         self.assertTrue(cert.summary()["expired"])
 
@@ -118,10 +138,23 @@ class DetailsTest(unittest.TestCase):
         self.assertEqual(summary["nipt"], "X99999999X")
         text = repr(summary).lower()
         self.assertNotIn("private", text)
-        self.assertEqual(set(summary), {
-            "nipt", "name", "commonName", "subject", "issuer", "serialNumber", "validFrom", "validTo",
-            "expired", "notYetValid", "fingerprintSha256", "suggestedEnvironment",
-        })
+        self.assertEqual(
+            set(summary),
+            {
+                "nipt",
+                "name",
+                "commonName",
+                "subject",
+                "issuer",
+                "serialNumber",
+                "validFrom",
+                "validTo",
+                "expired",
+                "notYetValid",
+                "fingerprintSha256",
+                "suggestedEnvironment",
+            },
+        )
 
 
 if __name__ == "__main__":

@@ -16,8 +16,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from cis_client import PURCHASES, SALES, CisClient, CisFault, flatten_invoice  # noqa: E402
-from cis_client.convert import CSV_COLUMNS  # noqa: E402
+from cis_client import PURCHASES, SALES, CisClient, CisFault, flatten_invoice
+from cis_client.convert import CSV_COLUMNS
 
 
 def main() -> int:

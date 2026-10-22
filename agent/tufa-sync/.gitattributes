@@ -1,0 +1,8 @@
+* text=auto eol=lf
+*.bat text eol=crlf
+*.p12 binary
+# Official files from the tax authority, kept exactly as published.
+schemas/** -text -whitespace linguist-vendored
+# Built from frontend/ by `npm run build`; committed so the app runs without Node.
+cis_client/web/** linguist-generated -diff
+frontend/package-lock.json linguist-generated -diff

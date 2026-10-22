@@ -173,8 +173,10 @@ Check a digest with `openssl dgst -sha256 -binary GetInvoicesRequest.c14n.xml | 
 
 ## 5. Certificate
 
-- Issued by NAIS (AKSHI) as a password protected PKCS#12 file. Some exports use
-  legacy PBE-SHA1-3DES/RC2 encryption; make sure your PKCS#12 reader supports it.
+- Issued by NAIS (AKSHI) as a password protected PKCS#12 file. The files are BER
+  (not strict DER) encoded and some use legacy PBE-SHA1-3DES/RC2 encryption; make
+  sure your PKCS#12 reader accepts both (OpenSSL, Java, .NET and Python
+  `cryptography` do; the latter warns about BER, which this client silences).
 - RSA key. The subject carries the business **NIPT in `SN` (surname, OID 2.5.4.4)**;
   CIS refuses certificates without it (fault 34 "doesn't contain TIN number").
 - Test certificates have **`title` (2.5.4.12) = `Test`**; production CIS refuses them
@@ -297,7 +299,30 @@ Ten months of a busy test business (about 37,700 invoices) took 47 requests
 and roughly a minute this way. De-duplicate by FIC in case invoices registered
 while paging shift the pages.
 
-## 9. Verification link
+## 9. Invoice lines (items)
+
+Period searches never include `Items`. To work with lines (costs per item, a
+summary by article, an invoice PDF), look each invoice up by FIC:
+
+```
+for each invoice of the period (with a FIC), at most 4 requests at a time:
+    GetInvoices { FIC, InvTransactionType }  ->  the complete invoice, with Items/I
+keep the result; a FIC never changes, so each invoice is fetched once
+```
+
+A month of a few hundred purchases takes seconds; a thousand sales about a
+minute. Each `I` has `N` (name), `C` (code, chosen by the issuer), `U` (unit,
+free text), `Q`, `UPB`, `UPA`, `R`, `PB`, `VR`, `VA`, `PA`, and optionally `EX`
+(VAT exemption) and `IN`. Corrective invoices carry negative quantities and
+amounts.
+
+To total lines per item across issuers, group by the item name (ignoring case,
+accents and repeated spaces) and the unit. Do not group by code: the same item
+has a different code at each supplier. Units arrive as `kg`, `KG`, `Kg.`,
+`Copë`, `cope`, `pcs` and so on; `cis_client/units.json` maps the common
+spellings to UN/ECE Rec. 20 codes (`KGM`, `XPP`, `LTR`, ...).
+
+## 10. Verification link
 
 The public check page (the address in an invoice's QR code) is
 

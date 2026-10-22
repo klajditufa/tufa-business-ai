@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-from typing import Optional
 
 
 class CisClientError(Exception):
@@ -17,7 +16,7 @@ class CertificateError(CisClientError):
 class ValidationError(CisClientError):
     """A request parameter is invalid. Nothing was sent to CIS."""
 
-    def __init__(self, message: str, field: Optional[str] = None):
+    def __init__(self, message: str, field: str | None = None):
         super().__init__(message)
         self.field = field
 
@@ -42,9 +41,9 @@ FAULT_HINTS = {
     "31": "The request signature was rejected. Check that the certificate and private key belong together.",
     "33": "The certificate is not an X.509 certificate.",
     "34": "CIS does not accept this certificate. A certificate issued for the test environment only works there "
-          "(and a production one only in production): check the selected environment.",
+    "(and a production one only in production): check the selected environment.",
     "35": "The certificate was not issued by NAIS for this environment. Test certificates only work in the "
-          "test environment and production certificates only in production.",
+    "test environment and production certificates only in production.",
     "36": "The certificate has expired. Request a new fiscalization certificate.",
     "38": "The certificate has been revoked.",
     "39": "CIS could not determine the certificate status. Try again later.",
@@ -63,7 +62,7 @@ _FAULT_NOISE = re.compile(r"\s*Code=\d+\s+RequestUUID=\S*\s+ResponseUUID=\S*")
 class CisFault(CisClientError):
     """CIS rejected the request with a SOAP fault."""
 
-    def __init__(self, fault_env: str, fault_string: str, fault_code: Optional[str]):
+    def __init__(self, fault_env: str, fault_string: str, fault_code: str | None):
         self.fault_env = fault_env
         self.raw_fault_string = fault_string
         self.fault_string = _FAULT_NOISE.sub("", fault_string).strip() or fault_string
@@ -77,7 +76,7 @@ class CisFault(CisClientError):
         return self.fault_env.upper().endswith("CLIENT")
 
     @property
-    def hint(self) -> Optional[str]:
+    def hint(self) -> str | None:
         return FAULT_HINTS.get(self.fault_code or "")
 
     def to_dict(self) -> dict:

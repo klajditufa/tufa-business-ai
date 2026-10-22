@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable, Optional
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes
@@ -19,7 +19,7 @@ SCHEMAS = ROOT / "schemas"
 TEST_P12 = FIXTURES / "selfsigned-test-only.p12"
 TEST_P12_PASSWORD = "test"
 
-_KEY: Optional[rsa.RSAPrivateKey] = None
+_KEY: rsa.RSAPrivateKey | None = None
 
 
 def test_key() -> rsa.RSAPrivateKey:
@@ -29,8 +29,11 @@ def test_key() -> rsa.RSAPrivateKey:
     return _KEY
 
 
-def make_x509(attributes: Iterable[x509.NameAttribute], key: Optional[rsa.RSAPrivateKey] = None,
-              not_after: datetime = datetime(2040, 1, 1, tzinfo=timezone.utc)) -> x509.Certificate:
+def make_x509(
+    attributes: Iterable[x509.NameAttribute],
+    key: rsa.RSAPrivateKey | None = None,
+    not_after: datetime = datetime(2040, 1, 1, tzinfo=timezone.utc),
+) -> x509.Certificate:
     key = key or test_key()
     name = x509.Name(list(attributes))
     return (

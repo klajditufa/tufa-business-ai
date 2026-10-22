@@ -1,35 +1,25 @@
 <!doctype html>
 <html lang="sq">
-<head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>CIS Client</title>
-	<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-	<link rel="stylesheet" href="/app.css">
-	<script src="/app.js" defer></script>
-</head>
-<body>
-	<header class="topbar">
-		<div class="topbar-inner container">
-			<div class="brand">
-				<img class="brand-mark" src="/favicon.svg" alt="" width="26" height="26">
-				<span class="brand-name">CIS Client</span>
-			</div>
-			<div class="topbar-session" id="session-slot"></div>
-			<div class="lang" role="group" aria-label="Language / Gjuha">
-				<button type="button" data-lang="sq">SQ</button>
-				<button type="button" data-lang="en">EN</button>
-			</div>
-		</div>
-	</header>
-	<main id="app" class="container" aria-live="polite">
-		<p class="boot">…</p>
-	</main>
-	<footer class="footer container">
-		<span data-i18n="footer"></span>
-	</footer>
-	<dialog id="detail-dialog" class="dialog dialog-wide"></dialog>
-	<dialog id="cert-dialog" class="dialog"></dialog>
-	<noscript>This app needs JavaScript. / Ky aplikacion kërkon JavaScript.</noscript>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Shitjet, blerjet dhe artikujt nga sistemi i fiskalizimit (CIS), me certifikatën e biznesit."
+    />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#242424" media="(prefers-color-scheme: dark)" />
+    <title>CIS Client</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <script src="/theme-init.js"></script>
+    <script type="module" crossorigin src="/assets/index-C51xWHYd.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-YlxF0CoI.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>This app needs JavaScript. / Ky aplikacion kërkon JavaScript.</noscript>
+  </body>
 </html>

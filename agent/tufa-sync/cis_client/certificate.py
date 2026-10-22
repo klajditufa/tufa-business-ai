@@ -13,9 +13,10 @@ from __future__ import annotations
 import base64
 import re
 import warnings
+from collections.abc import Iterable
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Union
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
@@ -44,7 +45,7 @@ _NIPT_ATTRIBUTES = (
 Password = Union[str, bytes, None]
 
 
-def _name_value(name: x509.Name, oid: x509.ObjectIdentifier) -> Optional[str]:
+def _name_value(name: x509.Name, oid: x509.ObjectIdentifier) -> str | None:
     values = name.get_attributes_for_oid(oid)
     return str(values[0].value) if values else None
 
@@ -57,7 +58,7 @@ def _utc(cert: x509.Certificate, attribute: str) -> datetime:
     return value
 
 
-def _password_candidates(password: Password) -> List[Optional[bytes]]:
+def _password_candidates(password: Password) -> list[bytes | None]:
     if password is None or password == "" or password == b"":
         # Files exported "without a password" use either no password or an empty one.
         return [None, b""]
@@ -84,12 +85,12 @@ class Certificate:
             raise CertificateError("The private key does not belong to the certificate.")
         self._key = private_key
         self.x509 = certificate
-        self.chain: Tuple[x509.Certificate, ...] = tuple(chain)
+        self.chain: tuple[x509.Certificate, ...] = tuple(chain)
 
     # Loading ----------------------------------------------------------------
 
     @classmethod
-    def from_file(cls, path: Union[str, Path], password: Password = None) -> "Certificate":
+    def from_file(cls, path: str | Path, password: Password = None) -> Certificate:
         try:
             data = Path(path).expanduser().read_bytes()
         except OSError as error:
@@ -97,7 +98,7 @@ class Certificate:
         return cls.from_bytes(data, password)
 
     @classmethod
-    def from_bytes(cls, data: bytes, password: Password = None) -> "Certificate":
+    def from_bytes(cls, data: bytes, password: Password = None) -> Certificate:
         if not data:
             raise CertificateError("The certificate file is empty.")
         if b"-----BEGIN" in data[:4096]:
@@ -105,20 +106,24 @@ class Certificate:
         return cls._from_pkcs12(data, password)
 
     @classmethod
-    def _from_pkcs12(cls, data: bytes, password: Password) -> "Certificate":
+    def _from_pkcs12(cls, data: bytes, password: Password) -> Certificate:
         loaded = None
         for candidate in _password_candidates(password):
             try:
                 with warnings.catch_warnings():
-                    # NAIS exports carry a few trailing bytes; cryptography parses them as BER and warns.
-                    warnings.filterwarnings("ignore", message="PKCS#12 bundle could not be parsed as DER")
+                    # NAIS issues BER encoded files; cryptography reads them but warns on every load.
+                    warnings.filterwarnings(
+                        "ignore", message="PKCS#12 bundle could not be parsed as DER", category=UserWarning
+                    )
                     loaded = pkcs12.load_key_and_certificates(data, candidate)
                 break
             except (ValueError, TypeError):
                 continue
         if loaded is None:
             if password:
-                raise CertificateError("Could not open the certificate: the password is wrong or the file is not a .p12/.pfx file.")
+                raise CertificateError(
+                    "Could not open the certificate: the password is wrong or the file is not a .p12/.pfx file."
+                )
             raise CertificateError("This certificate is password protected. Enter its password.")
         key, cert, extra = loaded
         if key is None or cert is None:
@@ -128,7 +133,7 @@ class Certificate:
         return cls(key, cert, [item for item in extra if item is not cert])
 
     @classmethod
-    def _from_pem(cls, data: bytes, password: Password) -> "Certificate":
+    def _from_pem(cls, data: bytes, password: Password) -> Certificate:
         certs = [x509.load_pem_x509_certificate(block) for block in _PEM_CERT.findall(data)]
         keys = _PEM_KEY.findall(data)
         if not certs:
@@ -168,7 +173,7 @@ class Certificate:
     # Details ----------------------------------------------------------------
 
     @property
-    def nipt(self) -> Optional[str]:
+    def nipt(self) -> str | None:
         """The business NIPT, when the certificate subject contains one."""
         subject = self.x509.subject
         for oid in _NIPT_ATTRIBUTES:
@@ -180,11 +185,11 @@ class Certificate:
         return match.group(1).upper() if match else None
 
     @property
-    def common_name(self) -> Optional[str]:
+    def common_name(self) -> str | None:
         return _name_value(self.x509.subject, NameOID.COMMON_NAME)
 
     @property
-    def organization(self) -> Optional[str]:
+    def organization(self) -> str | None:
         return _name_value(self.x509.subject, NameOID.ORGANIZATION_NAME)
 
     @property
@@ -236,6 +241,6 @@ class Certificate:
         }
 
 
-def load_certificate(path: Union[str, Path], password: Password = None) -> Certificate:
+def load_certificate(path: str | Path, password: Password = None) -> Certificate:
     """Load a .p12/.pfx (or PEM) fiscalization certificate."""
     return Certificate.from_file(path, password)

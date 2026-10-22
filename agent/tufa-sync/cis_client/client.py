@@ -14,10 +14,12 @@ from __future__ import annotations
 import base64
 import math
 import re
+from collections.abc import Iterator, Sequence
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
-from typing import Callable, Iterator, List, Optional, Set, Tuple, Union
+from typing import Callable, Optional, Union
 
 from lxml import etree
 
@@ -38,6 +40,7 @@ from .transport import (
 )
 
 PAGE_SIZE = 1000  # CIS returns at most 1000 invoices per page.
+DETAIL_WORKERS = 4  # FIC lookups run in parallel when items are needed for a whole list.
 SALES = "SALES"
 PURCHASES = "PURCHASES"
 INVOICE_KINDS = (SALES, PURCHASES)
@@ -50,11 +53,13 @@ NIPT_PATTERN = re.compile(r"^[A-Za-z]\d{8}[A-Za-z]$")
 DateArg = Optional[Union[date, str]]
 # progress(invoices fetched so far, total reported by CIS for the current range, range start, range end)
 Progress = Callable[[int, int, date, date], None]
+# detail_progress(invoices looked up so far, invoices to look up)
+DetailProgress = Callable[[int, int], None]
 
 
 @dataclass
 class InvoicePage:
-    invoices: List[dict]
+    invoices: list[dict]
     count: int  # total number of invoices matching the search, across all pages
     page: int
     page_size: int = PAGE_SIZE
@@ -79,7 +84,7 @@ class EinvoicePdf:
         return base64.b64encode(self.pdf).decode("ascii")
 
 
-def _date_range(from_date: DateArg, to_date: DateArg) -> Tuple[date, date]:
+def _date_range(from_date: DateArg, to_date: DateArg) -> tuple[date, date]:
     default_from, default_to = timeutil.current_month()
     try:
         start = timeutil.parse_date(from_date, "FromDate") if from_date else default_from
@@ -118,23 +123,27 @@ class CisClient:
     def __init__(
         self,
         certificate: Certificate,
-        environment: Optional[str] = None,
+        environment: str | None = None,
         *,
         timeout: float = 60.0,
         retries: int = 2,
         verify_tls: bool = True,
-        poster: Optional[Poster] = None,
+        poster: Poster | None = None,
     ):
         self.certificate = certificate
         self.transport = SoapTransport(
-            certificate, environment or certificate.suggested_environment,
-            timeout=timeout, retries=retries, verify_tls=verify_tls, poster=poster,
+            certificate,
+            environment or certificate.suggested_environment,
+            timeout=timeout,
+            retries=retries,
+            verify_tls=verify_tls,
+            poster=poster,
         )
 
     @classmethod
     def from_file(
-        cls, path: Union[str, Path], password: Password = None, environment: Optional[str] = None, **options
-    ) -> "CisClient":
+        cls, path: str | Path, password: Password = None, environment: str | None = None, **options
+    ) -> CisClient:
         return cls(Certificate.from_file(path, password), environment, **options)
 
     @property
@@ -155,12 +164,16 @@ class CisClient:
             raise ValidationError("Page must be an integer of at least 1", "Page")
 
         def body(request: etree._Element, namespace: str) -> None:
-            etree.SubElement(request, f"{{{namespace}}}InvoicesRequestBody", {
-                "FromDate": timeutil.start_of_day(start),
-                "ToDate": timeutil.end_of_day(end),
-                "InvTransactionType": kind,
-                "Page": str(page),
-            })
+            etree.SubElement(
+                request,
+                f"{{{namespace}}}InvoicesRequestBody",
+                {
+                    "FromDate": timeutil.start_of_day(start),
+                    "ToDate": timeutil.end_of_day(end),
+                    "InvTransactionType": kind,
+                    "Page": str(page),
+                },
+            )
 
         invoices, count = convert.invoices_from_response(self.transport.call(GET_INVOICES, body))
         return InvoicePage(invoices, count, page)
@@ -171,7 +184,7 @@ class CisClient:
     def get_purchases(self, from_date: DateArg = None, to_date: DateArg = None, page: int = 1) -> InvoicePage:
         return self.get_invoices(PURCHASES, from_date, to_date, page)
 
-    def get_invoice(self, fic: str, kind: str) -> Optional[dict]:
+    def get_invoice(self, fic: str, kind: str) -> dict | None:
         """The complete invoice, including its items, or None when CIS has no such invoice."""
         kind = _kind(kind)
         fic = _uuid(fic, "FIC")
@@ -182,8 +195,42 @@ class CisClient:
         invoices, _ = convert.invoices_from_response(self.transport.call(GET_INVOICES, body))
         return invoices[0] if invoices else None
 
+    def get_invoice_details(
+        self,
+        invoices: Sequence[dict],
+        kind: str,
+        progress: DetailProgress | None = None,
+        workers: int = DETAIL_WORKERS,
+    ) -> list[dict]:
+        """The complete invoices, with items, for invoices taken from a date range list.
+
+        Lists come without items, so every invoice is looked up by its FIC: one
+        CIS call each, ``workers`` at a time. The result keeps the order of
+        ``invoices``; invoices that already have items, have no FIC or that CIS
+        does not find are returned unchanged.
+        """
+        kind = _kind(kind)
+        result = list(invoices)
+        pending = [index for index, invoice in enumerate(result) if invoice.get("FIC") and "Items" not in invoice]
+        if not pending:
+            return result
+        with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
+            futures = {pool.submit(self.get_invoice, result[index]["FIC"], kind): index for index in pending}
+            try:
+                for done, future in enumerate(as_completed(futures), 1):
+                    complete = future.result()
+                    if complete is not None:
+                        result[futures[future]] = complete
+                    if progress:
+                        progress(done, len(pending))
+            except BaseException:
+                for future in futures:
+                    future.cancel()  # Stop the lookups that have not started; running ones finish.
+                raise
+        return result
+
     def iter_invoices(
-        self, kind: str, from_date: DateArg = None, to_date: DateArg = None, progress: Optional[Progress] = None
+        self, kind: str, from_date: DateArg = None, to_date: DateArg = None, progress: Progress | None = None
     ) -> Iterator[dict]:
         """Every invoice in the range, fetching all pages.
 
@@ -192,7 +239,7 @@ class CisClient:
         """
         kind = _kind(kind)
         start, end = _date_range(from_date, to_date)
-        seen: Set[str] = set()
+        seen: set[str] = set()
         fetched = 0
         pending = [(start, end)]
         while pending:
@@ -221,13 +268,13 @@ class CisClient:
                 page = self.get_invoices(kind, range_start, range_end, page.page + 1)
 
     def fetch_all_invoices(
-        self, kind: str, from_date: DateArg = None, to_date: DateArg = None, progress: Optional[Progress] = None
-    ) -> List[dict]:
+        self, kind: str, from_date: DateArg = None, to_date: DateArg = None, progress: Progress | None = None
+    ) -> list[dict]:
         return list(self.iter_invoices(kind, from_date, to_date, progress))
 
     # Registry lookups ---------------------------------------------------------
 
-    def get_taxpayers(self, search_term: str) -> List[dict]:
+    def get_taxpayers(self, search_term: str) -> list[dict]:
         """Search the taxpayer registry by NIPT (exact) or by name (3 to 100 characters)."""
         term = (search_term or "").strip()
         if NIPT_PATTERN.match(term):
@@ -243,21 +290,21 @@ class CisClient:
 
         return convert.taxpayers_from_response(self.transport.call(GET_TAXPAYERS, body))
 
-    def get_operators(self) -> List[dict]:
+    def get_operators(self) -> list[dict]:
         """Operators (cashiers) registered for this business; ``opCode`` is their OperatorCode."""
         return convert.operators_from_response(self.transport.call(GET_OPERATORS))
 
-    def get_business_units(self) -> List[dict]:
+    def get_business_units(self) -> list[dict]:
         """Business units (premises) registered for this business; ``BUCode`` is their BusinUnitCode."""
         return convert.list_from_response(self.transport.call(GET_BUSINESS_UNITS), "BusinessUnits", "BusinessUnit")
 
-    def get_tcrs(self) -> List[dict]:
+    def get_tcrs(self) -> list[dict]:
         """Registered cash registers / devices (TCRs) with their TCRCode."""
         return convert.list_from_response(self.transport.call(GET_TCRS), "TCRs", "TCR")
 
     # Electronic invoices ------------------------------------------------------
 
-    def get_einvoice_pdf(self, eic: str, party_type: str = "BUYER") -> Optional[EinvoicePdf]:
+    def get_einvoice_pdf(self, eic: str, party_type: str = "BUYER") -> EinvoicePdf | None:
         """The official PDF of an electronic invoice, found by its EIC.
 
         ``party_type`` is BUYER for purchases and SELLER for sales.

@@ -19,8 +19,9 @@ import json
 import ssl
 import urllib.error
 import urllib.request
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Callable, Iterable, List, Optional
+from typing import Callable
 
 import certifi
 
@@ -41,7 +42,7 @@ class PushResult:
     imported: int = 0
     updated: int = 0
     skipped: int = 0
-    errors: List[dict] = field(default_factory=list)
+    errors: list[dict] = field(default_factory=list)
     batches: int = 0
 
     def merge(self, response: dict) -> None:
@@ -53,8 +54,13 @@ class PushResult:
 
     def as_dict(self) -> dict:
         return {
-            "direction": self.direction, "sent": self.sent, "imported": self.imported, "updated": self.updated,
-            "skipped": self.skipped, "batches": self.batches, "errors": self.errors,
+            "direction": self.direction,
+            "sent": self.sent,
+            "imported": self.imported,
+            "updated": self.updated,
+            "skipped": self.skipped,
+            "batches": self.batches,
+            "errors": self.errors,
         }
 
 
@@ -72,10 +78,12 @@ class TufaClient:
         self.timeout = timeout
         self._ssl = ssl.create_default_context(cafile=certifi.where())
 
-    def _request(self, method: str, path: str, body: Optional[dict] = None) -> dict:
+    def _request(self, method: str, path: str, body: dict | None = None) -> dict:
         data = json.dumps(body, ensure_ascii=False).encode("utf-8") if body is not None else None
         request = urllib.request.Request(
-            self.base_url + path, data=data, method=method,
+            self.base_url + path,
+            data=data,
+            method=method,
             headers={
                 "Authorization": f"Bearer {self._api_key}",
                 "Content-Type": "application/json; charset=utf-8",
@@ -93,7 +101,9 @@ class TufaClient:
             except ValueError:
                 message = detail
             if error.code == 401:
-                raise TufaError("TUFA rejected the API key (401). Create a new key under Settings → Sinkronizimi.") from None
+                raise TufaError(
+                    "TUFA rejected the API key (401). Create a new key under Settings → Sinkronizimi."
+                ) from None
             raise TufaError(f"TUFA returned HTTP {error.code}: {message[:300]}") from None
         except urllib.error.URLError as error:
             raise TufaError(f"Cannot reach TUFA at {self.base_url}: {error.reason}") from None
@@ -107,8 +117,12 @@ class TufaClient:
         return self._request("GET", "/api/sync/invoices")
 
     def push(
-        self, kind: str, invoices: Iterable[dict], *, label: Optional[str] = None,
-        progress: Optional[Callable[[int, int], None]] = None,
+        self,
+        kind: str,
+        invoices: Iterable[dict],
+        *,
+        label: str | None = None,
+        progress: Callable[[int, int], None] | None = None,
     ) -> PushResult:
         direction = KINDS.get(kind.upper())
         if direction is None:
@@ -116,8 +130,10 @@ class TufaClient:
         rows = list(invoices)
         result = PushResult(direction=direction, sent=len(rows))
         for start in range(0, len(rows), BATCH_SIZE):
-            chunk = rows[start:start + BATCH_SIZE]
-            response = self._request("POST", "/api/sync/invoices", {"direction": direction, "invoices": chunk, "label": label})
+            chunk = rows[start : start + BATCH_SIZE]
+            response = self._request(
+                "POST", "/api/sync/invoices", {"direction": direction, "invoices": chunk, "label": label}
+            )
             if not response.get("ok"):
                 raise TufaError(f"TUFA refused the batch: {response.get('error') or response}")
             result.merge(response)

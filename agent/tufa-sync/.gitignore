@@ -1,7 +1,30 @@
-.venv/
+# Python
 __pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Exports and certificates never belong in the repository
+*.csv
+/*.json
+*.pdf
 *.p12
 *.pfx
 *.pem
-*.csv
+*.key
 !tests/fixtures/selfsigned-test-only.p12
+
+# Editors and operating systems
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Web app sources (the build in cis_client/web is committed)
+node_modules/

@@ -1,9 +1,9 @@
-"""Read sales, purchases, taxpayers and operators from the Albanian fiscalization
-system (CIS) using the business's own fiscalization certificate."""
+"""Read sales, purchases, invoice items, taxpayers and operators from the Albanian
+fiscalization system (CIS) using the business's own fiscalization certificate."""
 
 from .certificate import Certificate, load_certificate
 from .client import PURCHASES, SALES, CisClient, EinvoicePdf, InvoicePage
-from .convert import flatten_invoice, verification_url
+from .convert import flatten_invoice, flatten_items, summarise_items, totals, verification_url
 from .errors import (
     CertificateError,
     CisClientError,
@@ -13,9 +13,11 @@ from .errors import (
     ValidationError,
 )
 
-__version__ = "1.1.0"
+__version__ = "2.0.0"
 
 __all__ = [
+    "PURCHASES",
+    "SALES",
     "Certificate",
     "CertificateError",
     "CisClient",
@@ -23,12 +25,13 @@ __all__ = [
     "CisFault",
     "EinvoicePdf",
     "InvoicePage",
-    "PURCHASES",
-    "SALES",
     "SignatureError",
     "TransportError",
     "ValidationError",
     "flatten_invoice",
+    "flatten_items",
     "load_certificate",
+    "summarise_items",
+    "totals",
     "verification_url",
 ]

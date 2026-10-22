@@ -11,12 +11,12 @@ from __future__ import annotations
 import calendar
 import re
 from datetime import date, datetime, time, timedelta, tzinfo
-from typing import Optional, Tuple, Union
+from typing import Union
 
 try:
     from zoneinfo import ZoneInfo
 
-    ALBANIA: Optional[tzinfo] = ZoneInfo("Europe/Tirane")
+    ALBANIA: tzinfo | None = ZoneInfo("Europe/Tirane")
 except Exception:  # No time zone database (e.g. Windows without the tzdata package).
     ALBANIA = None
 
@@ -67,14 +67,14 @@ def end_of_day(day: date) -> str:
     return cis_timestamp(datetime.combine(day, time(23, 59, 59), tzinfo=_zone()))
 
 
-def current_month() -> Tuple[date, date]:
+def current_month() -> tuple[date, date]:
     """First and last day of the current month in Albania."""
     current = today()
     last = calendar.monthrange(current.year, current.month)[1]
     return current.replace(day=1), current.replace(day=last)
 
 
-def split_range(start: date, end: date) -> Tuple[Tuple[date, date], Tuple[date, date]]:
+def split_range(start: date, end: date) -> tuple[tuple[date, date], tuple[date, date]]:
     """Split an inclusive day range into two non-overlapping halves."""
     middle = start + timedelta(days=(end - start).days // 2)
     return (start, middle), (middle + timedelta(days=1), end)

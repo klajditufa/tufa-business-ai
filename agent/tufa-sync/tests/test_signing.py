@@ -23,12 +23,16 @@ SCHEMA_FILES = {
 
 
 def sales_body(request: etree._Element, namespace: str) -> None:
-    etree.SubElement(request, f"{{{namespace}}}InvoicesRequestBody", {
-        "FromDate": "2026-09-01T00:00:00+02:00",
-        "ToDate": "2026-09-30T23:59:59+02:00",
-        "InvTransactionType": "SALES",
-        "Page": "1",
-    })
+    etree.SubElement(
+        request,
+        f"{{{namespace}}}InvoicesRequestBody",
+        {
+            "FromDate": "2026-09-01T00:00:00+02:00",
+            "ToDate": "2026-09-30T23:59:59+02:00",
+            "InvTransactionType": "SALES",
+            "Page": "1",
+        },
+    )
 
 
 def request_element(envelope: bytes) -> etree._Element:
@@ -42,7 +46,9 @@ class GoldenTest(unittest.TestCase):
         self.certificate = load_test_certificate()
 
     def test_get_invoices_matches_golden(self) -> None:
-        envelope, request_uuid = transport.build_request(transport.GET_INVOICES, self.certificate, sales_body, UUID, WHEN)
+        envelope, request_uuid = transport.build_request(
+            transport.GET_INVOICES, self.certificate, sales_body, UUID, WHEN
+        )
         self.assertEqual(request_uuid, UUID)
         self.assertEqual(envelope, (GOLDEN / "GetInvoicesRequest.signed.xml").read_bytes())
 
@@ -59,8 +65,10 @@ class GoldenTest(unittest.TestCase):
         self.assertEqual(canonicalize(unsigned), canonical)
         digest = base64.b64encode(hashlib.sha256(canonical).digest()).decode()
         self.assertEqual(signature.findtext(f".//{{{DS_NS}}}DigestValue"), digest)
-        self.assertEqual(canonicalize(signature.find(f"{{{DS_NS}}}SignedInfo")),
-                         (GOLDEN / "GetInvoicesRequest.SignedInfo.c14n.xml").read_bytes())
+        self.assertEqual(
+            canonicalize(signature.find(f"{{{DS_NS}}}SignedInfo")),
+            (GOLDEN / "GetInvoicesRequest.SignedInfo.c14n.xml").read_bytes(),
+        )
 
 
 class SchemaTest(unittest.TestCase):
@@ -82,8 +90,15 @@ class SchemaTest(unittest.TestCase):
         self.check(transport.GET_INVOICES, sales_body)
 
     def test_get_invoices_by_fic(self) -> None:
-        self.check(transport.GET_INVOICES, lambda request, ns: etree.SubElement(
-            request, f"{{{ns}}}InvoicesRequestBody", FIC="2ed48eff-f3d0-4315-a2a5-16618c63ad0b", InvTransactionType="PURCHASES"))
+        self.check(
+            transport.GET_INVOICES,
+            lambda request, ns: etree.SubElement(
+                request,
+                f"{{{ns}}}InvoicesRequestBody",
+                FIC="2ed48eff-f3d0-4315-a2a5-16618c63ad0b",
+                InvTransactionType="PURCHASES",
+            ),
+        )
 
     def test_registry_lookups(self) -> None:
         for operation in (transport.GET_OPERATORS, transport.GET_BUSINESS_UNITS, transport.GET_TCRS):
@@ -93,12 +108,14 @@ class SchemaTest(unittest.TestCase):
         def body(request: etree._Element, ns: str) -> None:
             search = etree.SubElement(request, f"{{{ns}}}Filter")
             etree.SubElement(search, f"{{{ns}}}Name").text = "Vodafone"
+
         self.check(transport.GET_TAXPAYERS, body)
 
     def test_get_einvoices(self) -> None:
         def body(request: etree._Element, ns: str) -> None:
             etree.SubElement(request, f"{{{ns}}}EIC").text = "2ed48eff-f3d0-4315-a2a5-16618c63ad0b"
             etree.SubElement(request, f"{{{ns}}}PartyType").text = "BUYER"
+
         self.check(transport.GET_EINVOICES, body)
 
 

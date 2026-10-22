@@ -3,9 +3,9 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "tufa-sync"
-version = "1.1.0"
-description = "TUFA Sync: read invoices from the Albanian fiscalization system (CIS) with your own certificate and push them to TUFA Business AI."
+name = "cis-client"
+version = "2.0.0"
+description = "Read sales, purchases, items, taxpayers and operators from the Albanian fiscalization system (CIS) with each business's own certificate."
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
@@ -20,6 +20,9 @@ classifiers = [
     "Topic :: Office/Business :: Financial :: Accounting",
 ]
 
+[project.optional-dependencies]
+dev = ["ruff>=0.6"]
+
 [project.scripts]
 cis-client = "cis_client.cli:main"
 
@@ -27,4 +30,16 @@ cis-client = "cis_client.cli:main"
 include = ["cis_client*"]
 
 [tool.setuptools.package-data]
-cis_client = ["web/*"]
+cis_client = ["units.json", "web/*", "web/assets/*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+extend-exclude = ["schemas", "frontend", "cis_client/web"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "SIM", "RUF"]
+ignore = [
+    "RUF001", # Albanian text legitimately contains characters like "ë"
+    "RUF012", # class-level constants in tests
+]
