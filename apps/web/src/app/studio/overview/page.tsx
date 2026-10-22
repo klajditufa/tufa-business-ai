@@ -59,7 +59,6 @@ export default async function StudioOverviewPage({ searchParams }: { searchParam
                 <th className="px-3 py-2">Fiskalizimi</th>
                 <th className="px-3 py-2 text-right">Shitje e muajit</th>
                 <th className="px-3 py-2 text-right">TVSH</th>
-                <th className="px-3 py-2 text-right">Arkëtime pa marrë</th>
                 <th className="px-3 py-2">Xhiro e vitit / pragu</th>
                 <th className="px-3 py-2">Deklarimet</th>
               </tr>
@@ -99,10 +98,6 @@ export default async function StudioOverviewPage({ searchParams }: { searchParam
                       ) : (
                         <span className="text-muted-foreground">jo në TVSH</span>
                       )}
-                    </td>
-                    <td className="px-3 py-2 text-right tabular">
-                      <Link href={`${base}/parties?type=customers`} className="hover:underline">{money(r.receivables, "ALL", 0)}</Link>
-                      {Number(r.overdue_30) > 0 && <div className="text-[11px] text-warning">{money(r.overdue_30, "ALL", 0)} mbi 30 ditë</div>}
                     </td>
                     <td className="min-w-48 px-3 py-2">
                       <div className="flex justify-between text-xs tabular">
