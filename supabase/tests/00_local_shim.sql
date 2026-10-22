@@ -7,6 +7,14 @@ do $$ begin
   if not exists (select 1 from pg_roles where rolname = 'service_role') then create role service_role nologin bypassrls; end if;
 end $$;
 
+-- Si në Supabase: pgcrypto jeton në skemën `extensions` dhe search_path i bazës e përfshin.
+-- Kështu funksionet me `set search_path = public` që thërrasin pgcrypto dështojnë edhe lokalisht.
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
+do $$ begin
+  execute format('alter database %I set search_path = "$user", public, extensions', current_database());
+end $$;
+
 create schema if not exists auth;
 create table if not exists auth.users (
   id uuid primary key,
