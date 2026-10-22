@@ -89,3 +89,11 @@ body {
 .tabular {
   font-variant-numeric: tabular-nums;
 }
+
+/* Printim / PDF i raporteve: vetëm përmbajtja, pa menu dhe butona */
+@media print {
+  aside, header, nav, .no-print { display: none !important; }
+  body { background: white !important; color: black !important; }
+  main { padding: 0 !important; }
+  .print-break-avoid { break-inside: avoid; }
+}

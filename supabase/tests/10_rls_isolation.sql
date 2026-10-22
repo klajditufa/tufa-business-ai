@@ -509,6 +509,31 @@ select pg_temp.check('monthly_series nuk e fryn faturën në valutë',
   (select sum(sales_net) from public.monthly_series(:'compB'::uuid, 120) where month = date '2026-07-01') < 1000000);
 
 -- =============================================================================
+-- 15. Raporti vjetor (0022)
+-- =============================================================================
+select set_config('request.jwt.claim.sub', :'cli', false);
+set role authenticated;
+select pg_temp.check('annual_report: 12 muaj',
+  jsonb_array_length(public.annual_report(:'compB'::uuid, 2026) -> 'months') = 12);
+select pg_temp.check('annual_report: totali i shitjeve = company_turnover',
+  (public.annual_report(:'compB'::uuid, 2026) -> 'totals' ->> 's_net')::numeric
+   = (select sales_net from public.company_turnover(:'compB'::uuid, date '2026-01-01', date '2026-12-31')));
+select pg_temp.check('annual_report: korriku përmban ILIAD (374.120)',
+  (select (m ->> 's_net')::numeric >= 374120 from jsonb_array_elements(public.annual_report(:'compB'::uuid, 2026) -> 'months') m
+    where m ->> 'm' = '2026-07-01'));
+select pg_temp.check('annual_report: klienti kryesor = ILIAD bv',
+  public.annual_report(:'compB'::uuid, 2026) -> 'top_customers' -> 0 ->> 'name' = 'ILIAD bv');
+select pg_temp.check('annual_report: pragjet TVSH 10 mln + biznes i vogël 14 mln nga tax_rules',
+  (select array_agg((t ->> 'amount')::numeric order by (t ->> 'amount')::numeric)
+     from jsonb_array_elements(public.annual_report(:'compB'::uuid, 2026) -> 'thresholds') t) = array[10000000, 14000000]::numeric[]);
+reset role;
+select set_config('request.jwt.claim.sub', :'acc', false);
+set role authenticated;
+select pg_temp.check('accountant i A: raporti i B pa shifra (RLS)',
+  (public.annual_report(:'compB'::uuid, 2026) -> 'totals' ->> 's_count')::int = 0);
+reset role;
+
+-- =============================================================================
 -- Përmbledhje
 -- =============================================================================
 select name, ok, detail from t_results where not ok;

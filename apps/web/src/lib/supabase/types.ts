@@ -900,6 +900,9 @@ isOneToOne: false
             "accept_invitation":
 { Args: { "p_token": string }; Returns: Json
                            },
+"annual_report":
+{ Args: { "p_company_id": string,"p_year": number }; Returns: Json
+                           },
 "close_period":
 { Args: { "p_period_id": string }; Returns: undefined
                            },

@@ -12,8 +12,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const party = f.direction === "sale" ? "Klienti" : "Furnitori";
   const header = ["Data", "Nr. fature", party, "NIPT", "Pa TVSH", "TVSH", "Totali", "Monedha", "Tipi", "Pagesa", "Mënyra", "Burimi", "NIVF (FIC)", "NSLF (IIC)", "EIC"];
   const cell = (v: unknown) => {
+    // Numrat (edhe negativët e faturave korrigjuese) dalin si numra, me presje dhjetore
+    if (typeof v === "number" || (typeof v === "string" && /^-?\d+(\.\d+)?$/.test(v))) return String(v).replace(".", ",");
     const s = v == null ? "" : String(v);
-    // Mbrojtje nga formula injection në Excel dhe quoting standard CSV
+    // Tekst: mbrojtje nga formula injection në Excel dhe quoting standard CSV
     const safe = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
     return /[",;\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
   };
