@@ -21,7 +21,7 @@ export function MonthlyChart({ data, currency }: { data: Row[]; currency: string
           axisLine={false}
           tickLine={false}
           width={56}
-          tickFormatter={(v: number) => new Intl.NumberFormat("sq-AL", { notation: "compact" }).format(v)}
+          tickFormatter={(v: number) => (Math.abs(v) >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : Math.abs(v) >= 1e3 ? `${Math.round(v / 1e3)}K` : String(v))}
         />
         <Tooltip
           contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}

@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Box, Download, Landmark, List, Search } from "lucide-react";
+import { Button, Divider, Group, NativeSelect, Paper, SegmentedControl, Select, TextInput } from "@mantine/core";
+import { DateInput } from "@mantine/dates";
+import { IconBox, IconBuildingBank, IconDownload, IconList, IconSearch } from "@tabler/icons-react";
+import { useRouter } from "next/navigation";
 import type { InvoiceFilters } from "@/server/services/invoices";
-import { cn } from "@/lib/utils";
+import { DATE_PROPS } from "@/components/dates";
 
 type Preset = "thisMonth" | "lastMonth" | "thisQuarter" | "thisYear" | "lastYear" | "all" | "custom";
 
@@ -31,28 +34,28 @@ function presetRange(p: Preset, today = new Date()): { from: string; to: string 
   }
 }
 
-const PRESETS: [Preset, string][] = [
-  ["thisMonth", "Ky muaj"],
-  ["lastMonth", "Muaji i kaluar"],
-  ["thisQuarter", "Ky tremujor"],
-  ["thisYear", "Ky vit"],
-  ["lastYear", "Viti i kaluar"],
-  ["all", "Të gjitha"],
-  ["custom", "Periudhë tjetër"],
+const PRESETS: { value: Preset; label: string }[] = [
+  { value: "thisMonth", label: "Ky muaj" },
+  { value: "lastMonth", label: "Muaji i kaluar" },
+  { value: "thisQuarter", label: "Ky tremujor" },
+  { value: "thisYear", label: "Ky vit" },
+  { value: "lastYear", label: "Viti i kaluar" },
+  { value: "all", label: "Të gjitha" },
+  { value: "custom", label: "Periudhë tjetër" },
 ];
 
 function detect(range: { from: string; to: string } | null): Preset {
   if (!range) return "all";
-  for (const [p] of PRESETS) {
-    const r = presetRange(p);
-    if (r && r.from === range.from && r.to === range.to) return p;
+  for (const { value } of PRESETS) {
+    const r = presetRange(value);
+    if (r && r.from === range.from && r.to === range.to) return value;
   }
   return "custom";
 }
 
 /**
- * Filtrat e faturave në stilin e cis-client-2: kartë me periudhën (Nga / Deri) dhe rresht me
- * kërkimin, llojin, statusin e pagesës dhe eksportet. Formë GET: URL-ja mbetet e ndashme.
+ * Filtrat e faturave me komponentët e cis-client-2: periudha (paracaktim + Nga/Deri me kalendar),
+ * pastaj "Faturat | Sipas artikujve", kërkimi, lloji, pagesa dhe eksportet. URL-ja mbetet e ndashme.
  */
 export function InvoiceFilterBar({
   basePath,
@@ -65,103 +68,190 @@ export function InvoiceFilterBar({
   f: InvoiceFilters;
   range: { from: string; to: string } | null;
 }) {
+  const router = useRouter();
   const [preset, setPreset] = useState<Preset>(detect(range));
-  const [from, setFrom] = useState(range?.from ?? "");
-  const [to, setTo] = useState(range?.to ?? "");
-  const choose = (p: Preset) => {
-    setPreset(p);
-    const r = presetRange(p);
-    if (r) {
-      setFrom(r.from);
-      setTo(r.to);
-    } else if (p === "all") {
-      setFrom("");
-      setTo("");
+  const [from, setFrom] = useState<string | null>(range?.from ?? presetRange("thisMonth")!.from);
+  const [to, setTo] = useState<string | null>(range?.to ?? presetRange("thisMonth")!.to);
+  const [q, setQ] = useState(f.q ?? "");
+  const [kind, setKind] = useState(f.kind ?? "all");
+  const [status, setStatus] = useState(f.status ?? "all");
+
+  const url = (over: { from?: string | null; to?: string | null; all?: boolean } = {}) => {
+    const p = new URLSearchParams({ direction: f.direction });
+    const all = over.all ?? preset === "all";
+    if (all) p.set("period", "all");
+    else {
+      p.set("from", over.from ?? from ?? "");
+      p.set("to", over.to ?? to ?? "");
     }
+    if (q.trim()) p.set("q", q.trim());
+    if (kind !== "all") p.set("kind", kind);
+    if (status !== "all") p.set("status", status);
+    return p;
   };
-  const exportQs = new URLSearchParams();
-  exportQs.set("direction", f.direction);
-  if (range) {
-    exportQs.set("from", range.from);
-    exportQs.set("to", range.to);
-  } else exportQs.set("period", "all");
-  for (const k of ["q", "status", "kind"] as const) {
-    const v = f[k];
-    if (v && v !== "all") exportQs.set(k, v);
-  }
-  const field = "h-10 w-full rounded-lg border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-accent/40";
-  const lbl = "mb-1 block text-sm font-semibold";
+  const apply = () => router.push(`${basePath}?${url()}`);
+  const dateW = { base: "calc(50% - var(--mantine-spacing-sm) / 2)", sm: 160 };
 
   return (
-    <div className="space-y-4">
-      <form method="get" action={basePath} className="grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
-        <input type="hidden" name="direction" value={f.direction} />
-        {preset === "all" && <input type="hidden" name="period" value="all" />}
-        <div className="sm:col-span-2 lg:col-span-1">
-          <label className={lbl} htmlFor="inv-preset">Periudha</label>
-          <select id="inv-preset" className={field} value={preset} onChange={(e) => choose(e.target.value as Preset)}>
-            {PRESETS.map(([p, label]) => (
-              <option key={p} value={p}>{label}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className={lbl} htmlFor="inv-from">Nga</label>
-          <input id="inv-from" type="date" name={preset === "all" ? undefined : "from"} className={field} value={from} disabled={preset === "all"} onChange={(e) => { setFrom(e.target.value); setPreset("custom"); }} />
-        </div>
-        <div>
-          <label className={lbl} htmlFor="inv-to">Deri</label>
-          <input id="inv-to" type="date" name={preset === "all" ? undefined : "to"} className={field} value={to} min={from || undefined} disabled={preset === "all"} onChange={(e) => { setTo(e.target.value); setPreset("custom"); }} />
-        </div>
-        <button type="submit" className="h-10 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground hover:opacity-90 sm:col-span-2 lg:col-span-1">
-          Shfaq faturat
-        </button>
-      </form>
+    <>
+      <Paper p={{ base: "sm", sm: "md" }}>
+        <Group align="flex-end" gap="lg" wrap="wrap">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              apply();
+            }}
+            style={{ flex: "1 1 auto" }}
+          >
+            <Group align="flex-end" gap="sm">
+              <Select
+                label="Periudha"
+                w={{ base: "100%", sm: 170 }}
+                data={PRESETS}
+                value={preset}
+                onChange={(value) => {
+                  const next = (value ?? "thisMonth") as Preset;
+                  setPreset(next);
+                  const r = presetRange(next);
+                  if (r) {
+                    setFrom(r.from);
+                    setTo(r.to);
+                  }
+                }}
+              />
+              <DateInput
+                {...DATE_PROPS}
+                label="Nga"
+                w={dateW}
+                disabled={preset === "all"}
+                value={from}
+                onChange={(value) => {
+                  if (!value) return;
+                  setPreset("custom");
+                  setFrom(value);
+                  if (to && value > to) setTo(value);
+                }}
+              />
+              <DateInput
+                {...DATE_PROPS}
+                label="Deri"
+                w={dateW}
+                disabled={preset === "all"}
+                value={to}
+                minDate={from ?? undefined}
+                onChange={(value) => {
+                  if (!value) return;
+                  setPreset("custom");
+                  setTo(value);
+                  if (from && value < from) setFrom(value);
+                }}
+              />
+              <Button type="submit" w={{ base: "100%", sm: "auto" }}>
+                Shfaq faturat
+              </Button>
+            </Group>
+          </form>
+          <Divider orientation="vertical" visibleFrom="md" />
+          <Group gap="xs" visibleFrom="md" align="flex-end">
+            <Button
+              component={Link}
+              href={`${basePath}/bank`}
+              variant="default"
+              leftSection={<IconBuildingBank size={16} stroke={1.8} />}
+            >
+              Rakordimi me bankën
+            </Button>
+          </Group>
+        </Group>
+      </Paper>
 
-      <form method="get" action={basePath} className="flex flex-wrap items-center gap-2 text-sm">
-        <input type="hidden" name="direction" value={f.direction} />
-        {range ? (
-          <>
-            <input type="hidden" name="from" value={range.from} />
-            <input type="hidden" name="to" value={range.to} />
-          </>
-        ) : (
-          <input type="hidden" name="period" value="all" />
-        )}
-        <div className="inline-flex rounded-lg bg-muted p-1">
-          <span className="inline-flex items-center gap-1.5 rounded-md bg-card px-3 py-1.5 font-semibold shadow-sm">
-            <List className="h-4 w-4" /> Faturat
-          </span>
-          <Link href={itemsHref} className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-muted-foreground hover:text-foreground">
-            <Box className="h-4 w-4" /> Sipas artikujve
-          </Link>
-        </div>
-        <div className="relative min-w-56 flex-1">
-          <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <input name="q" defaultValue={f.q ?? ""} placeholder="Filtro sipas numrit, NIPT-it, emrit ose NIVF" className={cn(field, "pl-9")} />
-        </div>
-        <select name="kind" defaultValue={f.kind ?? "all"} className={cn(field, "w-auto")} aria-label="Lloji">
-          <option value="all">Të gjitha llojet</option>
-          <option value="noncash">Pa para në dorë</option>
-          <option value="cash">Me para në dorë</option>
-          <option value="einvoice">E-faturë</option>
-        </select>
-        <select name="status" defaultValue={f.status ?? "all"} className={cn(field, "w-auto")} aria-label="Pagesa">
-          <option value="all">Çdo pagesë</option>
-          <option value="unpaid">Të papaguara</option>
-          <option value="partial">Pjesërisht</option>
-          <option value="paid">Të paguara</option>
-        </select>
-        <button type="submit" className="h-10 rounded-lg border border-border bg-card px-4 font-semibold hover:bg-muted">Filtro</button>
-        <div className="flex gap-2 sm:ml-auto">
-          <a href={`${basePath}/export?${exportQs}`} className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-border bg-card px-4 font-semibold hover:bg-muted" title="Shkarko CSV me filtrat aktualë">
-            <Download className="h-4 w-4" /> CSV
-          </a>
-          <Link href={`${basePath}/bank`} className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-border bg-card px-4 font-semibold hover:bg-muted" title="Shëno pagesat nga ekstrakti bankar">
-            <Landmark className="h-4 w-4" /> Banka
-          </Link>
-        </div>
-      </form>
-    </div>
+      <Group gap="sm" wrap="wrap">
+        <SegmentedControl
+          value="invoices"
+          onChange={(value) => value === "items" && router.push(itemsHref)}
+          data={[
+            {
+              value: "invoices",
+              label: (
+                <Group gap={6} wrap="nowrap">
+                  <IconList size={16} stroke={1.8} /> Faturat
+                </Group>
+              ),
+            },
+            {
+              value: "items",
+              label: (
+                <Group gap={6} wrap="nowrap">
+                  <IconBox size={16} stroke={1.8} /> Sipas artikujve
+                </Group>
+              ),
+            },
+          ]}
+        />
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            apply();
+          }}
+          style={{ flex: "1 1 260px" }}
+        >
+          <TextInput
+            placeholder="Filtro sipas numrit, NIPT-it, emrit ose NIVF"
+            leftSection={<IconSearch size={16} stroke={1.8} />}
+            value={q}
+            onChange={(e) => setQ(e.currentTarget.value)}
+          />
+        </form>
+        <NativeSelect
+          aria-label="Lloji"
+          w={{ base: "100%", xs: 190 }}
+          value={kind}
+          onChange={(e) => {
+            setKind(e.currentTarget.value as typeof kind);
+            const p = url();
+            if (e.currentTarget.value === "all") p.delete("kind");
+            else p.set("kind", e.currentTarget.value);
+            router.push(`${basePath}?${p}`);
+          }}
+          data={[
+            { value: "all", label: "Të gjitha llojet" },
+            { value: "noncash", label: "Pa para në dorë" },
+            { value: "cash", label: "Me para në dorë" },
+            { value: "einvoice", label: "E-faturë" },
+          ]}
+        />
+        <NativeSelect
+          aria-label="Pagesa"
+          w={{ base: "100%", xs: 170 }}
+          value={status}
+          onChange={(e) => {
+            setStatus(e.currentTarget.value as typeof status);
+            const p = url();
+            if (e.currentTarget.value === "all") p.delete("status");
+            else p.set("status", e.currentTarget.value);
+            router.push(`${basePath}?${p}`);
+          }}
+          data={[
+            { value: "all", label: "Çdo pagesë" },
+            { value: "unpaid", label: "Të papaguara" },
+            { value: "partial", label: "Pjesërisht" },
+            { value: "paid", label: "Të paguara" },
+          ]}
+        />
+        <Group gap="xs" ml={{ base: 0, md: "auto" }}>
+          <Button
+            component="a"
+            href={`${basePath}/export?${range ? new URLSearchParams({ ...Object.fromEntries(url({ from: range.from, to: range.to, all: false })) }) : url({ all: true })}`}
+            variant="default"
+            leftSection={<IconDownload size={16} stroke={1.8} />}
+          >
+            CSV
+          </Button>
+          <Button component={Link} href={`${basePath}/bank`} variant="default" hiddenFrom="md" leftSection={<IconBuildingBank size={16} stroke={1.8} />}>
+            Banka
+          </Button>
+        </Group>
+      </Group>
+    </>
   );
 }

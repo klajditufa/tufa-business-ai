@@ -1,3 +1,4 @@
+import { Title } from "@mantine/core";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Card, Empty } from "@/components/ui";
@@ -30,7 +31,7 @@ export default async function StudioPage({ searchParams }: { searchParams: Promi
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold tracking-tight">Deklarimet · {monthLabelSq(year, month)}</h1>
+        <Title order={2} fz={{ base: 20, sm: 24 }}>Deklarimet · {monthLabelSq(year, month)}</Title>
         <MonthPicker year={year} month={month} basePath="/studio" />
       </div>
       {error && <p className="text-sm text-danger">{error.message}</p>}
@@ -48,7 +49,7 @@ export default async function StudioPage({ searchParams }: { searchParams: Promi
       ) : (
         <Card className="overflow-x-auto p-0">
           <table className="w-full text-sm">
-            <thead className="bg-muted text-left text-xs uppercase text-muted-foreground">
+            <thead className="bg-muted text-left text-xs font-semibold text-muted-foreground">
               <tr>
                 <th className="px-4 py-2">Subjekti</th>
                 {kinds.map((k) => (

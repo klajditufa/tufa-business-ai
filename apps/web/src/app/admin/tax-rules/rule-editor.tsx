@@ -1,8 +1,10 @@
 "use client";
 
+import { SegmentedControl } from "@mantine/core";
+import { DateField } from "@/components/dates";
 import { useActionState, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Pencil } from "lucide-react";
+import { IconCircleCheck as CheckCircle2, IconPencil as Pencil } from "@tabler/icons-react";
 import { confirmTaxRuleAction, editTaxRuleAction } from "@/server/actions/tax-rules";
 import type { ActionResult } from "@/server/actions/auth";
 import { Alert, Button, Input, Label } from "@/components/ui";
@@ -51,14 +53,15 @@ export function RuleEditor({ id, params, source, confirmed, current }: { id: str
           <input type="hidden" name="id" value={id} />
           <input type="hidden" name="mode" value={mode} />
           <input type="hidden" name="params" value={JSON.stringify(values)} />
-          <div className="flex flex-wrap gap-3 text-sm">
-            <label className="flex items-center gap-1.5">
-              <input type="radio" checked={mode === "supersede"} onChange={() => setMode("supersede")} /> Ndryshim ligjor nga një datë (ruan historinë)
-            </label>
-            <label className="flex items-center gap-1.5">
-              <input type="radio" checked={mode === "correct"} onChange={() => setMode("correct")} /> Korrigjim gabimi (zëvendëson vlerën)
-            </label>
-          </div>
+          <SegmentedControl
+            size="xs"
+            value={mode}
+            onChange={(v) => setMode(v as typeof mode)}
+            data={[
+              { value: "supersede", label: "Ndryshim ligjor nga një datë (ruan historinë)" },
+              { value: "correct", label: "Korrigjim gabimi (zëvendëson vlerën)" },
+            ]}
+          />
           <div className="grid gap-3 sm:grid-cols-2">
             {scalarKeys.map((k) => (
               <div key={k} className={k === "label" ? "sm:col-span-2" : ""}>
@@ -92,7 +95,7 @@ export function RuleEditor({ id, params, source, confirmed, current }: { id: str
             {mode === "supersede" && (
               <div>
                 <Label htmlFor={`${id}-from`}>Në fuqi nga data</Label>
-                <Input id={`${id}-from`} name="validFrom" type="date" required />
+                <DateField id={`${id}-from`} name="validFrom" required />
               </div>
             )}
             <div className={mode === "supersede" ? "" : "sm:col-span-2"}>

@@ -1,4 +1,4 @@
-import { FolderArchive } from "lucide-react";
+import { IconArchive as FolderArchive } from "@tabler/icons-react";
 import { PageTitle } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
 import { DocumentsClient } from "./documents-client";

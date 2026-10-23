@@ -1,8 +1,9 @@
 "use client";
 
+import { DateField } from "@/components/dates";
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import { IconTrash as Trash2 } from "@tabler/icons-react";
 import { deleteCustomsAction, saveCustomsAction, setCustomsStatusAction } from "@/server/actions/tools";
 import type { ActionResult } from "@/server/actions/auth";
 import { Alert, Badge, Button, Card, Input, Label } from "@/components/ui";
@@ -35,7 +36,7 @@ export function CustomsForm({ companyId, defaultDate }: { companyId: string; def
           </div>
           <div>
             <Label htmlFor="c-date">Data</Label>
-            <Input id="c-date" name="decl_date" type="date" defaultValue={defaultDate} required />
+            <DateField id="c-date" name="decl_date" defaultValue={defaultDate} required />
           </div>
           <div>
             <Label htmlFor="c-base">Vlera e tatueshme (ALL)</Label>
@@ -79,8 +80,8 @@ export function CustomsTable({ companyId, rows, canWrite }: { companyId: string;
     <div className="space-y-2">
       {error && <Alert tone="danger">{error}</Alert>}
       <Card className="overflow-x-auto p-0">
-        <table className="w-full text-sm">
-          <thead className="bg-muted text-left text-[11px] uppercase text-muted-foreground">
+        <table className="w-full text-sm min-w-[720px]">
+          <thead className="bg-muted text-left text-xs font-semibold text-muted-foreground">
             <tr>
               <th className="px-3 py-2">Deklarata</th>
               <th className="px-3 py-2 text-right">Vlera</th>

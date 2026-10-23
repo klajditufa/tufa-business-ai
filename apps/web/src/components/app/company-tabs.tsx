@@ -1,54 +1,64 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Badge, Tabs } from "@mantine/core";
 import {
-  ArrowDownLeft, ArrowUpRight, Calculator, FolderArchive, Landmark, LayoutDashboard, LayoutGrid, Percent, Settings, Wallet,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+  IconArchive, IconArrowDownLeft, IconArrowUpRight, IconBuildingBank, IconCalculator, IconLayoutDashboard, IconLayoutGrid,
+  IconPercentage, IconSettings, IconWallet, type Icon,
+} from "@tabler/icons-react";
 
-/** Skedat e subjektit (si cis-client-2): vijë e hollë poshtë listës, vijë 2px nën skedën e hapur, rrëshqasin në telefon. */
+/** Skedat e subjektit (Workspace i cis-client-2) + "Të gjitha subjektet" djathtas. */
 export function CompanyTabs({ companyId, studioCount }: { companyId: string; studioCount: number | null }) {
   const pathname = usePathname();
+  const router = useRouter();
   const direction = useSearchParams().get("direction");
   const base = `/app/${companyId}`;
-  const isInvoices = pathname.startsWith(`${base}/invoices`) && !pathname.startsWith(`${base}/invoices/bank`);
-  const tabs = [
-    { href: `${base}/dashboard`, label: "Paneli", icon: LayoutDashboard, active: pathname.startsWith(`${base}/dashboard`) },
-    { href: `${base}/invoices?direction=sale`, label: "Shitjet", icon: ArrowUpRight, active: isInvoices && direction !== "purchase" },
-    { href: `${base}/invoices?direction=purchase`, label: "Blerjet", icon: ArrowDownLeft, active: isInvoices && direction === "purchase" },
-    { href: `${base}/vat`, label: "TVSH", icon: Percent, active: pathname.startsWith(`${base}/vat`) },
-    { href: `${base}/payroll`, label: "Listëpagesa", icon: Wallet, active: pathname.startsWith(`${base}/payroll`) },
-    { href: `${base}/declarations`, label: "Deklarimet", icon: Landmark, active: pathname.startsWith(`${base}/declarations`) },
+  const tabs: { value: string; href: string; label: string; icon: Icon; match: (p: string) => boolean }[] = [
+    { value: "dashboard", href: `${base}/dashboard`, label: "Paneli", icon: IconLayoutDashboard, match: (p) => p.startsWith(`${base}/dashboard`) },
+    { value: "sales", href: `${base}/invoices?direction=sale`, label: "Shitjet", icon: IconArrowUpRight, match: (p) => p === `${base}/invoices` && direction !== "purchase" },
+    { value: "purchases", href: `${base}/invoices?direction=purchase`, label: "Blerjet", icon: IconArrowDownLeft, match: (p) => p === `${base}/invoices` && direction === "purchase" },
+    { value: "vat", href: `${base}/vat`, label: "TVSH", icon: IconPercentage, match: (p) => p.startsWith(`${base}/vat`) },
+    { value: "payroll", href: `${base}/payroll`, label: "Listëpagesa", icon: IconWallet, match: (p) => p.startsWith(`${base}/payroll`) },
+    { value: "declarations", href: `${base}/declarations`, label: "Deklarimet", icon: IconBuildingBank, match: (p) => p.startsWith(`${base}/declarations`) },
     {
+      value: "tools",
       href: `${base}/tools`,
       label: "Raporte & mjete",
-      icon: Calculator,
-      active: ["/tools", "/reports", "/parties", "/invoices/bank"].some((p) => pathname.startsWith(base + p)),
+      icon: IconCalculator,
+      match: (p) => ["/tools", "/reports", "/parties", "/invoices/"].some((x) => p.startsWith(base + x)),
     },
-    { href: `${base}/documents`, label: "Dokumentet", icon: FolderArchive, active: pathname.startsWith(`${base}/documents`) },
-    { href: `${base}/settings`, label: "Cilësimet", icon: Settings, active: pathname.startsWith(`${base}/settings`) },
+    { value: "documents", href: `${base}/documents`, label: "Dokumentet", icon: IconArchive, match: (p) => p.startsWith(`${base}/documents`) },
+    { value: "settings", href: `${base}/settings`, label: "Cilësimet", icon: IconSettings, match: (p) => p.startsWith(`${base}/settings`) },
   ];
-  const cls = (active: boolean) =>
-    cn(
-      "-mb-px flex shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm transition sm:px-4",
-      active ? "border-primary font-medium text-foreground" : "border-transparent text-foreground/80 hover:border-border hover:bg-muted/60",
-    );
+  const active = tabs.find((tab) => tab.match(pathname))?.value ?? null;
+  const hrefs = Object.fromEntries(tabs.map((tab) => [tab.value, tab.href]));
+  hrefs.overview = "/studio/overview";
+
   return (
-    <nav className="app-tabs -mx-4 flex overflow-x-auto border-b border-border px-4 sm:mx-0 sm:px-0" aria-label="Modulet">
-      {tabs.map((t) => (
-        <Link key={t.label} href={t.href} className={cls(t.active)} aria-current={t.active ? "page" : undefined}>
-          <t.icon className="h-4 w-4" />
-          {t.label}
-        </Link>
-      ))}
-      {studioCount !== null && (
-        <Link href="/studio/overview" className={cn(cls(false), "sm:ml-auto")}>
-          <LayoutGrid className="h-4 w-4" />
-          Të gjitha subjektet
-          {studioCount > 1 && <span className="rounded-full bg-muted px-1.5 text-xs text-muted-foreground">{studioCount}</span>}
-        </Link>
-      )}
-    </nav>
+    <Tabs className="app-tabs" value={active} onChange={(value) => value && router.push(hrefs[value])}>
+      <Tabs.List>
+        {tabs.map(({ value, label, icon: TabIcon, href }) => (
+          <Tabs.Tab key={value} value={value} leftSection={<TabIcon size={16} stroke={1.8} />} onMouseEnter={() => router.prefetch(href)}>
+            {label}
+          </Tabs.Tab>
+        ))}
+        {studioCount !== null && (
+          <Tabs.Tab
+            value="overview"
+            ml={{ base: 0, sm: "auto" }}
+            leftSection={<IconLayoutGrid size={16} stroke={1.8} />}
+            rightSection={
+              studioCount > 1 ? (
+                <Badge size="sm" variant="light" color="gray" circle>
+                  {studioCount}
+                </Badge>
+              ) : undefined
+            }
+          >
+            Të gjitha subjektet
+          </Tabs.Tab>
+        )}
+      </Tabs.List>
+    </Tabs>
   );
 }

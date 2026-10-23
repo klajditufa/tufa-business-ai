@@ -1,5 +1,6 @@
 "use client";
 
+import { Checkbox } from "@/components/ui";
 import { useActionState } from "react";
 import { updateCompanyAction } from "@/server/actions/settings";
 import type { ActionResult } from "@/server/actions/auth";
@@ -31,7 +32,7 @@ export function CompanyEditForm({ company, canEdit }: { company: Company; canEdi
         <div><Label htmlFor="base_currency">{d.onboarding.currency}</Label>
           <Select id="base_currency" name="base_currency" defaultValue={company.base_currency}><option value="ALL">LEK (ALL)</option><option value="EUR">EUR</option><option value="USD">USD</option></Select></div>
         <div><Label htmlFor="fiscal_year_start">Fillimi i vitit fiskal (muaji)</Label><Input id="fiscal_year_start" name="fiscal_year_start" type="number" min={1} max={12} defaultValue={company.fiscal_year_start} /></div>
-        <label className="flex items-center gap-2 self-end text-sm"><input type="checkbox" name="vat_registered" defaultChecked={company.vat_registered} /> {d.onboarding.vatRegistered}</label>
+        <Checkbox className="self-end pb-2" name="vat_registered" defaultChecked={company.vat_registered} label={d.onboarding.vatRegistered} />
       </fieldset>
       {state && !state.ok && <Alert tone="danger">{state.error}</Alert>}
       {state?.ok && <Alert tone="success">{state.message}</Alert>}

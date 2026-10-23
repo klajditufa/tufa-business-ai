@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import { ColorSchemeScript, mantineHtmlProps } from "@mantine/core";
 import "./globals.css";
-import { THEME_INIT_SCRIPT } from "@/components/app/theme-toggle";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: { default: "TUFA Business AI", template: "%s · TUFA Business AI" },
@@ -20,12 +21,14 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="sq" suppressHydrationWarning>
+    <html lang="sq" {...mantineHtmlProps}>
       <head>
-        {/* Tema e zgjedhur vendoset para pikturimit, që të mos ketë ndezje */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        {/* Tema e ruajtur vendoset para pikturimit (pa ndezje) */}
+        <ColorSchemeScript defaultColorScheme="auto" localStorageKey="tufa-color-scheme" />
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

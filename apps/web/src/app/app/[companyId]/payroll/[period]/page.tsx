@@ -1,6 +1,7 @@
+import { Title } from "@mantine/core";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { IconArrowLeft as ArrowLeft } from "@tabler/icons-react";
 import { getPayrollLines } from "@/server/services/payroll";
 import { Card, Empty } from "@/components/ui";
 import { monthLabelSq } from "@/components/app/month-picker";
@@ -21,7 +22,7 @@ export default async function PayrollMonthPage({ params }: { params: Promise<{ c
     <div className="space-y-6 pb-20 lg:pb-0">
       <Link href={`/app/${companyId}/payroll`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline"><ArrowLeft className="h-4 w-4" /> Listëpagesat</Link>
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Listëpagesa · {monthLabelSq(year, month)}</h1>
+        <Title order={2} fz={{ base: 20, sm: 24 }}>Listëpagesa · {monthLabelSq(year, month)}</Title>
         {d && (
           <p className="text-sm text-muted-foreground">
             {d.model} · dorëzuar {d.submitted_on ? date(d.submitted_on) : "—"} · afati {d.due_date ? date(d.due_date) : "—"} · {d.cats_status ?? ""}
@@ -42,8 +43,8 @@ export default async function PayrollMonthPage({ params }: { params: Promise<{ c
         <Empty title="Pa detaje për punonjësit." hint="Në e-Filing hap “Shfaq Detajet” për këtë muaj, kliko “Eksporto në Excel” dhe ngarkoje te faqja Listëpagesa." />
       ) : (
         <Card className="overflow-x-auto p-0">
-          <table className="w-full text-sm">
-            <thead className="bg-muted text-left text-[11px] uppercase text-muted-foreground">
+          <table className="w-full text-sm min-w-[720px]">
+            <thead className="bg-muted text-left text-xs font-semibold text-muted-foreground">
               <tr>
                 <th className="px-3 py-2">[9] NID · [10] Emri</th>
                 <th className="px-2 py-2 text-right">[14] Ditë</th>

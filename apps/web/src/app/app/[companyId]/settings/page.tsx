@@ -1,4 +1,4 @@
-import { Settings } from "lucide-react";
+import { IconSettings as Settings } from "@tabler/icons-react";
 import { PageTitle } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
 import { getCompany, getMyRole } from "@/server/services/companies";

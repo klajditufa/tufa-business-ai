@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCheck, X } from "lucide-react";
+import { IconChecks as CheckCheck, IconX as X } from "@tabler/icons-react";
 import { bulkSetStatusAction, type BulkItem, type BulkResult } from "@/server/actions/declarations";
 import { Button } from "@/components/ui";
 

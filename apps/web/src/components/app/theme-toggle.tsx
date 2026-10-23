@@ -1,67 +1,33 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-import { Monitor, Moon, Sun } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Center, SegmentedControl, Tooltip, useMantineColorScheme } from "@mantine/core";
+import { IconDeviceDesktop, IconMoon, IconSun } from "@tabler/icons-react";
 
-/** Tema: sistemi / e çelët / e errët. Ruhet në localStorage("tufa-theme"); skripti në <head> e vendos para pikturimit. */
-type Theme = "auto" | "light" | "dark";
-const KEY = "tufa-theme";
-const listeners = new Set<() => void>();
-
-function read(): Theme {
-  try {
-    const t = localStorage.getItem(KEY);
-    return t === "light" || t === "dark" ? t : "auto";
-  } catch {
-    return "auto";
-  }
-}
-
-function write(t: Theme) {
-  try {
-    if (t === "auto") localStorage.removeItem(KEY);
-    else localStorage.setItem(KEY, t);
-  } catch {
-    /* shfletim privat: tema vlen vetëm për këtë faqe */
-  }
-  if (t === "auto") delete document.documentElement.dataset.theme;
-  else document.documentElement.dataset.theme = t;
-  listeners.forEach((l) => l());
-}
-
-export const THEME_INIT_SCRIPT = `try{var t=localStorage.getItem("${KEY}");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
-
-export function ThemeToggle({ className }: { className?: string }) {
-  const theme = useSyncExternalStore(
-    (cb) => {
-      listeners.add(cb);
-      return () => listeners.delete(cb);
-    },
-    read,
-    () => "auto" as Theme,
-  );
-  const options: [Theme, typeof Sun, string][] = [
-    ["auto", Monitor, "Sipas sistemit"],
-    ["light", Sun, "E çelët"],
-    ["dark", Moon, "E errët"],
-  ];
+/** Tema: sistemi / e çelët / e errët (ThemeSwitch i cis-client-2). */
+export function ThemeToggle({ fullWidth = false }: { fullWidth?: boolean }) {
+  const { colorScheme, setColorScheme } = useMantineColorScheme();
+  const options = [
+    { value: "auto", label: "Sipas sistemit", icon: IconDeviceDesktop },
+    { value: "light", label: "E çelët", icon: IconSun },
+    { value: "dark", label: "E errët", icon: IconMoon },
+  ] as const;
   return (
-    <div className={cn("inline-flex rounded-lg bg-muted p-1", className)} role="radiogroup" aria-label="Tema">
-      {options.map(([value, Icon, label]) => (
-        <button
-          key={value}
-          type="button"
-          role="radio"
-          aria-checked={theme === value}
-          title={label}
-          onClick={() => write(value)}
-          className={cn("rounded-md px-2 py-1 text-muted-foreground", theme === value && "bg-card text-foreground shadow-sm")}
-        >
-          <Icon className="h-4 w-4" />
-          <span className="sr-only">{label}</span>
-        </button>
-      ))}
-    </div>
+    <SegmentedControl
+      size="xs"
+      fullWidth={fullWidth}
+      aria-label="Tema"
+      value={colorScheme}
+      onChange={(value) => setColorScheme(value as "auto" | "light" | "dark")}
+      data={options.map(({ value, label, icon: Icon }) => ({
+        value,
+        label: (
+          <Tooltip label={label}>
+            <Center h={20} w={20} mx="auto" aria-label={label}>
+              <Icon size={15} stroke={1.8} />
+            </Center>
+          </Tooltip>
+        ),
+      }))}
+    />
   );
 }

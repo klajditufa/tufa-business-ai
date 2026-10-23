@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Alert, Card, Input, Label, Select } from "@/components/ui";
+import { Alert, Card, Checkbox, Input, Label, Select } from "@/components/ui";
 import {
   PAYROLL_RULES,
   PayrollCalcError,
@@ -96,13 +96,16 @@ export function NetGrossCalculator({ defaultPeriod }: { defaultPeriod: string })
             <Input id="ng-pension" inputMode="decimal" value={pension} onChange={(e) => setPension(e.target.value)} />
           </div>
         </div>
-        <label className="flex items-start gap-2 text-sm">
-          <input type="checkbox" className="mt-1" checked={personalStatus} onChange={(e) => setPersonalStatus(e.target.checked)} />
-          <span>
-            Punonjësi ka nënshkruar <b>deklaratën e statusit personal</b> te ky punëdhënës (zbritja 50.000 / 35.000 / 30.000 ALL).
-            <span className="block text-xs text-muted-foreground">Pa deklaratë, zbritja nuk aplikohet.</span>
-          </span>
-        </label>
+        <Checkbox
+          checked={personalStatus}
+          onChange={(e) => setPersonalStatus(e.currentTarget.checked)}
+          label={
+            <>
+              Punonjësi ka nënshkruar <b>deklaratën e statusit personal</b> te ky punëdhënës (zbritja 50.000 / 35.000 / 30.000 ALL).
+            </>
+          }
+          description="Pa deklaratë, zbritja nuk aplikohet."
+        />
       </Card>
 
       {"error" in outcome && outcome.error ? (

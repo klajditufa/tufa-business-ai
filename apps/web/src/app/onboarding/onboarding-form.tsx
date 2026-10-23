@@ -1,5 +1,7 @@
 "use client";
 
+import { Group, Radio, Text } from "@mantine/core";
+import { Checkbox } from "@/components/ui";
 import { useActionState } from "react";
 import { createFirstCompanyAction } from "@/server/actions/onboarding";
 import type { ActionResult } from "@/server/actions/auth";
@@ -14,14 +16,22 @@ export function OnboardingForm() {
       <Card className="space-y-4">
         <div>
           <Label>{d.onboarding.orgType}</Label>
-          <div className="grid gap-2 sm:grid-cols-2">
-            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm has-[:checked]:border-accent has-[:checked]:bg-accent/10">
-              <input type="radio" name="orgType" value="single" defaultChecked /> {d.onboarding.orgSingle}
-            </label>
-            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm has-[:checked]:border-accent has-[:checked]:bg-accent/10">
-              <input type="radio" name="orgType" value="studio" /> {d.onboarding.orgStudio}
-            </label>
-          </div>
+          <Radio.Group name="orgType" defaultValue="single">
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Radio.Card value="single" radius="md" p="md">
+                <Group wrap="nowrap" gap="sm">
+                  <Radio.Indicator />
+                  <Text size="sm">{d.onboarding.orgSingle}</Text>
+                </Group>
+              </Radio.Card>
+              <Radio.Card value="studio" radius="md" p="md">
+                <Group wrap="nowrap" gap="sm">
+                  <Radio.Indicator />
+                  <Text size="sm">{d.onboarding.orgStudio}</Text>
+                </Group>
+              </Radio.Card>
+            </div>
+          </Radio.Group>
         </div>
         <div>
           <Label htmlFor="orgName">{d.onboarding.orgName}</Label>
@@ -78,9 +88,7 @@ export function OnboardingForm() {
             <option value="USD">USD</option>
           </Select>
         </div>
-        <label className="flex items-center gap-2 text-sm sm:col-span-2">
-          <input type="checkbox" name="vat_registered" defaultChecked /> {d.onboarding.vatRegistered}
-        </label>
+        <Checkbox className="sm:col-span-2" name="vat_registered" defaultChecked label={d.onboarding.vatRegistered} />
       </Card>
 
       {state && !state.ok && <Alert tone="danger">{state.error}</Alert>}

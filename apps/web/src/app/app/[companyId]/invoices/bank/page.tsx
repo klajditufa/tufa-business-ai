@@ -1,5 +1,6 @@
+import { Title } from "@mantine/core";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { IconArrowLeft as ArrowLeft } from "@tabler/icons-react";
 import { createClient } from "@/lib/supabase/server";
 import { getCompany } from "@/server/services/companies";
 import type { OpenInvoice } from "@/lib/bank-match";
@@ -42,7 +43,7 @@ export default async function BankPage({ params }: { params: Promise<{ companyId
         <ArrowLeft className="h-4 w-4" /> Faturat
       </Link>
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Përputhja me bankën</h1>
+        <Title order={2} fz={{ base: 20, sm: 24 }}>Përputhja me bankën</Title>
         <p className="text-sm text-muted-foreground">
           Ngarko ekstraktin e llogarisë: arkëtimet lidhen me faturat e shitjes dhe pagesat me faturat e blerjes, sipas numrit të faturës në përshkrim, shumës dhe emrit.
           {" "}{open.filter((o) => o.direction === "sale").length} shitje dhe {open.filter((o) => o.direction === "purchase").length} blerje të papaguara.

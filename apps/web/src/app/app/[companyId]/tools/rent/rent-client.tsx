@@ -1,8 +1,10 @@
 "use client";
 
+import { Checkbox } from "@/components/ui";
+import { DateField } from "@/components/dates";
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import { IconTrash as Trash2 } from "@tabler/icons-react";
 import { deleteRentAction, saveRentAction, setRentStatusAction } from "@/server/actions/tools";
 import type { ActionResult } from "@/server/actions/auth";
 import { Alert, Badge, Button, Card, Input, Label } from "@/components/ui";
@@ -50,7 +52,7 @@ export function RentForm({ companyId, defaultDate }: { companyId: string; defaul
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div>
             <Label htmlFor="r-date">Data e pagesës</Label>
-            <Input id="r-date" name="doc_date" type="date" defaultValue={defaultDate} required />
+            <DateField id="r-date" name="doc_date" defaultValue={defaultDate} required />
           </div>
           <div>
             <Label htmlFor="r-name">Qiradhënësi</Label>
@@ -77,13 +79,11 @@ export function RentForm({ companyId, defaultDate }: { companyId: string; defaul
             <Input id="r-prop" name="property" maxLength={300} placeholder="p.sh. Dyqan, rr. ..., Durrës" />
           </div>
         </div>
-        <label className="flex items-start gap-2 text-sm">
-          <input type="checkbox" name="reference_reviewed" className="mt-1" />
-          <span>
-            E kam kontrolluar minimumin referues të qirasë për këtë pasuri.
-            <span className="block text-xs text-muted-foreground">Sistemi nuk e gjen vetë minimumin; pa këtë konfirmim regjistrimi mbetet draft.</span>
-          </span>
-        </label>
+        <Checkbox
+          name="reference_reviewed"
+          label="E kam kontrolluar minimumin referues të qirasë për këtë pasuri."
+          description="Sistemi nuk e gjen vetë minimumin; pa këtë konfirmim regjistrimi mbetet draft."
+        />
         {preview && (
           <div className="rounded-lg bg-muted px-4 py-3 text-sm tabular">
             Baza {formatCents(preview.base)} × {rate}% = <b>TAP {formatCents(preview.tax)}</b>
@@ -112,8 +112,8 @@ export function RentTable({ companyId, rows, canWrite }: { companyId: string; ro
     <div className="space-y-2">
       {error && <Alert tone="danger">{error}</Alert>}
       <Card className="overflow-x-auto p-0">
-        <table className="w-full text-sm">
-          <thead className="bg-muted text-left text-[11px] uppercase text-muted-foreground">
+        <table className="w-full text-sm min-w-[720px]">
+          <thead className="bg-muted text-left text-xs font-semibold text-muted-foreground">
             <tr>
               <th className="px-3 py-2">Data</th>
               <th className="px-3 py-2">Qiradhënësi</th>

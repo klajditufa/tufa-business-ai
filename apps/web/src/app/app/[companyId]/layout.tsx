@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { Badge, Container, Group, Stack, Text } from "@mantine/core";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCompany, getMyRole, getProfile, listMyCompanies } from "@/server/services/companies";
@@ -40,27 +41,34 @@ export default async function CompanyLayout({
   return (
     <div className="min-h-screen">
       <Header company={company} companies={companies} userName={profile?.full_name || profile?.email || ""} role={role} isSuperAdmin={isSuperAdmin} />
-      <div className="mx-auto max-w-[1440px] px-4 pt-5 sm:px-6 lg:px-9">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <span className="font-mono text-sm text-muted-foreground">{company.nipt}</span>
-          {sync?.last_sync_at ? (
-            <span className="rounded-md bg-success/15 px-2 py-0.5 text-xs font-semibold text-success" title={`${sync.sales_count} shitje, ${sync.purchases_count} blerje`}>
-              Fiskalizimi i lidhur · {date(sync.last_sync_at)}
-            </span>
-          ) : (
-            <Link href={`/app/${companyId}/settings#sync`} className="rounded-md bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground hover:text-foreground">
-              Pa lidhje me fiskalizimin
-            </Link>
-          )}
-        </div>
-        <Suspense fallback={<div className="h-11 border-b border-border" />}>
-          <CompanyTabs companyId={companyId} studioCount={studio ? companies.length : null} />
-        </Suspense>
-      </div>
-      <main className="mx-auto max-w-[1440px] px-4 pb-12 pt-6 sm:px-6 lg:px-9">{children}</main>
-      <footer className="mx-auto max-w-[1440px] px-4 pb-8 text-xs text-muted-foreground sm:px-6 lg:px-9">
-        Faturat vijnë nga fiskalizimi (CIS) me certifikatën që mbetet te subjekti; deklaratat dhe listëpagesat nga C@TS. Deklarimi dhe pagesa bëhen në portalin zyrtar.
-      </footer>
+      <Container size={1440} px={{ base: "xs", sm: "md" }} pt="lg" pb="xl">
+        <Stack gap="lg">
+          <Group justify="space-between" gap="xs">
+            <Text size="sm" c="dimmed" ff="monospace">
+              {company.nipt}
+            </Text>
+            {sync?.last_sync_at ? (
+              <Badge variant="light" color="teal" title={`${sync.sales_count} shitje, ${sync.purchases_count} blerje`}>
+                Fiskalizimi i lidhur · {date(sync.last_sync_at)}
+              </Badge>
+            ) : (
+              <Link href={`/app/${companyId}/settings#sync`}>
+                <Badge variant="light" color="gray">
+                  Pa lidhje me fiskalizimin
+                </Badge>
+              </Link>
+            )}
+          </Group>
+          <Suspense fallback={<div className="h-11" />}>
+            <CompanyTabs companyId={companyId} studioCount={studio ? companies.length : null} />
+          </Suspense>
+          <main>{children}</main>
+        </Stack>
+        <Text size="xs" c="dimmed" mt={48}>
+          Hapësirë online · Faturat vijnë nga fiskalizimi (CIS) me certifikatën që mbetet te subjekti; deklaratat dhe listëpagesat nga
+          C@TS. Deklarimi dhe pagesa bëhen në portalin zyrtar.
+        </Text>
+      </Container>
     </div>
   );
 }

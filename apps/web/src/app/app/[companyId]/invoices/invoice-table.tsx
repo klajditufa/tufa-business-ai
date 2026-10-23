@@ -2,7 +2,9 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, CircleSlash } from "lucide-react";
+import { IconCircleCheck as CheckCircle2, IconCircleOff as CircleSlash } from "@tabler/icons-react";
+import { Checkbox, NativeSelect } from "@mantine/core";
+import { DateField } from "@/components/dates";
 import { setInvoicesPaymentAction } from "@/server/actions/invoices";
 import { Alert, Badge, Button, Card } from "@/components/ui";
 import { date, money } from "@/lib/format";
@@ -92,20 +94,20 @@ export function InvoiceTable({
           <div className="font-medium">
             {selected.size} të zgjedhura · {money(selectedTotal, currency)}
           </div>
-          <label className="flex flex-col text-xs text-muted-foreground">
-            Data e pagesës
-            <input type="date" value={paidAt} onChange={(e) => setPaidAt(e.target.value)} className="h-9 rounded-lg border border-border bg-background px-2 text-sm text-foreground" />
-          </label>
-          <label className="flex flex-col text-xs text-muted-foreground">
-            Mënyra
-            <select value={method} onChange={(e) => setMethod(e.target.value as typeof method)} className="h-9 rounded-lg border border-border bg-background px-2 text-sm text-foreground">
-              <option value="bank">Bankë</option>
-              <option value="cash">Cash</option>
-              <option value="card">Kartë</option>
-              <option value="compensation">Kompensim</option>
-              <option value="other">Tjetër</option>
-            </select>
-          </label>
+          <DateField label="Data e pagesës" size="xs" w={150} value={paidAt} onChange={(v) => v && setPaidAt(v)} />
+          <NativeSelect
+            label="Mënyra"
+            size="xs"
+            value={method}
+            onChange={(e) => setMethod(e.currentTarget.value as typeof method)}
+            data={[
+              { value: "bank", label: "Bankë" },
+              { value: "cash", label: "Cash" },
+              { value: "card", label: "Kartë" },
+              { value: "compensation", label: "Kompensim" },
+              { value: "other", label: "Tjetër" },
+            ]}
+          />
           <Button type="button" size="sm" disabled={pending} onClick={() => apply("paid")}>
             <CheckCircle2 className="h-4 w-4" /> Shëno të paguara
           </Button>
@@ -120,15 +122,16 @@ export function InvoiceTable({
       {msg && <Alert tone={msg.tone}>{msg.text}</Alert>}
 
       <Card className="overflow-x-auto p-0">
-        <table className="w-full text-sm">
-          <thead className="border-b border-border text-left text-sm font-semibold">
+        <table className="w-full text-sm min-w-[720px]">
+          <thead className="bg-muted text-left text-xs font-semibold text-muted-foreground">
             <tr>
               {canWrite && (
                 <th className="w-8 px-3 py-2">
-                  <input
-                    type="checkbox"
+                  <Checkbox
+                    size="xs"
                     aria-label="Zgjidh të gjitha"
                     checked={allSelected}
+                    indeterminate={!allSelected && selected.size > 0}
                     onChange={() => setSelected(allSelected ? new Set() : new Set(selectable.map((r) => r.id)))}
                   />
                 </th>
@@ -152,13 +155,13 @@ export function InvoiceTable({
                   key={r.id}
                   className={`border-t border-border hover:bg-muted/50 ${canWrite ? "cursor-pointer" : ""} ${r.type === "cancelled" ? "opacity-50" : ""} ${isSel ? "bg-accent/10" : ""}`}
                   onClick={canWrite && r.type !== "cancelled" ? (e) => {
-                    if ((e.target as HTMLElement).closest("a,button,input")) return;
+                    if ((e.target as HTMLElement).closest("a,button,input,.mantine-Checkbox-root")) return;
                     toggle(r.id);
                   } : undefined}
                 >
                   {canWrite && (
                     <td className="px-3 py-2">
-                      {r.type !== "cancelled" && <input type="checkbox" aria-label={`Zgjidh faturën ${r.number ?? ""}`} checked={isSel} onChange={() => toggle(r.id)} />}
+                      {r.type !== "cancelled" && <Checkbox size="xs" aria-label={`Zgjidh faturën ${r.number ?? ""}`} checked={isSel} onChange={() => toggle(r.id)} />}
                     </td>
                   )}
                   <td className="whitespace-nowrap px-4 py-3 tabular">{date(r.issue_date)}</td>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { IconArrowDownLeft as ArrowDownLeft, IconArrowUpRight as ArrowUpRight } from "@tabler/icons-react";
 import { getCompany } from "@/server/services/companies";
 import { filterRange, getSyncStatus, listInvoices, parseInvoiceFilters } from "@/server/services/invoices";
 import { Empty, PageTitle, Stat } from "@/components/ui";

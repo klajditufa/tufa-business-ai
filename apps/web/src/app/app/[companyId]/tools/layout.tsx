@@ -1,4 +1,4 @@
-import { Calculator } from "lucide-react";
+import { IconCalculator as Calculator } from "@tabler/icons-react";
 import { PageTitle } from "@/components/ui";
 import { ToolsMenu } from "./tools-menu";
 

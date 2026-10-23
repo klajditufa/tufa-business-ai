@@ -1,3 +1,4 @@
+import { Title } from "@mantine/core";
 import { redirect } from "next/navigation";
 import { listMyCompanies } from "@/server/services/companies";
 import { OnboardingForm } from "./onboarding-form";
@@ -9,7 +10,7 @@ export default async function OnboardingPage() {
   const d = t();
   return (
     <main className="mx-auto max-w-2xl p-6">
-      <h1 className="text-2xl font-bold tracking-tight">{d.onboarding.title}</h1>
+      <Title order={2} fz={{ base: 20, sm: 24 }}>{d.onboarding.title}</Title>
       <p className="mt-1 text-sm text-muted-foreground">{d.onboarding.subtitle}</p>
       <div className="mt-6">
         <OnboardingForm />

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Container, Stack, Text } from "@mantine/core";
 import { getProfile, listMyCompanies } from "@/server/services/companies";
 import { Header } from "@/components/app/header";
 import { StudioTabs } from "./studio-tabs";
@@ -12,11 +13,15 @@ export default async function StudioLayout({ children }: { children: React.React
   return (
     <div className="min-h-screen">
       <Header companies={companies} company={current} userName={profile?.full_name || profile?.email || ""} role="accountant" isSuperAdmin={isSuperAdmin} homeHref="/studio" />
-      <div className="mx-auto max-w-[1440px] px-4 pt-5 sm:px-6 lg:px-9">
-        <div className="mb-3 text-sm text-muted-foreground">Paneli i studios · {companies.length} subjekte</div>
-        <StudioTabs />
-      </div>
-      <main className="mx-auto max-w-[1440px] px-4 pb-12 pt-6 sm:px-6 lg:px-9">{children}</main>
+      <Container size={1440} px={{ base: "xs", sm: "md" }} pt="lg" pb="xl">
+        <Stack gap="lg">
+          <Text size="sm" c="dimmed">
+            Paneli i studios · {companies.length} subjekte
+          </Text>
+          <StudioTabs />
+          <main>{children}</main>
+        </Stack>
+      </Container>
     </div>
   );
 }

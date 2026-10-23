@@ -1,3 +1,4 @@
+import { date } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { Alert, Badge, Card, Empty } from "@/components/ui";
 
@@ -15,7 +16,7 @@ function Section({ title, syncedAt, children, count }: { title: string; syncedAt
     <div className="space-y-2">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="text-lg font-semibold">{title} <span className="text-sm font-normal text-muted-foreground">({count})</span></h3>
-        <span className="text-xs text-muted-foreground">{syncedAt ? `Sinkronizuar ${new Date(syncedAt).toLocaleString("sq-AL")}` : "Ende pa sinkronizuar"}</span>
+        <span className="text-xs text-muted-foreground">{syncedAt ? `Sinkronizuar ${date(syncedAt)} ${syncedAt.slice(11, 16)}` : "Ende pa sinkronizuar"}</span>
       </div>
       {children}
     </div>
@@ -55,8 +56,8 @@ export default async function RegistryPage({ params }: { params: Promise<{ compa
       <Section title="Njësitë e biznesit" syncedAt={units.syncedAt} count={units.rows.length}>
         {units.rows.length === 0 ? <Empty title="Asnjë njësi." /> : (
           <Card className="overflow-x-auto p-0">
-            <table className="w-full text-sm">
-              <thead className="bg-muted text-left text-[11px] uppercase text-muted-foreground">
+            <table className="w-full text-sm min-w-[600px]">
+              <thead className="bg-muted text-left text-xs font-semibold text-muted-foreground">
                 <tr><th className={th}>Kodi</th><th className={th}>Emri</th><th className={th}>Adresa</th><th className={th}>Nga</th><th className={th}>Deri</th></tr>
               </thead>
               <tbody>
@@ -78,8 +79,8 @@ export default async function RegistryPage({ params }: { params: Promise<{ compa
       <Section title="Pajisjet fiskale (TCR)" syncedAt={tcrs.syncedAt} count={tcrs.rows.length}>
         {tcrs.rows.length === 0 ? <Empty title="Asnjë pajisje." /> : (
           <Card className="overflow-x-auto p-0">
-            <table className="w-full text-sm">
-              <thead className="bg-muted text-left text-[11px] uppercase text-muted-foreground">
+            <table className="w-full text-sm min-w-[720px]">
+              <thead className="bg-muted text-left text-xs font-semibold text-muted-foreground">
                 <tr><th className={th}>Kodi TCR</th><th className={th}>ID e brendshme</th><th className={th}>Njësia</th><th className={th}>Lloji</th><th className={th}>Softueri</th><th className={th}>Nga</th><th className={th}>Statusi</th></tr>
               </thead>
               <tbody>
@@ -103,8 +104,8 @@ export default async function RegistryPage({ params }: { params: Promise<{ compa
       <Section title="Operatorët" syncedAt={operators.syncedAt} count={operators.rows.length}>
         {operators.rows.length === 0 ? <Empty title="Asnjë operator." /> : (
           <Card className="overflow-x-auto p-0">
-            <table className="w-full text-sm">
-              <thead className="bg-muted text-left text-[11px] uppercase text-muted-foreground">
+            <table className="w-full text-sm min-w-[600px]">
+              <thead className="bg-muted text-left text-xs font-semibold text-muted-foreground">
                 <tr><th className={th}>Emri</th><th className={th}>Kodi i operatorit</th><th className={th}>Nr. personal</th><th className={th}>Nga</th><th className={th}>Statusi</th></tr>
               </thead>
               <tbody>

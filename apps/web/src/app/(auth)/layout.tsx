@@ -1,4 +1,4 @@
-import { ReceiptText } from "lucide-react";
+import { IconReceipt as ReceiptText } from "@tabler/icons-react";
 import { t } from "@/lib/i18n";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {

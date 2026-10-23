@@ -51,7 +51,7 @@ export default async function ItemsPage({
           <h2 className="text-xl font-semibold">Faturat sipas artikujve</h2>
           <p className="text-sm text-muted-foreground">Sasitë dhe vlerat për çdo artikull, nga rreshtat e faturave të fiskalizimit.</p>
         </div>
-        {!wholeYear && <MonthPicker year={year} month={month} basePath={`${base}`} />}
+        {!wholeYear && <MonthPicker year={year} month={month} basePath={`${base}?direction=${direction}`} />}
       </div>
       <div className="flex flex-wrap gap-2 text-sm">
         <div className="inline-flex rounded-lg bg-muted p-1">
@@ -90,8 +90,8 @@ export default async function ItemsPage({
             <Card className="border-accent/60 p-3"><div className="text-xs text-muted-foreground">Totali</div><div className="text-lg font-semibold tabular">{formatCents(totals.total)}</div></Card>
           </div>
           <Card className="overflow-x-auto p-0">
-            <table className="w-full text-sm">
-              <thead className="bg-muted text-left text-[11px] uppercase text-muted-foreground">
+            <table className="w-full text-sm min-w-[720px]">
+              <thead className="bg-muted text-left text-xs font-semibold text-muted-foreground">
                 <tr>
                   <th className="px-3 py-2">Artikulli</th>
                   <th className="px-3 py-2">Njësia</th>
@@ -115,7 +115,7 @@ export default async function ItemsPage({
                       )}
                     </td>
                     <td className="px-3 py-2">{r.unit}</td>
-                    <td className="px-3 py-2 text-right tabular">{r.quantity.toLocaleString("sq-AL")}</td>
+                    <td className="px-3 py-2 text-right tabular">{String(r.quantity)}</td>
                     <td className="px-3 py-2 text-right tabular">{formatCents(r.net)}</td>
                     <td className="px-3 py-2 text-right tabular">{formatCents(r.vat)}</td>
                     <td className="px-3 py-2 text-right font-medium tabular">{formatCents(r.total)}</td>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { NativeSelect, NavLink, Paper, Stack, Text } from "@mantine/core";
 
 /** Grupet e "Raporte & mjete", si menuja e cis-client-2. Disa lidhje çojnë te modulet ekzistuese. */
 export function toolGroups(base: string) {
@@ -47,42 +47,28 @@ export function ToolsMenu({ companyId }: { companyId: string }) {
   return (
     <>
       {/* Telefon: zgjedhës */}
-      <select
+      <NativeSelect
+        hiddenFrom="lg"
         aria-label="Mjeti"
-        className="h-10 w-full rounded-lg border border-border bg-card px-3 text-sm lg:hidden"
         value={active}
-        onChange={(e) => router.push(e.target.value)}
-      >
-        {groups.map((g) => (
-          <optgroup key={g.title} label={g.title}>
-            {g.items.map((i) => (
-              <option key={i.href} value={i.href}>
-                {i.label}
-              </option>
-            ))}
-          </optgroup>
-        ))}
-      </select>
+        onChange={(e) => router.push(e.currentTarget.value)}
+        data={groups.map((g) => ({ group: g.title, items: g.items.map((i) => ({ value: i.href, label: i.label })) }))}
+      />
       {/* Desktop: menu e grupuar */}
-      <nav className="hidden rounded-xl border border-border bg-card p-3 lg:block">
-        {groups.map((g) => (
-          <div key={g.title} className="mb-3 last:mb-0">
-            <div className="px-3 pb-1 pt-2 text-xs font-medium text-muted-foreground">{g.title}</div>
-            {g.items.map((i) => (
-              <Link
-                key={i.href}
-                href={i.href}
-                className={cn(
-                  "block rounded-md px-3 py-2 text-sm hover:bg-muted",
-                  active === i.href && "bg-accent/15 font-medium text-accent",
-                )}
-              >
-                {i.label}
-              </Link>
-            ))}
-          </div>
-        ))}
-      </nav>
+      <Paper p="sm" visibleFrom="lg">
+        <Stack gap="xs">
+          {groups.map((g) => (
+            <div key={g.title}>
+              <Text size="xs" fw={600} c="dimmed" px="sm" pt="xs" pb={4}>
+                {g.title}
+              </Text>
+              {g.items.map((i) => (
+                <NavLink key={i.href} component={Link} href={i.href} label={i.label} active={active === i.href} variant="light" style={{ borderRadius: "var(--mantine-radius-md)" }} />
+              ))}
+            </div>
+          ))}
+        </Stack>
+      </Paper>
     </>
   );
 }

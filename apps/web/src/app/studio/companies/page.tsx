@@ -1,3 +1,4 @@
+import { Title } from "@mantine/core";
 import Link from "next/link";
 import { listMyCompanies } from "@/server/services/companies";
 import { Badge, Card } from "@/components/ui";
@@ -9,12 +10,12 @@ export default async function StudioCompaniesPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Subjektet ({companies.length})</h1>
+        <Title order={2} fz={{ base: 20, sm: 24 }}>Subjektet ({companies.length})</Title>
         <Link href="/studio/companies/new" className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">+ Subjekt i ri</Link>
       </div>
       <Card className="overflow-x-auto p-0">
-        <table className="w-full text-sm">
-          <thead className="bg-muted text-left text-xs uppercase text-muted-foreground">
+        <table className="w-full text-sm min-w-[600px]">
+          <thead className="bg-muted text-left text-xs font-semibold text-muted-foreground">
             <tr><th className="px-4 py-2">Emri</th><th className="px-4 py-2">NIPT</th><th className="px-4 py-2">Forma</th><th className="px-4 py-2">Regjimi</th><th className="px-4 py-2">TVSH</th><th className="px-4 py-2">Qyteti</th></tr>
           </thead>
           <tbody>

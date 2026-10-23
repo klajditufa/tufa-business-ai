@@ -2,7 +2,7 @@
 
 import { useActionState, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Copy, KeyRound, Trash2 } from "lucide-react";
+import { IconCopy as Copy, IconKey as KeyRound, IconTrash as Trash2 } from "@tabler/icons-react";
 import { createApiKeyAction, revokeApiKeyAction } from "@/server/actions/settings";
 import type { ActionResult } from "@/server/actions/auth";
 import { Alert, Badge, Button, Input, Label } from "@/components/ui";

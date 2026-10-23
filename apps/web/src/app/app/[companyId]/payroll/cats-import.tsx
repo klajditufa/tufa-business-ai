@@ -1,8 +1,10 @@
 "use client";
 
+import { MonthPickerInput } from "@mantine/dates";
+import { IconCalendar } from "@tabler/icons-react";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { FileUp, ShieldCheck, Upload } from "lucide-react";
+import { IconFileUpload as FileUp, IconShieldCheck as ShieldCheck, IconUpload as Upload } from "@tabler/icons-react";
 import { detectKind, findPeriodInGrid, parseCsv, parseLines, parseSummary, type Grid, type LineRow, type SummaryRow } from "@/lib/cats-payroll";
 import { importPayrollLinesAction, importPayrollSummaryAction } from "@/server/actions/payroll";
 import { Alert, Button, Card } from "@/components/ui";
@@ -108,11 +110,13 @@ export function CatsImport({ companyId, canWrite }: { companyId: string; canWrit
       {parsed?.kind === "lines" && (
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <span className="font-medium">{parsed.rows.length} punonjës (E-SIG 025) për muajin</span>
-          <input
-            type="month"
-            value={`${parsed.year}-${String(parsed.month).padStart(2, "0")}`}
-            onChange={(e) => { const [y, m] = e.target.value.split("-").map(Number); if (y && m) setParsed({ ...parsed, year: y, month: m }); }}
-            className="h-8 rounded border border-border bg-background px-2"
+          <MonthPickerInput
+            size="xs"
+            w={130}
+            valueFormat="MM/YYYY"
+            leftSection={<IconCalendar size={14} stroke={1.8} />}
+            value={`${parsed.year}-${String(parsed.month).padStart(2, "0")}-01`}
+            onChange={(v) => { if (!v) return; const [y, m] = v.split("-").map(Number); setParsed({ ...parsed, year: y, month: m }); }}
             aria-label="Muaji i listëpagesës"
           />
           <span className="text-muted-foreground">· bruto {money(parsed.rows.reduce((a, r) => a + r.gross, 0), "ALL", 0)}</span>

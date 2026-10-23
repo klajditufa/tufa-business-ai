@@ -2,7 +2,7 @@
 
 import { useActionState, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Copy, Trash2, UserPlus } from "lucide-react";
+import { IconCopy as Copy, IconTrash as Trash2, IconUserPlus as UserPlus } from "@tabler/icons-react";
 import { inviteUserAction, removeMemberAction, revokeInvitationAction } from "@/server/actions/settings";
 import type { ActionResult } from "@/server/actions/auth";
 import { Alert, Badge, Button, Input, Label, Select } from "@/components/ui";

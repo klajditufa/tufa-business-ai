@@ -1,4 +1,4 @@
-import { LayoutDashboard } from "lucide-react";
+import { IconLayoutDashboard as LayoutDashboard } from "@tabler/icons-react";
 import { PageTitle } from "@/components/ui";
 import Link from "next/link";
 import { getCompany } from "@/server/services/companies";

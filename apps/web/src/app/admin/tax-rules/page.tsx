@@ -1,3 +1,5 @@
+import { amount } from "@/lib/format";
+import { Title } from "@mantine/core";
 import { createClient } from "@/lib/supabase/server";
 import { Badge, Card } from "@/components/ui";
 import { date } from "@/lib/format";
@@ -16,7 +18,7 @@ function summary(p: Record<string, unknown>) {
   for (const [k, v] of Object.entries(p)) {
     if (k === "label" || k === "currency") continue;
     if (Array.isArray(v)) parts.push(`${k}: ${v.length} shkallë`);
-    else if (typeof v === "number") parts.push(`${k}: ${v.toLocaleString("sq-AL")}${/rate|employee|employer|self/.test(k) ? "%" : ""}`);
+    else if (typeof v === "number") parts.push(`${k}: ${amount(v, Number.isInteger(v) ? 0 : 2)}${/rate|employee|employer|self/.test(k) ? "%" : ""}`);
     else if (v != null && typeof v !== "object") parts.push(`${k}: ${v}`);
   }
   return parts.join(" · ");
@@ -43,7 +45,7 @@ export default async function TaxRulesPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Rregullat tatimore</h1>
+        <Title order={2} fz={{ base: 20, sm: 24 }}>Rregullat tatimore</Title>
         <p className="text-sm text-muted-foreground">
           Normat, pragjet dhe kontributet që përdorin TVSH-ja, raportet dhe deklarimet. Një ndryshim ligjor regjistrohet si vlerë e re nga data e hyrjes në fuqi,
           kështu periudhat e kaluara llogariten me vlerën e vjetër.

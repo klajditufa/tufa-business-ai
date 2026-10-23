@@ -1,8 +1,9 @@
 "use client";
 
+import { Checkbox, NativeSelect } from "@mantine/core";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, FileUp, ShieldCheck, TriangleAlert } from "lucide-react";
+import { IconCircleCheck as CheckCircle2, IconFileUpload as FileUp, IconShieldCheck as ShieldCheck, IconAlertTriangle as TriangleAlert } from "@tabler/icons-react";
 import { itemsToLines, parseStatement, type Statement, type TextItem } from "@/lib/bank-statement";
 import { matchTransactions, type Match, type OpenInvoice } from "@/lib/bank-match";
 import { setInvoicesPaymentAction } from "@/server/actions/invoices";
@@ -134,8 +135,8 @@ export function BankReconcile({ companyId, open, currency, canWrite }: { company
           </div>
 
           <Card className="overflow-x-auto p-0">
-            <table className="w-full text-sm">
-              <thead className="bg-muted text-left text-xs uppercase text-muted-foreground">
+            <table className="w-full text-sm min-w-[600px]">
+              <thead className="bg-muted text-left text-xs font-semibold text-muted-foreground">
                 <tr>
                   {canWrite && <th className="w-8 px-3 py-2" />}
                   <th className="px-3 py-2">Data</th>
@@ -159,7 +160,7 @@ export function BankReconcile({ companyId, open, currency, canWrite }: { company
                       {canWrite && (
                         <td className="px-3 py-2">
                           {isDone ? <CheckCircle2 className="h-4 w-4 text-success" /> : (
-                            <input type="checkbox" aria-label="Zgjidh" disabled={invs.length === 0} checked={!!picked[i] && invs.length > 0} onChange={(e) => setPicked((p) => ({ ...p, [i]: e.target.checked }))} />
+                            <Checkbox size="xs" aria-label="Zgjidh" disabled={invs.length === 0} checked={!!picked[i] && invs.length > 0} onChange={(e) => { const v = e.currentTarget.checked; setPicked((p) => ({ ...p, [i]: v })); }} />
                           )}
                         </td>
                       )}
@@ -175,20 +176,22 @@ export function BankReconcile({ companyId, open, currency, canWrite }: { company
                           </div>
                         ))}
                         {canWrite && !isDone && (
-                          <select
-                            className="mt-1 h-8 max-w-64 rounded border border-border bg-background px-1 text-xs"
+                          <NativeSelect
+                            mt={4}
+                            size="xs"
+                            maw={256}
+                            aria-label="Fatura"
                             value={manual[i] ?? ""}
                             onChange={(e) => {
-                              const v = e.target.value;
+                              const v = e.currentTarget.value;
                               setManual((s) => ({ ...s, [i]: v }));
                               setPicked((p) => ({ ...p, [i]: !!v || (m.confidence === "high") }));
                             }}
-                          >
-                            <option value="">{invs.length ? "ndrysho…" : "zgjidh faturën…"}</option>
-                            {options.map((o) => (
-                              <option key={o.id} value={o.id}>{o.number ?? "—"} · {o.counterparty_name} · {money(o.outstanding, currency, 0)}</option>
-                            ))}
-                          </select>
+                            data={[
+                              { value: "", label: invs.length ? "ndrysho…" : "zgjidh faturën…" },
+                              ...options.map((o) => ({ value: o.id, label: `${o.number ?? "—"} · ${o.counterparty_name} · ${money(o.outstanding, currency, 0)}` })),
+                            ]}
+                          />
                         )}
                       </td>
                       <td className="px-3 py-2">

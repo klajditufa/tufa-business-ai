@@ -1,5 +1,6 @@
 "use client";
 
+import { Checkbox } from "@/components/ui";
 import { useActionState } from "react";
 import { addCompanyAction } from "@/server/actions/onboarding";
 import type { ActionResult } from "@/server/actions/auth";
@@ -24,7 +25,7 @@ export function CompanyForm() {
           <Select id="tax_regime" name="tax_regime" defaultValue="standard">{Object.entries(d.taxRegimes).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select></div>
         <div><Label htmlFor="base_currency">{d.onboarding.currency}</Label>
           <Select id="base_currency" name="base_currency" defaultValue="ALL"><option value="ALL">LEK (ALL)</option><option value="EUR">EUR</option><option value="USD">USD</option></Select></div>
-        <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="vat_registered" defaultChecked /> {d.onboarding.vatRegistered}</label>
+        <Checkbox className="sm:col-span-2" name="vat_registered" defaultChecked label={d.onboarding.vatRegistered} />
       </Card>
       {state && !state.ok && <Alert tone="danger">{state.error}</Alert>}
       <Button type="submit" size="lg" disabled={pending}>{pending ? d.common.loading : d.onboarding.submit}</Button>

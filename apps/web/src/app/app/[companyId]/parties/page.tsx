@@ -1,5 +1,8 @@
+import { Title } from "@mantine/core";
+import { TextInput } from "@mantine/core";
+import { Button, Checkbox } from "@/components/ui";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { IconSearch as Search } from "@tabler/icons-react";
 import { getCompany } from "@/server/services/companies";
 import { listPartyBalances } from "@/server/services/parties";
 import { Badge, Card, Empty } from "@/components/ui";
@@ -39,7 +42,7 @@ export default async function PartiesPage({
   return (
     <div className="space-y-4 pb-20 lg:pb-0">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold tracking-tight">Klientët &amp; Furnitorët</h1>
+        <Title order={2} fz={{ base: 20, sm: 24 }}>Klientët &amp; Furnitorët</Title>
         <div className="flex gap-2 text-sm">{tab("customers", "Klientët")}{tab("suppliers", "Furnitorët")}</div>
       </div>
 
@@ -62,14 +65,9 @@ export default async function PartiesPage({
 
       <form method="get" action={base} className="flex flex-wrap items-center gap-2 text-sm">
         <input type="hidden" name="type" value={typeParam} />
-        <div className="relative min-w-48 flex-1">
-          <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <input name="q" defaultValue={sp.q ?? ""} placeholder="Emër ose NIPT…" className="h-9 w-full rounded-lg border border-border bg-background pl-8 pr-3" />
-        </div>
-        <label className="flex items-center gap-1.5">
-          <input type="checkbox" name="show" value="all" defaultChecked={showAll} /> përfshi edhe ata pa mbetje
-        </label>
-        <button type="submit" className="h-9 rounded-lg bg-muted px-3 hover:bg-border">Filtro</button>
+        <TextInput className="min-w-48 flex-1" name="q" defaultValue={sp.q ?? ""} placeholder="Emër ose NIPT…" leftSection={<Search size={16} stroke={1.8} />} />
+        <Checkbox name="show" value="all" defaultChecked={showAll} label="përfshi edhe ata pa mbetje" />
+        <Button type="submit" variant="secondary">Filtro</Button>
       </form>
 
       {error && <p className="text-sm text-danger">{error.message}</p>}
@@ -81,8 +79,8 @@ export default async function PartiesPage({
         />
       ) : (
         <Card className="overflow-x-auto p-0">
-          <table className="w-full text-sm">
-            <thead className="bg-muted text-left text-xs uppercase text-muted-foreground">
+          <table className="w-full text-sm min-w-[720px]">
+            <thead className="bg-muted text-left text-xs font-semibold text-muted-foreground">
               <tr>
                 <th className="px-4 py-2">{direction === "sale" ? "Klienti" : "Furnitori"}</th>
                 <th className="px-4 py-2 text-right">Fatura</th>

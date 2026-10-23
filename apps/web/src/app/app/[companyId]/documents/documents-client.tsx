@@ -1,8 +1,9 @@
 "use client";
 
+import { NativeSelect } from "@mantine/core";
 import { useCallback, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Download, FileText, Trash2, UploadCloud } from "lucide-react";
+import { IconDownload as Download, IconFileDescription as FileText, IconTrash as Trash2, IconCloudUpload as UploadCloud } from "@tabler/icons-react";
 import { createClient } from "@/lib/supabase/client";
 import { registerDocumentAction, getDocumentUrlAction, deleteDocumentAction, updateDocumentAction } from "@/server/actions/documents";
 import { Badge, Button, Card, Empty, Input, Select } from "@/components/ui";
@@ -150,8 +151,8 @@ export function DocumentsClient({
         <Empty title="Ende pa dokumente në këtë kategori." hint="Ngarko NIPT-in, QKB-në, kontratat, ekstraktet bankare dhe faturat." />
       ) : (
         <Card className="overflow-x-auto p-0">
-          <table className="w-full text-sm">
-            <thead className="bg-muted text-left text-xs uppercase text-muted-foreground">
+          <table className="w-full text-sm min-w-[600px]">
+            <thead className="bg-muted text-left text-xs font-semibold text-muted-foreground">
               <tr>
                 <th className="px-4 py-2">Dokumenti</th>
                 <th className="px-4 py-2">Kategoria</th>
@@ -172,13 +173,13 @@ export function DocumentsClient({
                   </td>
                   <td className="px-4 py-2">
                     {canWrite ? (
-                      <select
+                      <NativeSelect
+                        size="xs"
+                        aria-label="Kategoria"
                         defaultValue={doc.category}
-                        onChange={async (e) => { await updateDocumentAction(doc.id, { category: e.target.value as never }); startTransition(() => router.refresh()); }}
-                        className="rounded-md border border-border bg-card px-2 py-1 text-xs"
-                      >
-                        {Object.entries(categories).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                      </select>
+                        onChange={async (e) => { await updateDocumentAction(doc.id, { category: e.currentTarget.value as never }); startTransition(() => router.refresh()); }}
+                        data={Object.entries(categories).map(([value, label]) => ({ value, label }))}
+                      />
                     ) : categories[doc.category]}
                   </td>
                   <td className="px-4 py-2 tabular">{date(doc.document_date ?? doc.created_at)}</td>

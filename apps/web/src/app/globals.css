@@ -1,63 +1,30 @@
+/* Rendi i shtresave: Mantine mbi preflight-in e Tailwind, utilitetet e Tailwind mbi Mantine. */
+@layer theme, base, mantine, components, utilities;
 @import "tailwindcss";
+@import "@mantine/core/styles.layer.css";
+@import "@mantine/dates/styles.layer.css";
 
-/* Paleta: blu e errët (brand), e bardhë, gri neutrale; statuset financiare me ngjyra të kontrolluara. */
+/*
+ * Tokenët e Tailwind lidhen me variablat e Mantine, që faqet me klasa Tailwind dhe komponentët
+ * Mantine të kenë të njëjtat ngjyra në temën e çelët dhe të errët (si cis-client-2).
+ */
 :root {
-  /* Paleta e cis-client-2 (Mantine indigo): sfond gri i lehtë, karta të bardha, blu-indigo për veprimet. */
   --background: #f4f5f7;
-  --foreground: #1a1b1e;
-  --card: #ffffff;
-  --card-foreground: #1a1b1e;
-  --muted: #f1f3f5;
-  --muted-foreground: #6b7280;
-  --border: #e3e6ea;
-  --primary: #4c6ef5;
+  --foreground: var(--mantine-color-text);
+  --card: var(--mantine-color-body);
+  --card-foreground: var(--mantine-color-text);
+  --muted: var(--mantine-color-default-hover);
+  --muted-foreground: var(--mantine-color-dimmed);
+  --border: var(--mantine-color-default-border);
+  --primary: var(--mantine-primary-color-filled);
   --primary-foreground: #ffffff;
-  --accent: #4c6ef5;
-  --success: #0c8f6e;
-  --warning: #c26a00;
-  --danger: #e03131;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #1a1b1e;
-  --sidebar-active: #edf2ff;
+  --accent: var(--mantine-primary-color-filled);
+  --success: var(--mantine-color-teal-text);
+  --warning: var(--mantine-color-orange-text);
+  --danger: var(--mantine-color-red-text);
 }
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --background: #1a1a1a;
-    --foreground: #e9ecef;
-    --card: #242424;
-    --card-foreground: #e9ecef;
-    --muted: #2e2e2e;
-    --muted-foreground: #a0a4ab;
-    --border: #3a3a3a;
-    --primary: #5c7cfa;
-    --primary-foreground: #ffffff;
-    --accent: #748ffc;
-    --success: #38d9a9;
-    --warning: #fcc419;
-    --danger: #ff6b6b;
-    --sidebar: #242424;
-    --sidebar-foreground: #e9ecef;
-    --sidebar-active: #2b3044;
-  }
-}
-:root[data-theme="dark"] {
+:root[data-mantine-color-scheme="dark"] {
   --background: #1a1a1a;
-  --foreground: #e9ecef;
-  --card: #242424;
-  --card-foreground: #e9ecef;
-  --muted: #2e2e2e;
-  --muted-foreground: #a0a4ab;
-  --border: #3a3a3a;
-  --primary: #5c7cfa;
-  --primary-foreground: #ffffff;
-  --accent: #748ffc;
-  --success: #38d9a9;
-  --warning: #fcc419;
-  --danger: #ff6b6b;
-  --sidebar: #242424;
-  --sidebar-foreground: #e9ecef;
-  --sidebar-active: #2b3044;
 }
 
 @theme inline {
@@ -74,11 +41,8 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-active: var(--sidebar-active);
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: var(--mantine-font-family);
+  --font-mono: var(--mantine-font-family-monospace);
 }
 
 body {
@@ -104,10 +68,48 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Skedat kryesore: në telefon qëndrojnë në një rresht dhe rrëshqasin anash */
-.app-tabs {
-  scrollbar-width: none;
+
+/* Tabelat HTML të faqeve marrin pamjen e Mantine Table (rreshti nën kursor, kufij të hollë). */
+main table tbody tr:hover {
+  background-color: var(--mantine-color-default-hover);
 }
-.app-tabs::-webkit-scrollbar {
-  display: none;
+
+/* Skedat kryesore (si app.css i cis-client-2): vijë e hollë nën listë, 2px nën skedën e hapur. */
+.app-tabs {
+  --tabs-list-border-width: 1px;
+}
+.app-tabs .mantine-Tabs-list::before {
+  border-width: 0 0 1px;
+  border-color: var(--mantine-color-default-border);
+}
+.app-tabs .mantine-Tabs-tab[data-active] {
+  box-shadow: inset 0 -1px 0 var(--tabs-color);
+}
+@media (max-width: 48em) {
+  .app-tabs .mantine-Tabs-list {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .app-tabs .mantine-Tabs-list::-webkit-scrollbar {
+    display: none;
+  }
+  .app-tabs .mantine-Tabs-tab {
+    flex: none;
+    padding-inline: var(--mantine-spacing-sm);
+  }
+}
+
+/* Kodet e gjata (NIVF, NSLF, EIC) thyhen kudo jashtë tabelave. */
+.code-value {
+  overflow-wrap: anywhere;
+}
+
+/* Qelizat e tabelave me hapësirat e Mantine Table (verticalSpacing sm, horizontalSpacing md). */
+main table th,
+main table td {
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+}
+main table th {
+  white-space: nowrap;
 }
