@@ -648,6 +648,51 @@ select pg_temp.check('klienti i B nuk sheh listëpagesat e A',
 reset role;
 
 -- =============================================================================
+-- 19. Dërgimi direkt i listëpagesave me çelës (0027)
+-- =============================================================================
+select set_config('t.nipt_b', (select nipt::text from public.companies where id = :'compB'::uuid), false);
+set role anon;
+do $$ begin
+  perform public.sync_payroll('tba_' || repeat('ab', 24), 'X00000000X', 'summary', null, null, '[]'::jsonb);
+  perform pg_temp.check('sync_payroll: NIPT i ndryshëm refuzohet', false);
+exception when others then perform pg_temp.check('sync_payroll: NIPT i ndryshëm refuzohet', sqlstate = '22023'); end $$;
+do $$ begin
+  perform public.sync_payroll('tba_' || repeat('cd', 24), current_setting('t.nipt_b'), 'summary', null, null, '[]'::jsonb);
+  perform pg_temp.check('sync_payroll: çelës i keq refuzohet', false);
+exception when others then perform pg_temp.check('sync_payroll: çelës i keq refuzohet', sqlstate = '28000'); end $$;
+select pg_temp.check('sync_payroll (anon + çelës): përmbledhja e B importohet',
+  (select (j->>'imported')::int = 1 and (j->>'declarations_marked')::int = 1
+     from public.sync_payroll('tba_' || repeat('ab', 24), lower(current_setting('t.nipt_b')), 'summary', null, null,
+       '[{"year":2026,"month":7,"model":"Normal","submitted_on":"2026-08-05","due_date":"2026-08-20","employees":2,"gross":120000,"social":29400,"health":4080,"income_tax":5200,"cats_status":"Deklaratat e regjistruara."}]'::jsonb) j));
+select pg_temp.check('sync_payroll: rreshtat e korrikut të B',
+  (select (j->>'lines')::int = 1 from public.sync_payroll('tba_' || repeat('ab', 24), current_setting('t.nipt_b'), 'lines', 2026, 7,
+     '[{"nid":"K12345678B","full_name":"Test","gross":"60,000","social_base":60000,"income_tax":3900}]'::jsonb) j));
+do $$ begin
+  perform app.payroll_import_declarations('cccccccc-cccc-4ccc-8ccc-cccccccccccc', '[]'::jsonb);
+  perform pg_temp.check('anon NUK thërret app.payroll_import_declarations', false);
+exception when others then perform pg_temp.check('anon NUK thërret app.payroll_import_declarations', true); end $$;
+reset role;
+select pg_temp.check('deklarimi E-SIG 025 i korrikut të B → declared',
+  (select d.status = 'declared' from public.tax_declarations d join public.fiscal_periods fp on fp.id = d.period_id
+    where d.company_id = :'compB'::uuid and d.kind = 'payroll_esig25' and fp.year = 2026 and fp.month = 7));
+select set_config('request.jwt.claim.sub', :'acc', false);
+set role authenticated;
+do $$ begin
+  perform app.payroll_import_declarations('cccccccc-cccc-4ccc-8ccc-cccccccccccc', '[]'::jsonb);
+  perform pg_temp.check('accountant i A NUK anashkalon kontrollin me app.payroll_import_declarations', false);
+exception when others then perform pg_temp.check('accountant i A NUK anashkalon kontrollin me app.payroll_import_declarations', sqlstate = '42501'); end $$;
+do $$ begin
+  perform app.ensure_declarations_core('cccccccc-cccc-4ccc-8ccc-cccccccccccc', 2026, 1);
+  perform pg_temp.check('accountant i A NUK thërret app.ensure_declarations_core', false);
+exception when others then perform pg_temp.check('accountant i A NUK thërret app.ensure_declarations_core', sqlstate = '42501'); end $$;
+select pg_temp.check('import_payroll_declarations publik punon ende për A',
+  (select (j->>'updated')::int = 1 from public.import_payroll_declarations(:'compA'::uuid,
+     '[{"year":2026,"month":9,"model":"Normal","submitted_on":"2026-10-01","social":11500,"health":3400}]'::jsonb) j));
+reset role;
+select pg_temp.check('çelësat ekzistues kanë edhe sync:payroll',
+  not exists (select 1 from public.company_api_keys where not ('sync:payroll' = any (scopes))));
+
+-- =============================================================================
 -- Përmbledhje
 -- =============================================================================
 select name, ok, detail from t_results where not ok;

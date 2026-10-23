@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detectKind, findPeriodInGrid, parseDate, parseLines, parseNum, parsePeriod, parseSummary, type Grid } from "../cats-payroll";
+import { detectKind, findPeriodInGrid, mergeTables, parseCsv, parseDate, parseLines, parseNum, parsePeriod, parseSummary, type Grid } from "../cats-payroll";
 
 // Struktura e tabelave siç shfaqen në e-Filing (Listëpagesa të Dorëzuara / Shfaq Detajet), me vlera prove
 const SUMMARY: Grid = [
@@ -101,5 +101,39 @@ describe("struktura reale e tabelës në e-Filing (22.10.2026)", () => {
       [2026, 9, 11500, 3400, "2026-10-20", "2026-10-07"],
       [2025, 12, 40575, 11996, "2026-01-20", "2026-01-14"],
     ]);
+  });
+});
+
+describe("CSV i eksportuar nga cis-client-2 (kapja e faqes në e-Filing)", () => {
+  // portalTableCsv: rreshti "Kolona n", pastaj të gjitha rreshtat e tabelës së portalit; presje si ndarës
+  const CSV =
+    "﻿Kolona 1,Kolona 2,Kolona 3,Kolona 4,Kolona 5,Kolona 6,Kolona 7,Kolona 8,Kolona 9,Kolona 10,Kolona 11,Kolona 12,Kolona 13,Kolona 14\r\n" +
+    ",,Periudha,Data e Dorëzimit,Data e Pritshme e Deklaratës,Nr. i Punëmarrësve,Pagat,Kontributet e Sigurimeve Shoqërore,Kontributet e Sigurimeve Shëndetësore,Totali i Tatimit mbi të Ardhurat nga Punësimi,Model,Statusi,Statusi i Dërgimit në ISSH,Data e Dërgimit në ISSH\r\n" +
+    ',Shfaq Detajet,2026 Shtator,01.10.2026,20.10.2026,1,0,"11,500","3,400",0,Normal,Deklaratat e regjistruara.,E dërguar,07.10.2026\r\n' +
+    ',Shfaq Detajet,2026 Gusht,01.09.2026,20.10.2026,3,"1,250,000","250,800","42,500","61,300",Normal,"Aprovuar, por e papaguar",,\r\n';
+
+  it("lexohet me thonjëza dhe presje brenda shumave", () => {
+    const grid = parseCsv(CSV);
+    expect(grid[2][7]).toBe("11,500");
+    expect(detectKind(grid)).toBe("summary");
+    expect(parseSummary(grid).map((r) => [r.month, r.employees, r.gross, r.social, r.health, r.income_tax, r.cats_status])).toEqual([
+      [9, 1, 0, 11500, 3400, 0, "Deklaratat e regjistruara."],
+      [8, 3, 1250000, 250800, 42500, 61300, "Aprovuar, por e papaguar"],
+    ]);
+  });
+
+  it("CSV me pikëpresje (Excel shqip) dhe apostrof mbrojtës", () => {
+    const grid = parseCsv("Periudha;Pagat;Kontributet e Sigurimeve Shoqërore;Kontributet e Sigurimeve Shëndetësore;Totali i Tatimit\n2026 Tetor;'-500;100;34;0\n");
+    expect(parseSummary(grid)[0]).toMatchObject({ year: 2026, month: 10, gross: -500, social: 100, health: 34 });
+  });
+});
+
+describe("faqja e kapur nga cis-client-2 (tables: string[][][])", () => {
+  it("detajet: periudha në një tabelë, punonjësit në një tjetër", () => {
+    const tables: Grid[] = [DETAIL.slice(0, 2), [["Opsionet e filtrimit"]], DETAIL.slice(2)];
+    const grid = mergeTables(tables);
+    expect(detectKind(grid)).toBe("lines");
+    expect(findPeriodInGrid(grid)).toEqual({ year: 2026, month: 9 });
+    expect(parseLines(grid).map((l) => l.nid)).toEqual(["J01020086I", "K12345678B"]);
   });
 });

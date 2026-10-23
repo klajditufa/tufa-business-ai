@@ -1210,6 +1210,9 @@ isOneToOne: false
 "sync_cis_invoices":
 { Args: { "p_direction": Database["public"]['Enums']["invoice_direction"],"p_invoices": Json,"p_key": string,"p_label"?: string }; Returns: Json
                            },
+"sync_payroll":
+{ Args: { "p_key": string,"p_kind": string,"p_month": number,"p_nipt": string,"p_rows": Json,"p_year": number }; Returns: Json
+                           },
 "top_creditors":
 { Args: { "p_company_id": string,"p_limit"?: number }; Returns: {
               "invoices": number,"oldest_due": string,"outstanding": number,"supplier_id": string,"supplier_name": string

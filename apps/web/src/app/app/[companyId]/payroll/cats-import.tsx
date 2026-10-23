@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { FileUp, ShieldCheck, Upload } from "lucide-react";
-import { detectKind, findPeriodInGrid, parseLines, parseSummary, type Grid, type LineRow, type SummaryRow } from "@/lib/cats-payroll";
+import { detectKind, findPeriodInGrid, parseCsv, parseLines, parseSummary, type Grid, type LineRow, type SummaryRow } from "@/lib/cats-payroll";
 import { importPayrollLinesAction, importPayrollSummaryAction } from "@/server/actions/payroll";
 import { Alert, Button, Card } from "@/components/ui";
 import { money } from "@/lib/format";
@@ -28,8 +28,7 @@ async function fileToGrid(file: File): Promise<Grid> {
     doc.querySelectorAll("tr").forEach((tr) => grid.push([...tr.querySelectorAll("th,td")].map((c) => (c.textContent ?? "").replace(/\s+/g, " ").trim())));
     return grid;
   }
-  const sep = text.includes("\t") ? "\t" : text.split("\n")[0].includes(";") ? ";" : ",";
-  return text.split(/\r?\n/).map((l) => l.split(sep).map((c) => c.replace(/^"|"$/g, "").trim()));
+  return parseCsv(text);
 }
 
 type Parsed =

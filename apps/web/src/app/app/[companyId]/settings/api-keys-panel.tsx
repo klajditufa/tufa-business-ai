@@ -106,7 +106,7 @@ export function ApiKeysPanel({ companyId, keys, canAdmin, appUrl }: { companyId:
       )}
       {state && !state.ok && <Alert tone="danger">{state.error}</Alert>}
       <p className="text-xs text-muted-foreground">
-        Një çelës jep të drejtë vetëm të <b>dërgojë fatura për këtë subjekt</b> — asgjë tjetër. Nëse dyshon se ka rrjedhur, revokoje dhe krijo një të ri.
+        Një çelës jep të drejtë vetëm të <b>dërgojë fatura (nga fiskalizimi) dhe listëpagesa (nga e-Filing) për këtë subjekt</b> — asgjë tjetër. Nëse dyshon se ka rrjedhur, revokoje dhe krijo një të ri.
       </p>
       <Badge tone="info">Agjenti: tufa-sync (open source, Python) — shkarkohet nga GitHub</Badge>
     </div>

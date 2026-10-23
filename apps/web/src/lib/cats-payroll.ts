@@ -201,3 +201,38 @@ export function findPeriodInGrid(grid: Grid): { year: number; month: number } | 
   }
   return null;
 }
+
+/**
+ * CSV (RFC 4180): ndarësi zbulohet (; , ose tab), thonjëzat dhe rreshtat brenda thonjëzave ruhen,
+ * BOM hiqet. Mbështet eksportin e cis-client-2 ("Kolona 1,…" + rreshtat e portalit) dhe Excel-in.
+ * Apostrofi para tekstit (mbrojtje nga formulat në Excel) hiqet.
+ */
+export function parseCsv(input: string): Grid {
+  const text = input.replace(/^﻿/, "");
+  const firstLine = text.slice(0, text.search(/\r?\n|$/));
+  const sep = firstLine.includes("\t") ? "\t" : (firstLine.match(/;/g) ?? []).length > (firstLine.match(/,/g) ?? []).length ? ";" : ",";
+  const rows: Grid = [];
+  let row: string[] = [];
+  let cell = "";
+  let quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (quoted) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') { cell += '"'; i++; } else quoted = false;
+      } else cell += ch;
+    } else if (ch === '"' && cell === "") quoted = true;
+    else if (ch === sep) { row.push(cell); cell = ""; }
+    else if (ch === "\n" || ch === "\r") {
+      if (ch === "\r" && text[i + 1] === "\n") i++;
+      row.push(cell); rows.push(row); row = []; cell = "";
+    } else cell += ch;
+  }
+  if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
+  return rows.map((r) => r.map((c) => c.replace(/^'(?=[=+\-@])/, "").trim())).filter((r) => r.some((c) => c !== ""));
+}
+
+/** Disa tabela të një faqeje të kapur (cis-client-2) → një tabelë e vetme për njohjen dhe leximin. */
+export function mergeTables(tables: Grid[]): Grid {
+  return tables.flatMap((t) => [...t, []]).filter((r) => r.length);
+}
