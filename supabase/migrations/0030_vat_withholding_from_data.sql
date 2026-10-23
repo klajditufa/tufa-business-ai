@@ -5,7 +5,7 @@
 --    të paprekura për muajt pasi subjekti ka dalë nga TVSH-ja hiqen. Burimi ruhet te settings.
 --  * Tatimi në burim: CIS nuk e tregon dhe C@TS nuk lexohet nga serveri. Deklarimi mujor gjenerohet
 --    vetëm për subjektet që e mbajnë (withholding_agent): aktivizohet vetë kur regjistrohet një qira me
---    tatim në burim, ose kur deklarimi është shënuar ndonjëherë si i dorëzuar; përndryshe nga Cilësimet.
+--    tatim në burim; përndryshe nga Cilësimet.
 
 alter table public.companies add column if not exists withholding_agent boolean not null default false;
 comment on column public.companies.withholding_agent is 'Subjekti mban tatim në burim (qira, dividend, shërbime) → deklarimi mujor';
@@ -129,10 +129,9 @@ end $$;
 create trigger trg_rent_withholding_agent after insert on public.rent_withholdings
   for each row execute function app.rent_marks_withholding_agent();
 
--- Gjendja ekzistuese: mbajtës janë ata me qira ose me deklarim tatimi në burim të punuar.
-update public.companies c set withholding_agent = true
- where exists (select 1 from public.rent_withholdings r where r.company_id = c.id)
-    or exists (select 1 from public.tax_declarations d where d.company_id = c.id and d.kind = 'withholding' and not app.declaration_untouched(d));
+-- Gjendja ekzistuese: mbajtës janë vetëm subjektet me qira me tatim në burim (një deklarim i shënuar
+-- "deklaruar", p.sh. me shënimin në grup, nuk e provon). Deklarimet e punuara mbeten si histori.
+update public.companies c set withholding_agent = exists (select 1 from public.rent_withholdings r where r.company_id = c.id);
 
 delete from public.tax_declarations d
  using public.companies c
