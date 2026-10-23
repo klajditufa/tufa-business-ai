@@ -402,12 +402,8 @@ def command_pdf(args: argparse.Namespace) -> int:
     return 0
 
 
-def command_push(args: argparse.Namespace) -> int:
-    """Read SALES and/or PURCHASES from CIS and send them to TUFA Business AI.
-
-    With --details every invoice is fetched complete (items and VAT per rate), so TUFA
-    splits VAT by rate exactly; this takes one extra CIS call per invoice.
-    """
+def _tufa_connect(args: argparse.Namespace):
+    """Check the TUFA key, load the certificate and refuse a certificate of another company."""
     from .tufa import TufaClient
 
     url = args.tufa_url or os.environ.get("TUFA_URL")
@@ -430,6 +426,16 @@ def command_push(args: argparse.Namespace) -> int:
             "Use the API key of the right company.",
             "cert",
         )
+    return tufa, client
+
+
+def command_push(args: argparse.Namespace) -> int:
+    """Read SALES and/or PURCHASES from CIS and send them to TUFA Business AI.
+
+    With --details every invoice is fetched complete (items and VAT per rate), so TUFA
+    splits VAT by rate exactly; this takes one extra CIS call per invoice.
+    """
+    tufa, client = _tufa_connect(args)
 
     kinds = [SALES, PURCHASES] if args.what == "all" else [SALES if args.what == "sales" else PURCHASES]
     summary = []
@@ -470,6 +476,27 @@ def command_push(args: argparse.Namespace) -> int:
             print(f"  ! {item.get('fic') or '-'}: {item.get('message')}", file=sys.stderr)
         failed = failed or (result.skipped > 0 and result.imported + result.updated == 0 and result.sent > 0)
         summary.append(result.as_dict())
+    if args.format == "json":
+        emit(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", args.output)
+    return 1 if failed else 0
+
+
+def command_push_registry(args: argparse.Namespace) -> int:
+    """Send this business's CIS registers (business units, TCRs, operators) to TUFA Business AI."""
+    tufa, client = _tufa_connect(args)
+    readers = {"units": client.get_business_units, "tcrs": client.get_tcrs, "operators": client.get_operators}
+    summary, failed = [], False
+    for kind in args.what or list(readers):
+        try:
+            rows = readers[kind]()
+            result = tufa.push_registry(kind, rows)
+        except CisClientError as error:
+            failed = True
+            print(f"{kind}: {error}", file=sys.stderr)
+            summary.append({"kind": kind, "error": str(error)})
+            continue
+        print(f"{kind}: {result.get('rows', 0)} sent to TUFA", file=sys.stderr)
+        summary.append({"kind": kind, "rows": result.get("rows", 0)})
     if args.format == "json":
         emit(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", args.output)
     return 1 if failed else 0
@@ -576,6 +603,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="API key (prefer $TUFA_API_KEY so it does not show in the shell history)",
     )
     push.set_defaults(handler=command_push)
+
+    registry = commands.add_parser(
+        "push-registry",
+        parents=[common, output],
+        help="send business units, TCRs and operators from CIS to TUFA Business AI",
+    )
+    registry.add_argument(
+        "what", nargs="*", choices=("units", "tcrs", "operators"), help="which registers (default: all three)"
+    )
+    for flag, metavar, text in (
+        ("--tufa-url", "URL", "TUFA address; default: $TUFA_URL"),
+        ("--tufa-key", "KEY", "API key (prefer $TUFA_API_KEY so it does not show in the shell history)"),
+    ):
+        registry.add_argument(flag, default=None, metavar=metavar, help=text)
+    registry.set_defaults(handler=command_push_registry)
 
     pdf = commands.add_parser("pdf", parents=[common], help="download the official PDF of an e-invoice")
     pdf.add_argument("eic", help="EIC of the electronic invoice")

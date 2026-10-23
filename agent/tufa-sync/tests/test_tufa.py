@@ -46,6 +46,8 @@ class FakeTufa(BaseHTTPRequestHandler):
             return self._send(401, {"ok": False, "error": "bad key"})
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         FakeTufa.received.append(body)
+        if self.path == "/api/sync/registry":
+            return self._send(200, {"ok": True, "kind": body["kind"], "rows": len(body["rows"])})
         invoices = body["invoices"]
         with_fic = [i for i in invoices if i.get("FIC")]
         self._send(
@@ -172,6 +174,31 @@ class TufaTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("does not match", stderr.getvalue())
         self.assertEqual(FakeTufa.received, [])
+
+    def test_cli_push_registry(self) -> None:
+        stdout, stderr = io.StringIO(), io.StringIO()
+        fake = FakeCis()
+        environment = {
+            "CIS_CERT_PASSWORD": TEST_P12_PASSWORD,
+            "CIS_CERT": str(TEST_P12),
+            "TUFA_URL": self.url,
+            "TUFA_API_KEY": GOOD_KEY,
+        }
+        with (
+            mock.patch.dict(os.environ, environment),
+            mock.patch.object(cli, "CisClient", lambda c, e, **o: CisClient(c, e, poster=fake, retries=0)),
+            contextlib.redirect_stdout(stdout),
+            contextlib.redirect_stderr(stderr),
+        ):
+            code = cli.main(["push-registry", "--format", "json"])
+        self.assertEqual(code, 0, stderr.getvalue())
+        self.assertEqual([b["kind"] for b in FakeTufa.received], ["units", "tcrs", "operators"])
+        self.assertTrue(all(isinstance(b["rows"], list) for b in FakeTufa.received))
+        self.assertEqual([s["kind"] for s in json.loads(stdout.getvalue())], ["units", "tcrs", "operators"])
+
+    def test_push_registry_rejects_unknown_kind(self) -> None:
+        with self.assertRaises(TufaError):
+            TufaClient(self.url, GOOD_KEY).push_registry("passwords", [])
 
 
 if __name__ == "__main__":

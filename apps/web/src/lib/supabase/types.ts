@@ -175,6 +175,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"company_registry": {
+                  Row: {
+                    "company_id": string,"kind": string,"row_count": number | null,"rows": NonNullable<Json>,"synced_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "company_id": string,"kind": string,"row_count"?: never,"rows"?: NonNullable<Json>,"synced_at"?: string
+                  }
+                  Update: {
+                    "company_id"?: string,"kind"?: string,"row_count"?: never,"rows"?: NonNullable<Json>,"synced_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "company_registry_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"customers": {
                   Row: {
                     "address": string | null,"company_id": string,"country": string,"created_at": string,"deleted_at": string | null,"email": string | null,"id": string,"is_vat_payer": boolean,"name": string,"nipt": string | null,"notes": string | null,"phone": string | null,"updated_at": string
@@ -189,6 +209,26 @@ isOneToOne: false
                   Relationships: [
                     {
       foreignKeyName: "customers_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"customs_declarations": {
+                  Row: {
+                    "company_id": string,"created_at": string,"created_by": string | null,"decl_date": string,"duty": number,"id": string,"import_vat": number,"invoice_fic": string | null,"notes": string | null,"reference": string,"source_url": string | null,"status": string,"taxable_amount": number,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "company_id": string,"created_at"?: string,"created_by"?: string | null,"decl_date": string,"duty"?: number,"id"?: string,"import_vat": number,"invoice_fic"?: string | null,"notes"?: string | null,"reference": string,"source_url"?: string | null,"status"?: string,"taxable_amount": number,"updated_at"?: string
+                  }
+                  Update: {
+                    "company_id"?: string,"created_at"?: string,"created_by"?: string | null,"decl_date"?: string,"duty"?: number,"id"?: string,"import_vat"?: number,"invoice_fic"?: string | null,"notes"?: string | null,"reference"?: string,"source_url"?: string | null,"status"?: string,"taxable_amount"?: number,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "customs_declarations_company_id_fkey"
       columns: ["company_id"]
 isOneToOne: false
       referencedRelation: "companies"
@@ -641,6 +681,26 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"rent_withholdings": {
+                  Row: {
+                    "beneficiary_id": string | null,"beneficiary_name": string,"company_id": string,"created_at": string,"created_by": string | null,"doc_date": string,"gross": number,"id": string,"notes": string | null,"property": string | null,"rate": number,"receipt": string | null,"reference_minimum": number,"reference_reviewed": boolean,"status": string,"tax": number | null,"tax_base": number | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "beneficiary_id"?: string | null,"beneficiary_name": string,"company_id": string,"created_at"?: string,"created_by"?: string | null,"doc_date": string,"gross": number,"id"?: string,"notes"?: string | null,"property"?: string | null,"rate"?: number,"receipt"?: string | null,"reference_minimum"?: number,"reference_reviewed"?: boolean,"status"?: string,"tax"?: never,"tax_base"?: never,"updated_at"?: string
+                  }
+                  Update: {
+                    "beneficiary_id"?: string | null,"beneficiary_name"?: string,"company_id"?: string,"created_at"?: string,"created_by"?: string | null,"doc_date"?: string,"gross"?: number,"id"?: string,"notes"?: string | null,"property"?: string | null,"rate"?: number,"receipt"?: string | null,"reference_minimum"?: number,"reference_reviewed"?: boolean,"status"?: string,"tax"?: never,"tax_base"?: never,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "rent_withholdings_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"subscriptions": {
                   Row: {
                     "created_at": string,"id": string,"organization_id": string,"payment_provider": string | null,"payment_provider_ref": string | null,"period_end": string | null,"period_start": string,"plan_id": string,"status": Database["public"]['Enums']["subscription_status"],"updated_at": string
@@ -928,7 +988,7 @@ isOneToOne: false
           Views: {
             "tax_declarations_view": {
                   Row: {
-                    "assigned_to": string | null,"company_id": string | null,"computed": Json | null,"created_at": string | null,"declared_at": string | null,"declared_by": string | null,"due_date": string | null,"effective_status": Database["public"]['Enums']["declaration_status"] | null,"id": string | null,"kind": Database["public"]['Enums']["declaration_kind"] | null,"month": number | null,"notes": string | null,"official": Json | null,"period_id": string | null,"source_document_id": string | null,"status": Database["public"]['Enums']["declaration_status"] | null,"updated_at": string | null,"year": number | null
+                    "assigned_to": string | null,"company_id": string,"computed": NonNullable<Json>,"created_at": string,"declared_at": string | null,"declared_by": string | null,"due_date": string,"effective_status": Database["public"]['Enums']["declaration_status"] | null,"id": string,"kind": Database["public"]['Enums']["declaration_kind"],"month": number,"notes": string | null,"official": NonNullable<Json>,"period_id": string,"source_document_id": string | null,"status": Database["public"]['Enums']["declaration_status"],"updated_at": string,"year": number
                   }
                   ComputedFields: never
                   Relationships: [
@@ -1034,6 +1094,11 @@ isOneToOne: false
                            },
 "create_organization_with_company":
 { Args: { "p_company": Json,"p_org_name": string,"p_org_type": Database["public"]['Enums']["organization_type"] }; Returns: string
+                           },
+"customs_matches":
+{ Args: { "p_company_id": string,"p_from": string,"p_to": string }; Returns: {
+              "decl_date": string,"duty": number,"id": string,"import_vat": number,"invoice_base": number,"invoice_date": string,"invoice_fic": string,"invoice_id": string,"invoice_number": string,"invoice_supplier": string,"invoice_vat": number,"match_by": string,"notes": string,"reference": string,"source_url": string,"status": string,"taxable_amount": number,"vat_difference": number
+            }[]
                            },
 "effective_tax_rule":
 { Args: { "p_code"?: string,"p_company_id"?: string,"p_date": string,"p_kind": Database["public"]['Enums']["tax_rule_kind"] }; Returns: Json
@@ -1209,6 +1274,9 @@ isOneToOne: false
                            },
 "sync_cis_invoices":
 { Args: { "p_direction": Database["public"]['Enums']["invoice_direction"],"p_invoices": Json,"p_key": string,"p_label"?: string }; Returns: Json
+                           },
+"sync_cis_registry":
+{ Args: { "p_key": string,"p_kind": string,"p_rows": Json }; Returns: Json
                            },
 "sync_payroll":
 { Args: { "p_key": string,"p_kind": string,"p_month": number,"p_nipt": string,"p_rows": Json,"p_year": number }; Returns: Json

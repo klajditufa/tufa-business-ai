@@ -693,6 +693,73 @@ select pg_temp.check('çelësat ekzistues kanë edhe sync:payroll',
   not exists (select 1 from public.company_api_keys where not ('sync:payroll' = any (scopes))));
 
 -- =============================================================================
+-- 20. Qiraja, doganat, regjistrat (0028)
+-- =============================================================================
+select set_config('request.jwt.claim.sub', :'acc', false);
+set role authenticated;
+insert into public.rent_withholdings (company_id, doc_date, beneficiary_name, gross, reference_minimum)
+values (:'compA'::uuid, '2026-09-05', 'Qiradhënës Test', 40000, 50000);
+select pg_temp.check('qiraja: baza = max(bruto, minimumi), TAP 15%',
+  (select tax_base = 50000 and tax = 7500 from public.rent_withholdings where company_id = :'compA'::uuid and beneficiary_name = 'Qiradhënës Test'));
+do $$ begin
+  update public.rent_withholdings set status = 'reviewed' where beneficiary_name = 'Qiradhënës Test';
+  perform pg_temp.check('qiraja: pa rishikuar minimumin nuk kalon në reviewed', false);
+exception when check_violation then perform pg_temp.check('qiraja: pa rishikuar minimumin nuk kalon në reviewed', true); end $$;
+do $$ begin
+  update public.rent_withholdings set status = 'submitted', reference_reviewed = true where beneficiary_name = 'Qiradhënës Test';
+  perform pg_temp.check('qiraja: e dorëzuar pa protokoll refuzohet', false);
+exception when check_violation then perform pg_temp.check('qiraja: e dorëzuar pa protokoll refuzohet', true); end $$;
+do $$ begin
+  insert into public.rent_withholdings (company_id, doc_date, beneficiary_name, gross)
+  values ('cccccccc-cccc-4ccc-8ccc-cccccccccccc', '2026-09-05', 'Ndërhyrës', 1000);
+  perform pg_temp.check('qiraja: accountant i A nuk shkruan në B', false);
+exception when others then perform pg_temp.check('qiraja: accountant i A nuk shkruan në B', sqlstate = '42501'); end $$;
+
+insert into public.invoices (company_id, direction, number, nivf, issue_date, subtotal, vat_amount, total, counterparty_name)
+values (:'compA'::uuid, 'purchase', 'DAV-T-1', 'FIC-DAV-T-1', '2026-09-10', 1000, 200, 1200, 'Dogana');
+insert into public.customs_declarations (company_id, reference, decl_date, taxable_amount, import_vat)
+values (:'compA'::uuid, 'dav-t-1', '2026-09-09', 1000, 190);
+insert into public.customs_declarations (company_id, reference, decl_date, taxable_amount, import_vat, invoice_fic)
+values (:'compA'::uuid, 'DAV-T-2', '2026-09-09', 1000, 200, 'FIC-DAV-T-1');
+select pg_temp.check('doganat: përputhje me numrin e faturës, diferenca e TVSH = 10',
+  (select match_by = 'reference' and vat_difference = 10 from public.customs_matches(:'compA'::uuid, '2026-09-01', '2026-09-30') where reference = 'dav-t-1'));
+select pg_temp.check('doganat: përputhje me NIVF, pa diferencë',
+  (select match_by = 'fic' and vat_difference = 0 from public.customs_matches(:'compA'::uuid, '2026-09-01', '2026-09-30') where reference = 'DAV-T-2'));
+select pg_temp.check('doganat: accountant i A nuk sheh asgjë të B',
+  (select count(*) from public.customs_matches(:'compB'::uuid, '2000-01-01', '2100-01-01')) = 0);
+do $$ begin
+  insert into public.customs_declarations (company_id, reference, decl_date, taxable_amount, import_vat, source_url)
+  values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'DAV-T-3', '2026-09-09', 1, 1, 'https://dogana.gov.al.evil.example/x');
+  perform pg_temp.check('doganat: lidhje jo zyrtare refuzohet', false);
+exception when check_violation then perform pg_temp.check('doganat: lidhje jo zyrtare refuzohet', true); end $$;
+do $$ begin
+  insert into public.company_registry (company_id, kind, rows) values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'tcrs', '[]');
+  perform pg_temp.check('regjistrat: përdoruesi nuk shkruan direkt', false);
+exception when others then perform pg_temp.check('regjistrat: përdoruesi nuk shkruan direkt', sqlstate = '42501'); end $$;
+reset role;
+
+set role anon;
+select pg_temp.check('regjistrat: agjenti me çelësin e B ruan operatorët, fushat e panjohura hidhen',
+  (select (j->>'rows')::int = 2 from public.sync_cis_registry('tba_' || repeat('ab', 24), 'operators',
+     '[{"name":"Arkëtar 1","opCode":"ab123cd456","idNumber":"X1","hack":"<script>"},{"name":"Arkëtar 2","opCode":"zz999zz999"}]'::jsonb) j));
+do $$ begin
+  perform public.sync_cis_registry('tba_' || repeat('cd', 24), 'tcrs', '[]'::jsonb);
+  perform pg_temp.check('regjistrat: çelës i keq refuzohet', false);
+exception when others then perform pg_temp.check('regjistrat: çelës i keq refuzohet', sqlstate = '28000'); end $$;
+do $$ begin
+  perform public.sync_cis_registry('tba_' || repeat('ab', 24), 'passwords', '[]'::jsonb);
+  perform pg_temp.check('regjistrat: lloj i panjohur refuzohet', false);
+exception when others then perform pg_temp.check('regjistrat: lloj i panjohur refuzohet', sqlstate = '22023'); end $$;
+reset role;
+select pg_temp.check('regjistrat: fusha "hack" nuk u ruajt',
+  (select not (rows->0 ? 'hack') and rows->0->>'opCode' = 'ab123cd456' from public.company_registry where company_id = :'compB'::uuid and kind = 'operators'));
+select set_config('request.jwt.claim.sub', :'acc', false);
+set role authenticated;
+select pg_temp.check('regjistrat: accountant i A nuk sheh regjistrat e B',
+  (select count(*) from public.company_registry where company_id = :'compB'::uuid) = 0);
+reset role;
+
+-- =============================================================================
 -- Përmbledhje
 -- =============================================================================
 select name, ok, detail from t_results where not ok;

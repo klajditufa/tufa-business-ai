@@ -43,6 +43,14 @@ computer and go directly to the tax authority.
 
    Për subjektet në TVSH me disa norma shto `--details`: dërgohen faturat e plota
    (artikujt dhe TVSH sipas normës), një thirrje shtesë në CIS për çdo faturë.
+   Me artikujt, TUFA plotëson edhe **Raporte & mjete → Faturat sipas artikujve**.
+
+   Për njësitë e biznesit, pajisjet (TCR) dhe operatorët (TUFA → **Raporte & mjete →
+   Operatorët, njësitë & pajisjet**):
+
+   ```sh
+   ./start.sh push-registry               # ose: push-registry units tcrs
+   ```
 
    Fjalëkalimi i certifikatës kërkohet në ekran (ose vendoset me
    `CIS_CERT_PASSWORD`). `push` lexon shitjet **dhe** blerjet e periudhës nga

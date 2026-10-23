@@ -9,6 +9,9 @@ TUFA under Settings → "Sinkronizimi i faturave".
     Authorization: Bearer tba_...
     {"direction": "sale"|"purchase", "invoices": [<CIS Inv objects>], "label": "..."}
 
+    POST {TUFA_URL}/api/sync/registry
+    {"kind": "units"|"tcrs"|"operators", "rows": [...]}
+
 Invoices are sent in batches; TUFA upserts them by FIC, so re-running a range
 is safe and only updates what changed.
 """
@@ -29,6 +32,7 @@ from .errors import CisClientError
 
 BATCH_SIZE = 500
 KINDS = {"SALES": "sale", "PURCHASES": "purchase"}
+REGISTRIES = ("units", "tcrs", "operators")
 
 
 class TufaError(CisClientError):
@@ -142,3 +146,12 @@ class TufaClient:
         if not rows:
             result.batches = 0
         return result
+
+    def push_registry(self, kind: str, rows: Iterable[dict]) -> dict:
+        """Replace TUFA's copy of one CIS register (business units, TCRs or operators)."""
+        if kind not in REGISTRIES:
+            raise TufaError(f"Unknown register {kind!r}; expected one of {', '.join(REGISTRIES)}")
+        response = self._request("POST", "/api/sync/registry", {"kind": kind, "rows": list(rows)})
+        if not response.get("ok"):
+            raise TufaError(f"TUFA refused the register: {response.get('error') or response}")
+        return response
