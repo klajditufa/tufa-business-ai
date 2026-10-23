@@ -49,15 +49,17 @@ export default async function DashboardPage({ params }: { params: Promise<{ comp
         </Alert>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className={`grid gap-4 sm:grid-cols-2 ${company?.vat_registered === false ? "xl:grid-cols-3" : "xl:grid-cols-4"}`}>
         <Kpi title={d.dashboard.monthlyIncome} value={money(tv?.sales_net, currency)} sub={`${tv?.sales_count ?? 0} fatura`} />
         <Kpi title={d.dashboard.monthlyExpenses} value={money(tv?.purchases_net, currency)} sub={`${tv?.purchases_count ?? 0} fatura`} />
+        {company?.vat_registered !== false && (
         <Kpi
           title={d.dashboard.vatBalance}
           value={money(tv?.vat_balance, currency)}
           sub={Number(tv?.vat_balance ?? 0) >= 0 ? "për pagesë · " + d.dashboard.estimate : "kreditim · " + d.dashboard.estimate}
           tone={Number(tv?.vat_balance ?? 0) > 0 ? "warning" : "success"}
         />
+        )}
         <Kpi title={d.dashboard.unpaidObligations} value={money(unpaidTotal, currency)} sub={`${data.obligations?.length ?? 0} zëra`} tone={unpaidTotal > 0 ? "danger" : "success"} />
       </div>
 

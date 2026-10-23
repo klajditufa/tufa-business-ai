@@ -14,6 +14,7 @@ const editSchema = companySchema.omit({ orgType: true, orgName: true, nipt: true
   nace_code: z.string().max(20).optional().or(z.literal("")),
   activity: z.string().max(300).optional().or(z.literal("")),
   fiscal_year_start: z.coerce.number().int().min(1).max(12).default(1),
+  withholding_agent: z.preprocess((v) => v === "on" || v === "true", z.boolean()),
 });
 
 export async function updateCompanyAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
@@ -41,6 +42,7 @@ export async function updateCompanyAction(_prev: ActionResult | null, formData: 
       nace_code: c.nace_code || null,
       activity: c.activity || null,
       fiscal_year_start: c.fiscal_year_start,
+      withholding_agent: c.withholding_agent,
     })
     .eq("id", companyId);
   if (error) return { ok: false, error: error.code === "42501" ? "Nuk ke të drejtë të ndryshosh subjektin." : error.message };

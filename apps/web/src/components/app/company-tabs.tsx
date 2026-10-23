@@ -10,12 +10,12 @@ import {
 } from "@tabler/icons-react";
 
 /** Skedat e subjektit (Workspace i cis-client-2) + "Të gjitha subjektet" djathtas. */
-export function CompanyTabs({ companyId, studioCount }: { companyId: string; studioCount: number | null }) {
+export function CompanyTabs({ companyId, studioCount, vatRegistered = true }: { companyId: string; studioCount: number | null; vatRegistered?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const direction = useSearchParams().get("direction");
   const base = `/app/${companyId}`;
-  const tabs: { value: string; href: string; label: string; icon: Icon; match: (p: string) => boolean }[] = [
+  const allTabs: { value: string; href: string; label: string; icon: Icon; match: (p: string) => boolean }[] = [
     { value: "dashboard", href: `${base}/dashboard`, label: "Paneli", icon: IconLayoutDashboard, match: (p) => p.startsWith(`${base}/dashboard`) },
     { value: "sales", href: `${base}/invoices?direction=sale`, label: "Shitjet", icon: IconArrowUpRight, match: (p) => p === `${base}/invoices` && direction !== "purchase" },
     { value: "purchases", href: `${base}/invoices?direction=purchase`, label: "Blerjet", icon: IconArrowDownLeft, match: (p) => p === `${base}/invoices` && direction === "purchase" },
@@ -32,6 +32,8 @@ export function CompanyTabs({ companyId, studioCount }: { companyId: string; stu
     { value: "documents", href: `${base}/documents`, label: "Dokumentet", icon: IconArchive, match: (p) => p.startsWith(`${base}/documents`) },
     { value: "settings", href: `${base}/settings`, label: "Cilësimet", icon: IconSettings, match: (p) => p.startsWith(`${base}/settings`) },
   ];
+  // Subjekti pa TVSH (sipas fiskalizimit) nuk ka skedë TVSH.
+  const tabs = allTabs.filter((tab) => vatRegistered || tab.value !== "vat");
   const { navigate, navigating } = useNav();
   const [clicked, setClicked] = useState<string | null>(null);
   const active = tabs.find((tab) => tab.match(pathname))?.value ?? null;

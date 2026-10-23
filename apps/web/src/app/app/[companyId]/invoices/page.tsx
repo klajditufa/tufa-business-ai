@@ -36,6 +36,8 @@ export default async function InvoicesPage({
   const sum = (k: "subtotal" | "vat_amount" | "total") => active.reduce((a, r) => a + Number(r[k] ?? 0), 0);
   const unpaid = active.filter((r) => r.payment_status !== "paid").reduce((a, r) => a + Number(r.total) - Number(r.paid_amount ?? 0), 0);
   const sale = f.direction === "sale";
+  // Subjekt pa TVSH: shitjet nuk kanë TVSH, prandaj karta fshihet (blerjet e mbajnë).
+  const showVat = !sale || company?.vat_registered !== false;
   const itemsPeriod = (range?.from ?? new Date().toISOString()).slice(0, 7);
   const itemsHref = `/app/${companyId}/tools/items?direction=${f.direction}&period=${itemsPeriod}`;
   const dmy = (d: string) => d.split("-").reverse().join("/");
@@ -64,10 +66,10 @@ export default async function InvoicesPage({
         />
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className={`grid grid-cols-2 gap-3 ${showVat ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
             <Stat label="Fatura" value={active.length} />
             <Stat label="Pa TVSH" value={money(sum("subtotal"), currency).replace(/ LEK$/, "")} />
-            <Stat label="TVSH" value={money(sum("vat_amount"), currency).replace(/ LEK$/, "")} />
+            {showVat && <Stat label="TVSH" value={money(sum("vat_amount"), currency).replace(/ LEK$/, "")} />}
             <Stat
               label={`Totali (${currency})`}
               value={money(sum("total"), currency).replace(/ LEK$/, "")}

@@ -10,6 +10,11 @@ import { t } from "@/lib/i18n";
 
 export function CompanyEditForm({ company, canEdit }: { company: Company; canEdit: boolean }) {
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(updateCompanyAction, null);
+  const settings = (company.settings ?? {}) as { vat_status_source?: string; vat_status_as_of?: string };
+  const vatSource =
+    settings.vat_status_source === "cis" && settings.vat_status_as_of
+      ? `Sipas fiskalizimit (fatura e shitjes e ${settings.vat_status_as_of.split("-").reverse().join(".")}); përditësohet vetë me çdo marrje nga CIS.`
+      : "Përditësohet vetë kur merren shitjet nga CIS.";
   const d = t();
   const ro = !canEdit;
   return (
@@ -32,7 +37,20 @@ export function CompanyEditForm({ company, canEdit }: { company: Company; canEdi
         <div><Label htmlFor="base_currency">{d.onboarding.currency}</Label>
           <Select id="base_currency" name="base_currency" defaultValue={company.base_currency}><option value="ALL">LEK (ALL)</option><option value="EUR">EUR</option><option value="USD">USD</option></Select></div>
         <div><Label htmlFor="fiscal_year_start">Fillimi i vitit fiskal (muaji)</Label><Input id="fiscal_year_start" name="fiscal_year_start" type="number" min={1} max={12} defaultValue={company.fiscal_year_start} /></div>
-        <Checkbox className="self-end pb-2" name="vat_registered" defaultChecked={company.vat_registered} label={d.onboarding.vatRegistered} />
+        <Checkbox
+          className="self-end pb-2"
+          name="vat_registered"
+          defaultChecked={company.vat_registered}
+          label={d.onboarding.vatRegistered}
+          description={vatSource}
+        />
+        <Checkbox
+          className="sm:col-span-2"
+          name="withholding_agent"
+          defaultChecked={company.withholding_agent}
+          label="Subjekti mban tatim në burim (qira, dividend, shërbime nga individë)"
+          description="Vetëm atëherë shfaqen deklarimi mujor i tatimit në burim dhe mjeti i qirasë. Aktivizohet vetë me regjistrimin e parë të një qiraje."
+        />
       </fieldset>
       {state && !state.ok && <Alert tone="danger">{state.error}</Alert>}
       {state?.ok && <Alert tone="success">{state.message}</Alert>}

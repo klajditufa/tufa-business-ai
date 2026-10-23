@@ -217,8 +217,8 @@ select pg_temp.check('vat_rates_at kthen >= 4 norma', (select count(*) from publ
 -- =============================================================================
 select set_config('request.jwt.claim.sub', :'acc', false);
 set role authenticated;
-select pg_temp.check('ensure_declarations krijon 3 rreshta për A (TVSH po)',
-  (select count(*) from public.ensure_declarations(:'compA'::uuid, 2026, 9)) = 3);
+select pg_temp.check('ensure_declarations krijon 2 rreshta për A (TVSH + E-SIG; tatimi në burim vetëm kur e mban)',
+  (select count(*) from public.ensure_declarations(:'compA'::uuid, 2026, 9)) = 2);
 select pg_temp.check('set_declaration_status → declared vendos declared_by',
   (select declared_by from public.set_declaration_status(
      (select id from public.tax_declarations where company_id = :'compA'::uuid and kind = 'vat' and period_id = (select id from public.fiscal_periods where company_id = :'compA'::uuid and year = 2026 and month = 9)),
@@ -237,7 +237,7 @@ select pg_temp.check('klienti sheh deklarimet e B (2 lloje, pa TVSH)',
 reset role;
 select set_config('request.jwt.claim.sub', :'owner', false);
 set role authenticated;
-select pg_temp.check('matrica e studios: A(3) + B(2) = 5 rreshta', (select count(*) from public.studio_declaration_matrix(2026, 9)) = 5);
+select pg_temp.check('matrica e studios: A(2) + B(1) = 3 rreshta (pa tatim në burim)', (select count(*) from public.studio_declaration_matrix(2026, 9)) = 3);
 reset role;
 
 -- =============================================================================
@@ -790,6 +790,36 @@ do $$ begin
   perform public.import_cis_invoices_user('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'sale', '[]'::jsonb, null);
   perform pg_temp.check('import_cis_invoices_user: anon refuzohet', false);
 exception when others then perform pg_temp.check('import_cis_invoices_user: anon refuzohet', sqlstate = '42501'); end $$;
+reset role;
+
+-- =============================================================================
+-- 22. TVSH nga CIS dhe tatimi në burim (0030)
+-- =============================================================================
+select set_config('request.jwt.claim.sub', :'owner', false);
+set role authenticated;
+select pg_temp.check('B pa qira: nuk mban tatim në burim dhe nuk i gjenerohet deklarimi',
+  not (select withholding_agent from public.companies where id = :'compB'::uuid)
+  and not exists (select 1 from public.ensure_declarations(:'compB'::uuid, 2027, 3) d where d.kind = 'withholding'));
+reset role;
+select set_config('request.jwt.claim.sub', :'acc', false);
+set role authenticated;
+select public.ensure_declarations(:'compA'::uuid, 2027, 3);
+create temp table t_vat as select public.import_cis_invoices_user(:'compA'::uuid, 'sale', jsonb_build_array(
+       jsonb_build_object('FIC', 'fic-novat-1', 'IssueDateTime', '2027-02-10T10:00:00+01:00', 'TotPrice', '100', 'TotVATAmt', '0', 'IsIssuerInVAT', 'false',
+         'Seller', jsonb_build_object('IDNum', current_setting('t.nipt_a'), 'Name', 'A'),
+         'Buyer', jsonb_build_object('IDNum', 'K11111111A', 'Name', 'Klient'))), 'test') as j;
+select pg_temp.check('import shitjeje me IsIssuerInVAT=false → subjekti del pa TVSH, TVSH-ja e paprekur e 2027-03 hiqet',
+  (select (j->>'vat_registered')::boolean = false and (j->>'vat_changed')::boolean from t_vat)
+  and not exists (select 1 from public.tax_declarations d join public.fiscal_periods fp on fp.id = d.period_id
+                   where d.company_id = :'compA'::uuid and d.kind = 'vat' and fp.year = 2027 and fp.month = 3)
+  and exists (select 1 from public.tax_declarations d where d.company_id = :'compA'::uuid and d.kind = 'vat' and d.status = 'declared'));
+select pg_temp.check('A me qira (seksioni 20): mban tatim në burim dhe i gjenerohet deklarimi mujor',
+  (select withholding_agent from public.companies where id = :'compA'::uuid)
+  and exists (select 1 from public.ensure_declarations(:'compA'::uuid, 2027, 4) d where d.kind = 'withholding'));
+do $$ begin
+  perform app.vat_status_from_cis('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
+  perform pg_temp.check('përdoruesi nuk thërret app.vat_status_from_cis', false);
+exception when others then perform pg_temp.check('përdoruesi nuk thërret app.vat_status_from_cis', sqlstate = '42501'); end $$;
 reset role;
 
 -- =============================================================================

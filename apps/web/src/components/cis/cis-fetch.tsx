@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Json } from "@/lib/supabase/types";
 import { useCis } from "./cis-provider";
 
-type Summary = { read: number; imported: number; updated: number; skipped: number; withItems: number; detailFailed: number };
+type Summary = { read: number; imported: number; updated: number; skipped: number; withItems: number; detailFailed: number; vat?: { registered: boolean; changed: boolean; asOf: string } };
 
 const IMPORT_CHUNK = 100;
 
@@ -72,7 +72,10 @@ export function CisFetchButton({
           p_label: `CIS ${kind.toLowerCase()} ${from}..${to}`,
         });
         if (rpcError) throw new Error(rpcError.message);
-        const r = (data ?? {}) as { imported?: number; updated?: number; skipped?: number };
+        const r = (data ?? {}) as { imported?: number; updated?: number; skipped?: number; vat_registered?: boolean; vat_changed?: boolean; vat_as_of?: string };
+        if (typeof r.vat_registered === "boolean") {
+          totals.vat = { registered: r.vat_registered, changed: !!r.vat_changed || !!totals.vat?.changed, asOf: r.vat_as_of ?? "" };
+        }
         totals.imported += r.imported ?? 0;
         totals.updated += r.updated ?? 0;
         totals.skipped += r.skipped ?? 0;
@@ -81,6 +84,8 @@ export function CisFetchButton({
       setPhase("done");
       if (onDone) onDone();
       else router.refresh();
+      // Kur ndryshon statusi i TVSH-së, rifreskohet edhe koka me skedat (layout-i).
+      if (totals.vat?.changed) setTimeout(() => router.refresh(), 1500);
     } catch (e) {
       setPhase("error");
       if (e instanceof CisFault) setError({ message: e.message, hint: (e.code && FAULT_HINTS[e.code]) || undefined });
@@ -120,6 +125,13 @@ export function CisFetchButton({
             <Alert color="teal" variant="light" icon={<IconCircleCheck size={18} />} title={`${summary.read} fatura nga CIS`}>
               {summary.imported} të reja, {summary.updated} të përditësuara{summary.skipped ? `, ${summary.skipped} të anashkaluara` : ""}.{" "}
               {summary.withItems} me artikuj{summary.detailFailed ? `; ${summary.detailFailed} pa artikuj (provo sërish më vonë)` : ""}.
+              {summary.vat && (
+                <Text size="sm" mt={6}>
+                  Statusi i TVSH-së sipas fiskalizimit: <b>{summary.vat.registered ? "subjekt në TVSH" : "subjekt pa TVSH"}</b>
+                  {summary.vat.asOf ? ` (fatura e ${summary.vat.asOf.split("-").reverse().join(".")})` : ""}
+                  {summary.vat.changed ? " — u përditësua te subjekti." : "."}
+                </Text>
+              )}
             </Alert>
           )}
           {phase === "error" && error && (

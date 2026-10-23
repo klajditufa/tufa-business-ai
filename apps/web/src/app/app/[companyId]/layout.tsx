@@ -59,7 +59,7 @@ export default async function CompanyLayout({
             </Group>
           </Group>
           <Suspense fallback={<div className="h-11" />}>
-            <CompanyTabs companyId={companyId} studioCount={studio ? companies.length : null} />
+            <CompanyTabs companyId={companyId} studioCount={studio ? companies.length : null} vatRegistered={company.vat_registered} />
           </Suspense>
           <main>{children}</main>
         </Stack>

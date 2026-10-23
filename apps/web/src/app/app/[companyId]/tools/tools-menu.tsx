@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 import { NativeSelect, NavLink, Paper, Stack, Text } from "@mantine/core";
 
 /** Grupet e "Raporte & mjete", si menuja e cis-client-2. Disa lidhje çojnë te modulet ekzistuese. */
-export function toolGroups(base: string) {
-  return [
+export function toolGroups(base: string, flags: { vat: boolean; withholding: boolean } = { vat: true, withholding: true }) {
+  const groups = [
     {
       title: "Faturat & financat",
       items: [
@@ -20,8 +20,8 @@ export function toolGroups(base: string) {
     {
       title: "Deklarimet",
       items: [
-        { href: `${base}/vat`, label: "Përgatitja e TVSH-së" },
-        { href: `${base}/tools/rent`, label: "Tatimi në burim · Qira" },
+        ...(flags.vat ? [{ href: `${base}/vat`, label: "Përgatitja e TVSH-së" }] : []),
+        ...(flags.withholding ? [{ href: `${base}/tools/rent`, label: "Tatimi në burim · Qira" }] : []),
         { href: `${base}/tools/customs`, label: "Deklaratat doganore" },
       ],
     },
@@ -37,12 +37,13 @@ export function toolGroups(base: string) {
       items: [{ href: `${base}/tools/registry`, label: "Operatorët, njësitë & pajisjet" }],
     },
   ];
+  return groups.filter((g) => g.items.length > 0);
 }
 
-export function ToolsMenu({ companyId }: { companyId: string }) {
+export function ToolsMenu({ companyId, vat = true, withholding = true }: { companyId: string; vat?: boolean; withholding?: boolean }) {
   const pathname = usePathname();
   const { navigate } = useNav();
-  const groups = toolGroups(`/app/${companyId}`);
+  const groups = toolGroups(`/app/${companyId}`, { vat, withholding });
   const all = groups.flatMap((g) => g.items);
   const active = all.find((i) => pathname.startsWith(i.href))?.href ?? "";
   return (
