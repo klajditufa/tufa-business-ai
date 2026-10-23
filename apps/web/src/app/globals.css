@@ -111,3 +111,29 @@ main table td {
 main table th {
   white-space: nowrap;
 }
+
+/* Shiriti i ngarkimit gjatë kalimit nga një faqe në tjetrën (NavProgressProvider). */
+.nav-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 1000;
+  height: 3px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--mantine-primary-color-filled) 18%, transparent);
+}
+.nav-progress::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  background: var(--mantine-primary-color-filled);
+  border-radius: 3px;
+  animation: nav-progress 1.1s ease-in-out infinite;
+}
+@keyframes nav-progress {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(260%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-progress::before { animation-duration: 3s; }
+}

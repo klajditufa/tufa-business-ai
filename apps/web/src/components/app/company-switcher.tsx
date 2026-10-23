@@ -1,7 +1,8 @@
 "use client";
 
+import { useNav } from "@/components/app/nav-progress";
 import { useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Badge, ColorSwatch, Group, Menu, Stack, Text, TextInput, UnstyledButton } from "@mantine/core";
 import { IconBuildingStore, IconCheck, IconChevronDown, IconPlus, IconSearch } from "@tabler/icons-react";
 import type { Company } from "@/server/services/companies";
@@ -12,12 +13,12 @@ const label = (c: Company) => c.trade_name || c.legal_name;
  * Subjekti që tregon faqja dhe të tjerët (BusinessSwitcher i cis-client-2). Ndërrimi ruan modulin e hapur.
  */
 export function CompanySwitcher({ current, companies, canAdd }: { current?: Company; companies: Company[]; canAdd?: boolean }) {
-  const router = useRouter();
+  const { navigate } = useNav();
   const pathname = usePathname();
   const [q, setQ] = useState("");
   const go = (c: Company) => {
     if (current && c.id === current.id) return;
-    router.push(current && pathname.startsWith(`/app/${current.id}`) ? pathname.replace(`/app/${current.id}`, `/app/${c.id}`) : `/app/${c.id}/dashboard`);
+    navigate(current && pathname.startsWith(`/app/${current.id}`) ? pathname.replace(`/app/${current.id}`, `/app/${c.id}`) : `/app/${c.id}/dashboard`);
   };
   const needle = q.trim().toLowerCase();
   const list = needle ? companies.filter((c) => `${label(c)} ${c.nipt}`.toLowerCase().includes(needle)) : companies;
@@ -103,7 +104,7 @@ export function CompanySwitcher({ current, companies, canAdd }: { current?: Comp
         {canAdd && (
           <>
             <Menu.Divider />
-            <Menu.Item leftSection={<IconPlus size={16} />} onClick={() => router.push("/studio/companies/new")}>
+            <Menu.Item leftSection={<IconPlus size={16} />} onClick={() => navigate("/studio/companies/new")}>
               Shto subjekt
             </Menu.Item>
           </>

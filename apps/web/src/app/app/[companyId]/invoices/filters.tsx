@@ -1,11 +1,12 @@
 "use client";
 
+import { useNav } from "@/components/app/nav-progress";
 import { useState } from "react";
 import Link from "next/link";
 import { Button, Divider, Group, NativeSelect, Paper, SegmentedControl, Select, TextInput } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { IconBox, IconBuildingBank, IconDownload, IconList, IconSearch } from "@tabler/icons-react";
-import { useRouter } from "next/navigation";
+
 import type { InvoiceFilters } from "@/server/services/invoices";
 import { DATE_PROPS } from "@/components/dates";
 
@@ -68,7 +69,7 @@ export function InvoiceFilterBar({
   f: InvoiceFilters;
   range: { from: string; to: string } | null;
 }) {
-  const router = useRouter();
+  const { navigate, navigating } = useNav();
   const [preset, setPreset] = useState<Preset>(detect(range));
   const [from, setFrom] = useState<string | null>(range?.from ?? presetRange("thisMonth")!.from);
   const [to, setTo] = useState<string | null>(range?.to ?? presetRange("thisMonth")!.to);
@@ -89,7 +90,7 @@ export function InvoiceFilterBar({
     if (status !== "all") p.set("status", status);
     return p;
   };
-  const apply = () => router.push(`${basePath}?${url()}`);
+  const apply = () => navigate(`${basePath}?${url()}`);
   const dateW = { base: "calc(50% - var(--mantine-spacing-sm) / 2)", sm: 160 };
 
   return (
@@ -146,7 +147,7 @@ export function InvoiceFilterBar({
                   if (from && value < from) setFrom(value);
                 }}
               />
-              <Button type="submit" w={{ base: "100%", sm: "auto" }}>
+              <Button type="submit" loading={navigating} w={{ base: "100%", sm: "auto" }}>
                 Shfaq faturat
               </Button>
             </Group>
@@ -168,7 +169,7 @@ export function InvoiceFilterBar({
       <Group gap="sm" wrap="wrap">
         <SegmentedControl
           value="invoices"
-          onChange={(value) => value === "items" && router.push(itemsHref)}
+          onChange={(value) => value === "items" && navigate(itemsHref)}
           data={[
             {
               value: "invoices",
@@ -211,7 +212,7 @@ export function InvoiceFilterBar({
             const p = url();
             if (e.currentTarget.value === "all") p.delete("kind");
             else p.set("kind", e.currentTarget.value);
-            router.push(`${basePath}?${p}`);
+            navigate(`${basePath}?${p}`);
           }}
           data={[
             { value: "all", label: "Të gjitha llojet" },
@@ -229,7 +230,7 @@ export function InvoiceFilterBar({
             const p = url();
             if (e.currentTarget.value === "all") p.delete("status");
             else p.set("status", e.currentTarget.value);
-            router.push(`${basePath}?${p}`);
+            navigate(`${basePath}?${p}`);
           }}
           data={[
             { value: "all", label: "Çdo pagesë" },

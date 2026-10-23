@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+
+import { useNav } from "@/components/app/nav-progress";
 import { ActionIcon, Group } from "@mantine/core";
 import { MonthPickerInput } from "@mantine/dates";
 import { IconCalendar, IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
@@ -9,10 +10,10 @@ const pad = (n: number) => String(n).padStart(2, "0");
 
 /** Muaji i periudhës: shigjeta + zgjedhës muaji me kalendar (Mantine Dates), në URL si ?period=VVVV-MM. */
 export function MonthPicker({ year, month, basePath }: { year: number; month: number; basePath: string }) {
-  const router = useRouter();
+  const { navigate } = useNav();
   const go = (y: number, m: number) => {
     const sep = basePath.includes("?") ? "&" : "?";
-    router.push(`${basePath}${sep}period=${y}-${pad(m)}`);
+    navigate(`${basePath}${sep}period=${y}-${pad(m)}`);
   };
   const shift = (delta: number) => {
     const d = new Date(Date.UTC(year, month - 1 + delta, 1));

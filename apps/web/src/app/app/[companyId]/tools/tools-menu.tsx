@@ -1,7 +1,8 @@
 "use client";
 
+import { useNav } from "@/components/app/nav-progress";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { NativeSelect, NavLink, Paper, Stack, Text } from "@mantine/core";
 
 /** Grupet e "Raporte & mjete", si menuja e cis-client-2. Disa lidhje çojnë te modulet ekzistuese. */
@@ -40,7 +41,7 @@ export function toolGroups(base: string) {
 
 export function ToolsMenu({ companyId }: { companyId: string }) {
   const pathname = usePathname();
-  const router = useRouter();
+  const { navigate } = useNav();
   const groups = toolGroups(`/app/${companyId}`);
   const all = groups.flatMap((g) => g.items);
   const active = all.find((i) => pathname.startsWith(i.href))?.href ?? "";
@@ -51,7 +52,7 @@ export function ToolsMenu({ companyId }: { companyId: string }) {
         hiddenFrom="lg"
         aria-label="Mjeti"
         value={active}
-        onChange={(e) => router.push(e.currentTarget.value)}
+        onChange={(e) => navigate(e.currentTarget.value)}
         data={groups.map((g) => ({ group: g.title, items: g.items.map((i) => ({ value: i.href, label: i.label })) }))}
       />
       {/* Desktop: menu e grupuar */}

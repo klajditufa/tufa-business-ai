@@ -1,7 +1,9 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Badge, Tabs } from "@mantine/core";
+import { useState } from "react";
+import { Badge, Loader, Tabs } from "@mantine/core";
+import { useNav } from "./nav-progress";
 import {
   IconArchive, IconArrowDownLeft, IconArrowUpRight, IconBuildingBank, IconCalculator, IconLayoutDashboard, IconLayoutGrid,
   IconPercentage, IconSettings, IconWallet, type Icon,
@@ -30,15 +32,41 @@ export function CompanyTabs({ companyId, studioCount }: { companyId: string; stu
     { value: "documents", href: `${base}/documents`, label: "Dokumentet", icon: IconArchive, match: (p) => p.startsWith(`${base}/documents`) },
     { value: "settings", href: `${base}/settings`, label: "Cilësimet", icon: IconSettings, match: (p) => p.startsWith(`${base}/settings`) },
   ];
+  const { navigate, navigating } = useNav();
+  const [clicked, setClicked] = useState<string | null>(null);
   const active = tabs.find((tab) => tab.match(pathname))?.value ?? null;
+  // Kur faqja e re u vizatua (ose u kalua me "mbrapa"), harrohet skeda e klikuar.
+  const [lastActive, setLastActive] = useState(active);
+  if (active !== lastActive) {
+    setLastActive(active);
+    setClicked(null);
+  }
+  // Skeda e klikuar zgjidhet menjëherë dhe tregon rrotën derisa faqja e re të vizatohet.
+  const loading = navigating && clicked !== null && clicked !== active ? clicked : null;
+  const shown = loading ?? active;
   const hrefs = Object.fromEntries(tabs.map((tab) => [tab.value, tab.href]));
   hrefs.overview = "/studio/overview";
+  const spinner = <Loader size={12} type="oval" />;
 
   return (
-    <Tabs className="app-tabs" value={active} onChange={(value) => value && router.push(hrefs[value])}>
+    <Tabs
+      className="app-tabs"
+      value={shown}
+      onChange={(value) => {
+        if (!value || value === shown) return;
+        setClicked(value);
+        navigate(hrefs[value]);
+      }}
+    >
       <Tabs.List>
         {tabs.map(({ value, label, icon: TabIcon, href }) => (
-          <Tabs.Tab key={value} value={value} leftSection={<TabIcon size={16} stroke={1.8} />} onMouseEnter={() => router.prefetch(href)}>
+          <Tabs.Tab
+            key={value}
+            value={value}
+            leftSection={<TabIcon size={16} stroke={1.8} />}
+            rightSection={loading === value ? spinner : undefined}
+            onMouseEnter={() => router.prefetch(href)}
+          >
             {label}
           </Tabs.Tab>
         ))}
@@ -48,7 +76,9 @@ export function CompanyTabs({ companyId, studioCount }: { companyId: string; stu
             ml={{ base: 0, sm: "auto" }}
             leftSection={<IconLayoutGrid size={16} stroke={1.8} />}
             rightSection={
-              studioCount > 1 ? (
+              loading === "overview" ? (
+                spinner
+              ) : studioCount > 1 ? (
                 <Badge size="sm" variant="light" color="gray" circle>
                   {studioCount}
                 </Badge>

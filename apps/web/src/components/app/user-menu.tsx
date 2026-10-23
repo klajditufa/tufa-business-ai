@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+
+import { useNav } from "@/components/app/nav-progress";
 import { ActionIcon, Avatar, Menu, Text } from "@mantine/core";
 import { IconAdjustmentsHorizontal, IconBuilding, IconLifebuoy, IconLogout, IconScale, IconSettings } from "@tabler/icons-react";
 import { ThemeToggle } from "./theme-toggle";
@@ -21,7 +22,7 @@ export function UserMenu({
   superAdmin: boolean;
   logout: () => Promise<void>;
 }) {
-  const router = useRouter();
+  const { navigate } = useNav();
   const initials = userName.split(/[\s@.]+/).filter(Boolean).slice(0, 2).map((s) => s[0]?.toUpperCase()).join("") || "?";
   return (
     <Menu width={240}>
@@ -49,22 +50,22 @@ export function UserMenu({
         </div>
         <Menu.Divider />
         {settingsHref && (
-          <Menu.Item leftSection={<IconSettings size={16} />} onClick={() => router.push(settingsHref)}>
+          <Menu.Item leftSection={<IconSettings size={16} />} onClick={() => navigate(settingsHref)}>
             Cilësimet e subjektit
           </Menu.Item>
         )}
         {studio && (
-          <Menu.Item leftSection={<IconBuilding size={16} />} onClick={() => router.push("/studio")}>
+          <Menu.Item leftSection={<IconBuilding size={16} />} onClick={() => navigate("/studio")}>
             Paneli i studios
           </Menu.Item>
         )}
         {superAdmin && (
-          <Menu.Item leftSection={<IconScale size={16} />} onClick={() => router.push("/admin/tax-rules")}>
+          <Menu.Item leftSection={<IconScale size={16} />} onClick={() => navigate("/admin/tax-rules")}>
             Rregullat tatimore
           </Menu.Item>
         )}
         {settingsHref && (
-          <Menu.Item leftSection={<IconLifebuoy size={16} />} onClick={() => router.push(`${settingsHref}#help`)}>
+          <Menu.Item leftSection={<IconLifebuoy size={16} />} onClick={() => navigate(`${settingsHref}#help`)}>
             Ndihmë
           </Menu.Item>
         )}

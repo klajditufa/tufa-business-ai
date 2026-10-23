@@ -1,5 +1,6 @@
 "use client";
 
+import { useNav } from "@/components/app/nav-progress";
 import { NativeSelect } from "@mantine/core";
 import { useCallback, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -48,6 +49,7 @@ export function DocumentsClient({
   companyId: string; docs: Doc[]; categories: Record<string, string>; activeCategory: string; search: string; canWrite: boolean;
 }) {
   const router = useRouter();
+  const { navigate } = useNav();
   const [pending, startTransition] = useTransition();
   const [category, setCategory] = useState<string>(activeCategory || "other");
   const [drag, setDrag] = useState(false);
@@ -98,7 +100,7 @@ export function DocumentsClient({
     const sp = new URLSearchParams();
     const c = next.category ?? activeCategory; const q = next.q ?? search;
     if (c) sp.set("category", c); if (q) sp.set("q", q);
-    router.push(`?${sp.toString()}`);
+    navigate(`?${sp.toString()}`);
   };
 
   return (
