@@ -1,0 +1,2 @@
+/* Rendi i shtresave: preflight i Tailwind < Mantine < utilitetet e Tailwind. Ngarkohet i pari. */
+@layer theme, base, mantine, components, utilities;

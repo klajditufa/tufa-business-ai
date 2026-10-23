@@ -1,8 +1,6 @@
 /* Rendi i shtresave: Mantine mbi preflight-in e Tailwind, utilitetet e Tailwind mbi Mantine. */
 @layer theme, base, mantine, components, utilities;
 @import "tailwindcss";
-@import "@mantine/core/styles.layer.css";
-@import "@mantine/dates/styles.layer.css";
 
 /*
  * Tokenët e Tailwind lidhen me variablat e Mantine, që faqet me klasa Tailwind dhe komponentët
