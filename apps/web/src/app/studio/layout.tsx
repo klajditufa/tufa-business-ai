@@ -1,31 +1,22 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getProfile, listMyCompanies } from "@/server/services/companies";
-import { logoutAction } from "@/server/actions/auth";
-import { Button } from "@/components/ui";
-import { t } from "@/lib/i18n";
+import { Header } from "@/components/app/header";
+import { StudioTabs } from "./studio-tabs";
 
-/** Paneli i studios: për org_owner / accountant me disa subjekte. */
+/** Paneli i studios: për org_owner / accountant me disa subjekte. E njëjta kokë si te subjekti. */
 export default async function StudioLayout({ children }: { children: React.ReactNode }) {
   const [profile, companies] = await Promise.all([getProfile(), listMyCompanies()]);
   if (companies.length === 0) redirect("/onboarding");
-  const d = t();
+  const isSuperAdmin = !!(profile && "is_super_admin" in profile && profile.is_super_admin);
+  const current = companies.find((c) => c.id === profile?.last_company_id);
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-10 flex items-center gap-4 border-b border-border bg-card/90 px-4 py-3 backdrop-blur sm:px-6">
-        <Link href="/studio" className="font-semibold">{d.app.name} · Paneli i studios</Link>
-        <nav className="hidden gap-3 text-sm sm:flex">
-          <Link href="/studio/overview" className="hover:underline">Pasqyra</Link>
-          <Link href="/studio" className="hover:underline">Deklarimet</Link>
-          <Link href="/studio/companies" className="hover:underline">Subjektet</Link>
-        </nav>
-        <div className="ml-auto flex items-center gap-3">
-          <Link href={`/app/${companies[0].id}/dashboard`} className="text-sm text-accent hover:underline">→ Paneli i subjektit</Link>
-          <span className="hidden text-sm text-muted-foreground sm:inline">{profile?.full_name || profile?.email}</span>
-          <form action={logoutAction}><Button variant="secondary" size="sm">{d.nav.logout}</Button></form>
-        </div>
-      </header>
-      <main className="p-4 sm:p-6 lg:p-8">{children}</main>
+      <Header companies={companies} company={current} userName={profile?.full_name || profile?.email || ""} role="accountant" isSuperAdmin={isSuperAdmin} homeHref="/studio" />
+      <div className="mx-auto max-w-[1440px] px-4 pt-5 sm:px-6 lg:px-9">
+        <div className="mb-3 text-sm text-muted-foreground">Paneli i studios · {companies.length} subjekte</div>
+        <StudioTabs />
+      </div>
+      <main className="mx-auto max-w-[1440px] px-4 pb-12 pt-6 sm:px-6 lg:px-9">{children}</main>
     </div>
   );
 }

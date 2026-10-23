@@ -42,7 +42,7 @@ export default async function BankPage({ params }: { params: Promise<{ companyId
         <ArrowLeft className="h-4 w-4" /> Faturat
       </Link>
       <div>
-        <h1 className="text-2xl font-semibold">Përputhja me bankën</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Përputhja me bankën</h1>
         <p className="text-sm text-muted-foreground">
           Ngarko ekstraktin e llogarisë: arkëtimet lidhen me faturat e shitjes dhe pagesat me faturat e blerjes, sipas numrit të faturës në përshkrim, shumës dhe emrit.
           {" "}{open.filter((o) => o.direction === "sale").length} shitje dhe {open.filter((o) => o.direction === "purchase").length} blerje të papaguara.

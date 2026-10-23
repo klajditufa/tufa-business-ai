@@ -1,16 +1,16 @@
 import Link from "next/link";
-import { RefreshCw } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { getCompany } from "@/server/services/companies";
-import { getSyncStatus, listInvoices, parseInvoiceFilters } from "@/server/services/invoices";
-import { Card, Empty } from "@/components/ui";
+import { filterRange, getSyncStatus, listInvoices, parseInvoiceFilters } from "@/server/services/invoices";
+import { Empty, PageTitle, Stat } from "@/components/ui";
 import { date, money } from "@/lib/format";
-import { t } from "@/lib/i18n";
 import { InvoiceFilterBar } from "./filters";
 import { InvoiceTable } from "./invoice-table";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Regjistri i shitjeve / blerjeve: filtra (periudhë, kërkim, status, burim), totale, burimi i çdo fature dhe statusi i sinkronizimit CIS.
+ * Shitjet / Blerjet (pamja e cis-client-2): periudha, filtrat, katër kartat e totaleve dhe tabela.
+ * Faturat vijnë nga fiskalizimi (CIS) përmes TUFA Sync; pagesat shënohen këtu.
  */
 export default async function InvoicesPage({
   params,
@@ -21,7 +21,7 @@ export default async function InvoicesPage({
 }) {
   const { companyId } = await params;
   const f = parseInvoiceFilters(await searchParams);
-  const d = t();
+  const range = filterRange(f);
   const basePath = `/app/${companyId}/invoices`;
   const supabase = await createClient();
   const [company, { data: rows, error }, sync, { data: perms }] = await Promise.all([
@@ -36,39 +36,51 @@ export default async function InvoicesPage({
   const active = list.filter((r) => r.type !== "cancelled");
   const sum = (k: "subtotal" | "vat_amount" | "total") => active.reduce((a, r) => a + Number(r[k] ?? 0), 0);
   const unpaid = active.filter((r) => r.payment_status !== "paid").reduce((a, r) => a + Number(r.total) - Number(r.paid_amount ?? 0), 0);
+  const sale = f.direction === "sale";
+  const itemsPeriod = (range?.from ?? new Date().toISOString()).slice(0, 7);
+  const itemsHref = `/app/${companyId}/tools/items?direction=${f.direction}&period=${itemsPeriod}`;
+  const dmy = (d: string) => d.split("-").reverse().join("/");
 
   return (
-    <div className="space-y-4 pb-20 lg:pb-0">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">{f.direction === "sale" ? d.nav.sales : d.nav.purchases}</h1>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <RefreshCw className="h-3.5 w-3.5" />
-          {sync?.last_sync_at ? (
-            <span>Sinkronizuar nga fiskalizimi: {date(sync.last_sync_at)} · {sync.sales_count} shitje, {sync.purchases_count} blerje</span>
-          ) : (
-            <span>
-              Pa sinkronizim ende — <Link href={`/app/${companyId}/settings#sync`} className="underline">lidh TUFA Sync</Link>
-            </span>
-          )}
-        </div>
-      </div>
+    <div className="space-y-5">
+      <PageTitle
+        icon={sale ? ArrowUpRight : ArrowDownLeft}
+        tone={sale ? "teal" : "indigo"}
+        title={sale ? "Shitjet" : "Blerjet"}
+        subtitle={sale ? "Faturat që biznesi juaj u ka lëshuar klientëve." : "Faturat që furnitorët i kanë lëshuar biznesit tuaj."}
+      />
 
-      <InvoiceFilterBar basePath={basePath} f={f} />
+      <InvoiceFilterBar basePath={basePath} itemsHref={itemsHref} f={f} range={range} />
 
       {error && <p className="text-sm text-danger">{error.message}</p>}
 
       {list.length === 0 ? (
         <Empty
-          title="Asnjë faturë për këta filtra."
-          hint={sync?.last_sync_at ? "Provo një periudhë tjetër ose hiq filtrat." : "Faturat vijnë automatikisht nga fiskalizimi (CIS) pasi të lidhësh agjentin TUFA Sync te Cilësimet."}
+          title={sync?.last_sync_at ? "Asnjë faturë për këtë përzgjedhje." : "Ende pa fatura nga fiskalizimi."}
+          hint={
+            sync?.last_sync_at
+              ? `Sinkronizimi i fundit: ${date(sync.last_sync_at)}. Provo një periudhë tjetër ose hiq filtrat.`
+              : "Faturat vijnë automatikisht nga fiskalizimi (CIS) pasi të lidhësh agjentin TUFA Sync te Cilësimet."
+          }
         />
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Card className="p-3"><div className="text-xs text-muted-foreground">Fatura</div><div className="text-lg font-semibold tabular">{active.length}</div></Card>
-            <Card className="p-3"><div className="text-xs text-muted-foreground">Pa TVSH</div><div className="text-lg font-semibold tabular">{money(sum("subtotal"), currency)}</div></Card>
-            <Card className="p-3"><div className="text-xs text-muted-foreground">TVSH</div><div className="text-lg font-semibold tabular">{money(sum("vat_amount"), currency)}</div></Card>
-            <Card className="p-3"><div className="text-xs text-muted-foreground">Totali · të papaguara</div><div className="text-lg font-semibold tabular">{money(sum("total"), currency)}<span className="ml-1 text-xs font-normal text-muted-foreground">/ {money(unpaid, currency, 0)}</span></div></Card>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <Stat label="Fatura" value={active.length} />
+            <Stat label="Pa TVSH" value={money(sum("subtotal"), currency).replace(/ LEK$/, "")} />
+            <Stat label="TVSH" value={money(sum("vat_amount"), currency).replace(/ LEK$/, "")} />
+            <Stat
+              label={`Totali (${currency})`}
+              value={money(sum("total"), currency).replace(/ LEK$/, "")}
+              hint={unpaid > 0 ? `${money(unpaid, currency, 0)} të papaguara` : "të gjitha të paguara"}
+              highlight
+            />
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+            <span className="tabular">{range ? `${dmy(range.from)} – ${dmy(range.to)}` : "Të gjitha periudhat"}</span>
+            {!sync?.last_sync_at && (
+              <Link href={`/app/${companyId}/settings#sync`} className="underline">Lidh TUFA Sync</Link>
+            )}
           </div>
 
           <InvoiceTable

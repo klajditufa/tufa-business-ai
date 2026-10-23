@@ -43,7 +43,7 @@ export default async function TaxRulesPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Rregullat tatimore</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Rregullat tatimore</h1>
         <p className="text-sm text-muted-foreground">
           Normat, pragjet dhe kontributet që përdorin TVSH-ja, raportet dhe deklarimet. Një ndryshim ligjor regjistrohet si vlerë e re nga data e hyrjes në fuqi,
           kështu periudhat e kaluara llogariten me vlerën e vjetër.

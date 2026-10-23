@@ -39,7 +39,7 @@ export default async function PartiesPage({
   return (
     <div className="space-y-4 pb-20 lg:pb-0">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Klientët &amp; Furnitorët</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Klientët &amp; Furnitorët</h1>
         <div className="flex gap-2 text-sm">{tab("customers", "Klientët")}{tab("suppliers", "Furnitorët")}</div>
       </div>
 

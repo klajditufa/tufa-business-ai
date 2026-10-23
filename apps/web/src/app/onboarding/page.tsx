@@ -9,7 +9,7 @@ export default async function OnboardingPage() {
   const d = t();
   return (
     <main className="mx-auto max-w-2xl p-6">
-      <h1 className="text-2xl font-semibold">{d.onboarding.title}</h1>
+      <h1 className="text-2xl font-bold tracking-tight">{d.onboarding.title}</h1>
       <p className="mt-1 text-sm text-muted-foreground">{d.onboarding.subtitle}</p>
       <div className="mt-6">
         <OnboardingForm />

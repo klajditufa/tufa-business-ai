@@ -1,3 +1,5 @@
+import { Settings } from "lucide-react";
+import { PageTitle } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
 import { getCompany, getMyRole } from "@/server/services/companies";
 import { Badge, Card, CardTitle } from "@/components/ui";
@@ -36,7 +38,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ compa
 
   return (
     <div className="space-y-6 pb-20 lg:pb-0">
-      <h1 className="text-2xl font-semibold">{d.nav.settings}</h1>
+      <PageTitle icon={Settings} title={d.nav.settings} subtitle="Të dhënat e subjektit, përdoruesit dhe lidhja me fiskalizimin." />
 
       <Card>
         <CardTitle>Subjekti · {company.nipt}</CardTitle>

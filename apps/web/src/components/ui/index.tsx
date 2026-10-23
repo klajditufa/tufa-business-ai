@@ -14,7 +14,7 @@ export function Button({
 }) {
   const variants = {
     primary: "bg-primary text-primary-foreground hover:opacity-90",
-    secondary: "bg-muted text-foreground hover:bg-border",
+    secondary: "border border-border bg-card text-foreground hover:bg-muted",
     ghost: "bg-transparent hover:bg-muted",
     danger: "bg-danger text-white hover:opacity-90",
   };
@@ -22,7 +22,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition disabled:cursor-not-allowed disabled:opacity-50",
         variants[variant],
         sizes[size],
         className,
@@ -61,7 +61,7 @@ export function Label({ className, ...props }: React.LabelHTMLAttributes<HTMLLab
 }
 
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("rounded-xl border border-border bg-card p-5 shadow-sm", className)} {...props} />;
+  return <div className={cn("rounded-2xl border border-border bg-card p-5", className)} {...props} />;
 }
 
 export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
@@ -82,7 +82,7 @@ export function Badge({
   };
   return (
     <span
-      className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", tones[tone], className)}
+      className={cn("inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold", tones[tone], className)}
       {...props}
     />
   );
@@ -104,9 +104,57 @@ export function Alert({
 
 export function Empty({ title, hint }: { title: string; hint?: string }) {
   return (
-    <div className="rounded-xl border border-dashed border-border p-10 text-center">
-      <p className="font-medium">{title}</p>
+    <div className="rounded-2xl border border-dashed border-border p-10 text-center text-muted-foreground">
+      <p className="font-medium text-foreground/80">{title}</p>
       {hint && <p className="mt-1 text-sm text-muted-foreground">{hint}</p>}
+    </div>
+  );
+}
+
+/** Titulli i faqes si te cis-client-2: pllakë me ikonë + titull + nëntitull. */
+export function PageTitle({
+  icon: Icon,
+  title,
+  subtitle,
+  tone = "neutral",
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: React.ReactNode;
+  subtitle?: React.ReactNode;
+  tone?: "neutral" | "teal" | "indigo" | "orange" | "violet";
+  children?: React.ReactNode;
+}) {
+  const tones = {
+    neutral: "border border-border bg-card text-muted-foreground",
+    teal: "bg-success/15 text-success",
+    indigo: "bg-accent/15 text-accent",
+    orange: "bg-warning/15 text-warning",
+    violet: "bg-violet-500/15 text-violet-500",
+  };
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex items-start gap-4">
+        <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl", tones[tone])}>
+          <Icon className="h-5 w-5" />
+        </span>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+          {subtitle && <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>}
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/** Kartë përmbledhëse (Fatura / Pa TVSH / TVSH / Totali). */
+export function Stat({ label, value, hint, highlight = false }: { label: string; value: React.ReactNode; hint?: React.ReactNode; highlight?: boolean }) {
+  return (
+    <div className={cn("rounded-2xl border bg-card px-4 py-3", highlight ? "border-primary" : "border-border")}>
+      <div className="text-xs font-medium text-muted-foreground">{label}</div>
+      <div className="mt-0.5 text-2xl font-bold tabular">{value}</div>
+      {hint && <div className="mt-0.5 text-xs text-muted-foreground">{hint}</div>}
     </div>
   );
 }

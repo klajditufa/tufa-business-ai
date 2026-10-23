@@ -1,3 +1,5 @@
+import { Wallet } from "lucide-react";
+import { PageTitle } from "@/components/ui";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { listPayrollDeclarations } from "@/server/services/payroll";
@@ -24,10 +26,16 @@ export default async function PayrollPage({ params }: { params: Promise<{ compan
 
   return (
     <div className="space-y-6 pb-20 lg:pb-0">
-      <div>
-        <h1 className="text-2xl font-semibold">Listëpagesa (E-SIG 025)</h1>
-        <p className="text-sm text-muted-foreground">Vlerat zyrtare nga C@TS. Importi shënon edhe deklarimin e muajit si “deklaruar” dhe shton detyrimet me afatin nga e-Filing.</p>
-      </div>
+      <PageTitle
+        icon={Wallet}
+        tone="violet"
+        title="Listëpagesa (E-SIG 025)"
+        subtitle="Vlerat zyrtare nga C@TS. Importi shënon edhe deklarimin e muajit si “deklaruar” dhe shton detyrimet me afatin nga e-Filing."
+      >
+        <Link href={`/app/${companyId}/tools/net-gross`} className="inline-flex h-9 items-center rounded-lg border border-border bg-card px-3 text-sm font-semibold hover:bg-muted">
+          Neto / bruto
+        </Link>
+      </PageTitle>
 
       <CatsImport companyId={companyId} canWrite={canWrite} />
       {error && <p className="text-sm text-danger">{error.message}</p>}

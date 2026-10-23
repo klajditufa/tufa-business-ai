@@ -1,3 +1,5 @@
+import { LayoutDashboard } from "lucide-react";
+import { PageTitle } from "@/components/ui";
 import Link from "next/link";
 import { getCompany } from "@/server/services/companies";
 import { getDashboardData } from "@/server/services/dashboard";
@@ -26,10 +28,12 @@ export default async function DashboardPage({ params }: { params: Promise<{ comp
 
   return (
     <div className="space-y-6 pb-20 lg:pb-0">
-      <div>
-        <h1 className="text-2xl font-semibold">{fmt(d.dashboard.welcome, { name: company?.trade_name || company?.legal_name || "" })}</h1>
-        <p className="text-sm text-muted-foreground">{d.dashboard.thisMonth}</p>
-      </div>
+      <PageTitle
+        icon={LayoutDashboard}
+        tone="indigo"
+        title={fmt(d.dashboard.welcome, { name: company?.trade_name || company?.legal_name || "" })}
+        subtitle={d.dashboard.thisMonth}
+      />
 
       {data.errors.length > 0 && <Alert tone="danger">{data.errors.join(" · ")}</Alert>}
       {overdue.length > 0 && (

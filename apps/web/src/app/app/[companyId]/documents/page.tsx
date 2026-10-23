@@ -1,3 +1,5 @@
+import { FolderArchive } from "lucide-react";
+import { PageTitle } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
 import { DocumentsClient } from "./documents-client";
 import { t } from "@/lib/i18n";
@@ -44,7 +46,7 @@ export default async function DocumentsPage({
 
   return (
     <div className="space-y-4 pb-20 lg:pb-0">
-      <h1 className="text-2xl font-semibold">{d.nav.documents}</h1>
+      <PageTitle icon={FolderArchive} title={d.nav.documents} subtitle="Arkiva e sigurt e subjektit: QKB, NIPT, kontrata, vërtetime." />
       {error && <p className="text-sm text-danger">{error.message}</p>}
       <DocumentsClient
         companyId={companyId}

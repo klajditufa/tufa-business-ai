@@ -1,7 +1,8 @@
+import { Percent } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCompany } from "@/server/services/companies";
-import { Alert, Card, CardTitle, Empty } from "@/components/ui";
+import { Alert, Card, CardTitle, Empty, PageTitle } from "@/components/ui";
 import { MonthPicker, monthLabelSq, parsePeriod } from "@/components/app/month-picker";
 import { money } from "@/lib/format";
 import { t } from "@/lib/i18n";
@@ -66,7 +67,7 @@ export default async function VatPage({
   if (company && !company.vat_registered) {
     return (
       <div className="space-y-4 pb-20 lg:pb-0">
-        <h1 className="text-2xl font-semibold">{d.nav.vat}</h1>
+        <PageTitle icon={Percent} tone="indigo" title={d.nav.vat} />
         <Alert tone="info">Ky subjekt nuk është i regjistruar në TVSH. Nëse kjo ka ndryshuar, përditësoje te Parametrat.</Alert>
       </div>
     );
@@ -74,10 +75,9 @@ export default async function VatPage({
 
   return (
     <div className="space-y-6 pb-20 lg:pb-0">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">{d.nav.vat} · {monthLabelSq(year, month)}</h1>
+      <PageTitle icon={Percent} tone="indigo" title={`${d.nav.vat} · ${monthLabelSq(year, month)}`} subtitle="Përgatitja e TVSH-së nga faturat e fiskalizimit dhe krahasimi me deklaratën në C@TS.">
         <MonthPicker year={year} month={month} basePath={basePath} />
-      </div>
+      </PageTitle>
       {error && <Alert tone="danger">{error.message}</Alert>}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

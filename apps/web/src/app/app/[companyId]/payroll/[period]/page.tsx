@@ -21,7 +21,7 @@ export default async function PayrollMonthPage({ params }: { params: Promise<{ c
     <div className="space-y-6 pb-20 lg:pb-0">
       <Link href={`/app/${companyId}/payroll`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline"><ArrowLeft className="h-4 w-4" /> Listëpagesat</Link>
       <div>
-        <h1 className="text-2xl font-semibold">Listëpagesa · {monthLabelSq(year, month)}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Listëpagesa · {monthLabelSq(year, month)}</h1>
         {d && (
           <p className="text-sm text-muted-foreground">
             {d.model} · dorëzuar {d.submitted_on ? date(d.submitted_on) : "—"} · afati {d.due_date ? date(d.due_date) : "—"} · {d.cats_status ?? ""}

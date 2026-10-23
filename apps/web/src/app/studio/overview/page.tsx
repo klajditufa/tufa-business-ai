@@ -36,7 +36,7 @@ export default async function StudioOverviewPage({ searchParams }: { searchParam
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Pasqyra e subjekteve · {monthLabelSq(year, month)}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Pasqyra e subjekteve · {monthLabelSq(year, month)}</h1>
         <MonthPicker year={year} month={month} basePath="/studio/overview" />
       </div>
       {error && <p className="text-sm text-danger">{error.message}</p>}

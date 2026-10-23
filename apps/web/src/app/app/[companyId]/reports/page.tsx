@@ -36,7 +36,7 @@ export default async function ReportsPage({
     <div className="space-y-6 pb-20 lg:pb-0">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Raporti vjetor {year}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Raporti vjetor {year}</h1>
           <p className="text-sm text-muted-foreground">{company?.legal_name} · NIPT {company?.nipt}</p>
         </div>
         <div className="no-print flex items-center gap-2">

@@ -1,3 +1,5 @@
+import { Landmark } from "lucide-react";
+import { PageTitle } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
 import { Card, Empty } from "@/components/ui";
 import { KIND_LABELS, StatusBadge, type DeclStatus } from "@/components/app/status-badge";
@@ -39,10 +41,9 @@ export default async function DeclarationsPage({
 
   return (
     <div className="space-y-6 pb-20 lg:pb-0">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">{d.nav.declarations}</h1>
+      <PageTitle icon={Landmark} tone="orange" title={d.nav.declarations} subtitle="Deklaratat e muajit, afatet dhe statusi në C@TS.">
         <MonthPicker year={year} month={month} basePath={basePath} />
-      </div>
+      </PageTitle>
       {error && <p className="text-sm text-danger">{error.message}</p>}
 
       {!rows || rows.length === 0 ? (

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { THEME_INIT_SCRIPT } from "@/components/app/theme-toggle";
 
 export const metadata: Metadata = {
   title: { default: "TUFA Business AI", template: "%s · TUFA Business AI" },
@@ -9,7 +10,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0f2b5b",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#242424" },
+  ],
   width: "device-width",
   initialScale: 1,
 };
@@ -17,6 +21,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="sq" suppressHydrationWarning>
+      <head>
+        {/* Tema e zgjedhur vendoset para pikturimit, që të mos ketë ndezje */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="antialiased">{children}</body>
     </html>
   );

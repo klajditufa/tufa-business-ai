@@ -32,7 +32,7 @@ export default async function PartyLedgerPage({
         <ArrowLeft className="h-4 w-4" /> {direction === "sale" ? "Klientët" : "Furnitorët"}
       </Link>
       <div>
-        <h1 className="text-2xl font-semibold">{party.name}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{party.name}</h1>
         <p className="text-sm text-muted-foreground">
           {party.nipt && <span className="font-mono">{party.nipt}</span>}
           {party.address && <> · {party.address}</>}
