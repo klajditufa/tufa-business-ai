@@ -1,5 +1,6 @@
 import { date } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
+import { RegistryRefresh } from "@/components/cis/registry-refresh";
 import { Alert, Badge, Card, Empty } from "@/components/ui";
 
 export const metadata = { title: "Operatorët, njësitë & pajisjet" };
@@ -23,7 +24,7 @@ function Section({ title, syncedAt, children, count }: { title: string; syncedAt
   );
 }
 
-/** Regjistrat e fiskalizimit (CIS), pamja e fundit e dërguar nga agjenti TUFA Sync me certifikatën e subjektit. */
+/** Regjistrat e fiskalizimit (CIS), pamja e fundit e marrë me certifikatën e subjektit (nga shfletuesi ose TUFA Sync). */
 export default async function RegistryPage({ params }: { params: Promise<{ companyId: string }> }) {
   const { companyId } = await params;
   const supabase = await createClient();
@@ -41,16 +42,16 @@ export default async function RegistryPage({ params }: { params: Promise<{ compa
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold">Operatorët, njësitë & pajisjet</h2>
-        <p className="text-sm text-muted-foreground">Siç janë të regjistruara në sistemin e fiskalizimit (CIS) për këtë subjekt.</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-semibold">Operatorët, njësitë & pajisjet</h2>
+          <p className="text-sm text-muted-foreground">Siç janë të regjistruara në sistemin e fiskalizimit (CIS) për këtë subjekt.</p>
+        </div>
+        <RegistryRefresh />
       </div>
       {error && <Alert tone="danger">{error.message}</Alert>}
       {none && (
-        <Alert tone="info">
-          Këto lexohen vetëm me certifikatën e subjektit, që mbetet në kompjuterin e tij. Në atë kompjuter, brenda dosjes <code>tufa-sync</code>, nis{" "}
-          <code className="rounded bg-background px-1">./start.sh push-registry</code> me të njëjtin çelës API si për faturat.
-        </Alert>
+        <Alert tone="info">Shtyp “Rifresko nga CIS”: me certifikatën e subjektit merren njësitë, pajisjet dhe operatorët.</Alert>
       )}
 
       <Section title="Njësitë e biznesit" syncedAt={units.syncedAt} count={units.rows.length}>

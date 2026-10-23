@@ -75,7 +75,7 @@ export default async function ItemsPage({
       {missing > 0 && rows.length > 0 && (
         <Alert tone="info">
           {missing} nga {invoices.length} fatura nuk kanë ende artikuj; totalet më poshtë mbulojnë vetëm {withItems.length} faturat e tjera.
-          Nis sinkronizimin edhe një herë që t’i plotësosh.
+          Merri edhe një herë nga CIS (Shitjet / Blerjet → “Merr nga CIS”) që t’i plotësosh.
         </Alert>
       )}
 
@@ -84,17 +84,21 @@ export default async function ItemsPage({
           <Card className="space-y-3">
             <div className="font-semibold">Artikujt e këtyre {invoices.length} faturave nuk janë marrë ende nga fiskalizimi</div>
             <p className="text-sm text-muted-foreground">
-              Lista e faturave nga CIS nuk i përmban artikujt: ata merren duke hapur çdo faturë me certifikatën e subjektit, e cila mbetet në
-              kompjuterin e tij. Faturat e kësaj periudhe janë sinkronizuar pa ta.
+              Lista e faturave nga CIS nuk i përmban artikujt: ata merren duke hapur çdo faturë me certifikatën e subjektit. Faturat e kësaj
+              periudhe janë marrë pa ta.
             </p>
-            <ol className="list-decimal space-y-1 pl-5 text-sm">
-              <li>Në kompjuterin me certifikatën, hap Terminal brenda dosjes <code>tufa-sync</code>.</li>
-              <li>
-                Nis sinkronizimin për periudhën:
-                <pre className="mt-1 overflow-x-auto rounded-md bg-muted px-3 py-2 text-xs">{`./start.sh push --details --from ${from} --to ${to}`}</pre>
-              </li>
-              <li>Rifresko këtë faqe: artikujt dalin menjëherë. Faturat ekzistuese përditësohen, nuk dyfishohen.</li>
-            </ol>
+            <p className="text-sm">
+              Te <b>{direction === "sale" ? "Shitjet" : "Blerjet"}</b>, zgjidh periudhën dhe shtyp <b>“Merr nga CIS”</b> (me “Me artikujt e faturave” të
+              zgjedhur). Faturat ekzistuese përditësohen me artikujt, nuk dyfishohen.
+            </p>
+            <div>
+              <Link
+                href={`/app/${companyId}/invoices?direction=${direction}&from=${from}&to=${to}`}
+                className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground"
+              >
+                Hap {direction === "sale" ? "Shitjet" : "Blerjet"} për këtë periudhë
+              </Link>
+            </div>
           </Card>
         ) : (
           <Empty title={`Asnjë faturë për ${wholeYear ? `vitin ${year}` : monthLabelSq(year, month)}.`} hint="Provo një periudhë tjetër ose sinkronizo faturat me TUFA Sync." />

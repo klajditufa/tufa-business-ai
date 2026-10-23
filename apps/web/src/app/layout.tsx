@@ -3,6 +3,7 @@ import { ColorSchemeScript, mantineHtmlProps } from "@mantine/core";
 import "./layers.css";
 import "@mantine/core/styles.layer.css";
 import "@mantine/dates/styles.layer.css";
+import "@mantine/dropzone/styles.layer.css";
 import "./globals.css";
 import { Providers } from "./providers";
 

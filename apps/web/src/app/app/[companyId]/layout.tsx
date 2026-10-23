@@ -1,10 +1,11 @@
 import { Suspense } from "react";
 import { Badge, Container, Group, Stack, Text } from "@mantine/core";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCompany, getMyRole, getProfile, listMyCompanies } from "@/server/services/companies";
 import { getSyncStatus } from "@/server/services/invoices";
 import { Header } from "@/components/app/header";
+import { CisProvider } from "@/components/cis/cis-provider";
+import { CisStatus } from "@/components/cis/cis-status";
 import { CompanyTabs } from "@/components/app/company-tabs";
 import { createClient } from "@/lib/supabase/server";
 import { date } from "@/lib/format";
@@ -39,6 +40,7 @@ export default async function CompanyLayout({
   const studio = role === "org_owner" || role === "accountant" || isSuperAdmin;
 
   return (
+    <CisProvider company={{ id: company.id, nipt: company.nipt, name: company.trade_name || company.legal_name }}>
     <div className="min-h-screen">
       <Header company={company} companies={companies} userName={profile?.full_name || profile?.email || ""} role={role} isSuperAdmin={isSuperAdmin} />
       <Container size={1440} px={{ base: "xs", sm: "md" }} pt="lg" pb="xl">
@@ -47,17 +49,14 @@ export default async function CompanyLayout({
             <Text size="sm" c="dimmed" ff="monospace">
               {company.nipt}
             </Text>
-            {sync?.last_sync_at ? (
-              <Badge variant="light" color="teal" title={`${sync.sales_count} shitje, ${sync.purchases_count} blerje`}>
-                Fiskalizimi i lidhur · {date(sync.last_sync_at)}
-              </Badge>
-            ) : (
-              <Link href={`/app/${companyId}/settings#sync`}>
-                <Badge variant="light" color="gray">
-                  Pa lidhje me fiskalizimin
+            <Group gap="xs">
+              {sync?.last_sync_at && (
+                <Badge variant="light" color="gray" title={`${sync.sales_count} shitje, ${sync.purchases_count} blerje`}>
+                  Sinkronizuar · {date(sync.last_sync_at)}
                 </Badge>
-              </Link>
-            )}
+              )}
+              <CisStatus />
+            </Group>
           </Group>
           <Suspense fallback={<div className="h-11" />}>
             <CompanyTabs companyId={companyId} studioCount={studio ? companies.length : null} />
@@ -70,5 +69,6 @@ export default async function CompanyLayout({
         </Text>
       </Container>
     </div>
+    </CisProvider>
   );
 }

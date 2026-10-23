@@ -99,7 +99,7 @@ export default async function VatPage({
       </p>
 
       {(rows ?? []).length === 0 ? (
-        <Empty title="Asnjë faturë për këtë periudhë." hint="Faturat vijnë nga fiskalizimi (CIS) me agjentin TUFA Sync — shih Cilësimet → Sinkronizimi i faturave." />
+        <Empty title="Asnjë faturë për këtë periudhë." hint="Merri faturat te Shitjet / Blerjet me “Merr nga CIS” (certifikata e subjektit)." />
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
           <VatTable title="Shitjet sipas normave" rows={sales} currency={currency} />

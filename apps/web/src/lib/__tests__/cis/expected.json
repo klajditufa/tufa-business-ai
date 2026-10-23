@@ -1,0 +1,176 @@
+{
+ "list": [
+  {
+   "TypeOfInv": "CASH",
+   "IsSimplifiedInv": "false",
+   "IssueDateTime": "2026-09-01T09:00:00+02:00",
+   "InvOrdNum": "3440",
+   "TCRCode": "ab123cd456",
+   "IsIssuerInVAT": "true",
+   "TotVATAmt": "24.00",
+   "TotPrice": "144.00",
+   "OperatorCode": "op123op123",
+   "BusinUnitCode": "bu123bu123",
+   "SoftCode": "sw123sw123",
+   "IIC": "47B1A0D1F1A2590891290E341AD147DD",
+   "FIC": "0d57e245-04be-5e05-ac5e-052024deab3e",
+   "IsReverseCharge": "false",
+   "IsEinvoice": "false",
+   "Seller": {
+    "IDType": "NUIS",
+    "IDNum": "X99999999X",
+    "Name": "TEST ONLY SHPK",
+    "Address": "Rruga e Testit 1",
+    "Town": "Tiranë",
+    "Country": "ALB"
+   },
+   "Buyer": {
+    "IDType": "NUIS",
+    "IDNum": "K11111111A",
+    "Name": "ALFA TREGTI SHPK",
+    "Town": "Durrës",
+    "Country": "ALB"
+   },
+   "CorrectiveInv": {
+    "IICRef": "00000000000000000000000000000000",
+    "IssueDateTime": "2026-09-01T09:00:00+02:00",
+    "Type": "CORRECTIVE"
+   }
+  },
+  {
+   "TypeOfInv": "NONCASH",
+   "IsSimplifiedInv": "false",
+   "IssueDateTime": "2026-09-01T10:07:00+02:00",
+   "InvOrdNum": "3441",
+   "IsIssuerInVAT": "true",
+   "TotVATAmt": "1524.00",
+   "TotPrice": "9144.00",
+   "OperatorCode": "op123op123",
+   "BusinUnitCode": "bu123bu123",
+   "SoftCode": "sw123sw123",
+   "IIC": "7C3F9A374C145D21B32458CEA891F8D1",
+   "FIC": "516f491b-f0b1-56d9-a8a6-badc9cf6c0e8",
+   "IsReverseCharge": "false",
+   "IsEinvoice": "false",
+   "Seller": {
+    "IDType": "NUIS",
+    "IDNum": "X99999999X",
+    "Name": "TEST ONLY SHPK",
+    "Address": "Rruga e Testit 1",
+    "Town": "Tiranë",
+    "Country": "ALB"
+   },
+   "Buyer": {
+    "IDType": "NUIS",
+    "IDNum": "L22222222B",
+    "Name": "BETA SHËRBIME SHPK",
+    "Town": "Tiranë",
+    "Country": "ALB"
+   }
+  }
+ ],
+ "count": 2,
+ "full": {
+  "TypeOfInv": "CASH",
+  "IsSimplifiedInv": "false",
+  "IssueDateTime": "2026-09-01T09:00:00+02:00",
+  "SendDateTime": "2026-09-01T09:00:00+02:00",
+  "InvNum": "3440/2026/ab123cd456",
+  "InvOrdNum": "3440",
+  "TCRCode": "ab123cd456",
+  "IsIssuerInVAT": "true",
+  "TotPriceWoVAT": "120.00",
+  "TotVATAmt": "24.00",
+  "TotPrice": "144.00",
+  "OperatorCode": "op123op123",
+  "BusinUnitCode": "bu123bu123",
+  "SoftCode": "sw123sw123",
+  "IIC": "47B1A0D1F1A2590891290E341AD147DD",
+  "IICSignature": "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB",
+  "FIC": "0d57e245-04be-5e05-ac5e-052024deab3e",
+  "IsReverseCharge": "false",
+  "IsEinvoice": "false",
+  "PayMethods": [
+   {
+    "Type": "BANKNOTE",
+    "Amt": "144.00"
+   }
+  ],
+  "Seller": {
+   "IDType": "NUIS",
+   "IDNum": "X99999999X",
+   "Name": "TEST ONLY SHPK",
+   "Address": "Rruga e Testit 1",
+   "Town": "Tiranë",
+   "Country": "ALB"
+  },
+  "Buyer": {
+   "IDType": "NUIS",
+   "IDNum": "K11111111A",
+   "Name": "ALFA TREGTI SHPK",
+   "Town": "Durrës",
+   "Country": "ALB"
+  },
+  "CorrectiveInv": {
+   "IICRef": "00000000000000000000000000000000",
+   "IssueDateTime": "2026-09-01T09:00:00+02:00",
+   "Type": "CORRECTIVE"
+  },
+  "SameTaxes": [
+   {
+    "NumOfItems": "1",
+    "PriceBefVAT": "120.00",
+    "VATRate": "20.00",
+    "VATAmt": "24.00"
+   }
+  ],
+  "Items": [
+   {
+    "N": "Kafe ekspres",
+    "C": "A70",
+    "U": "XPP",
+    "Q": "1.0",
+    "UPB": "120.00",
+    "UPA": "144.00",
+    "R": "0.00",
+    "RR": "true",
+    "PB": "120.00",
+    "VR": "20.00",
+    "VA": "24.00",
+    "PA": "144.00"
+   }
+  ]
+ },
+ "operators": [
+  {
+   "name": "Arta Hoxha",
+   "opCode": "op123op123",
+   "firstName": "Arta",
+   "lastName": "Hoxha",
+   "idNumber": "I00000000A",
+   "validFrom": "2024-01-01",
+   "validTo": null
+  },
+  {
+   "name": "Blerim Kola",
+   "opCode": "op456op456",
+   "firstName": "Blerim",
+   "lastName": "Kola",
+   "idNumber": "I00000000B",
+   "validFrom": "2023-03-01",
+   "validTo": "2025-12-31"
+  }
+ ],
+ "tcrs": [
+  {
+   "IssuerNUIS": "X99999999X",
+   "BusinUnitCode": "bu123bu123",
+   "TCRIntID": "ARKA-1",
+   "SoftCode": "sw123sw123",
+   "TCRCode": "ab123cd456",
+   "MaintainerCode": "mt123mt123",
+   "ValidFrom": "2021-01-01",
+   "Type": "REGULAR"
+  }
+ ]
+}

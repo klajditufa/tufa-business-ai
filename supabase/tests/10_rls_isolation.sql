@@ -760,6 +760,39 @@ select pg_temp.check('regjistrat: accountant i A nuk sheh regjistrat e B',
 reset role;
 
 -- =============================================================================
+-- 21. Importi nga shfletuesi (0029)
+-- =============================================================================
+select set_config('t.nipt_a', (select nipt::text from public.companies where id = :'compA'::uuid), false);
+select set_config('request.jwt.claim.sub', :'acc', false);
+set role authenticated;
+select pg_temp.check('import_cis_invoices_user: fatura e A importohet, e huaja anashkalohet',
+  (select (j->>'imported')::int = 1 and (j->>'foreign_skipped')::int = 1
+     from public.import_cis_invoices_user(:'compA'::uuid, 'sale', jsonb_build_array(
+       jsonb_build_object('FIC', 'fic-browser-1', 'IssueDateTime', '2026-10-05T10:00:00+02:00', 'TotPrice', '120', 'TotVATAmt', '20',
+         'Seller', jsonb_build_object('IDNum', current_setting('t.nipt_a'), 'Name', 'A'),
+         'Buyer', jsonb_build_object('IDNum', 'K11111111A', 'Name', 'Klient')),
+       jsonb_build_object('FIC', 'fic-browser-2', 'IssueDateTime', '2026-10-05T10:00:00+02:00', 'TotPrice', '120', 'TotVATAmt', '20',
+         'Seller', jsonb_build_object('IDNum', 'Z99999999Z', 'Name', 'Tjetër'),
+         'Buyer', jsonb_build_object('IDNum', 'K11111111A', 'Name', 'Klient'))), 'test') j));
+do $$ begin
+  perform public.import_cis_invoices_user('cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'sale', '[]'::jsonb, null);
+  perform pg_temp.check('import_cis_invoices_user: accountant i A nuk importon në B', false);
+exception when others then perform pg_temp.check('import_cis_invoices_user: accountant i A nuk importon në B', sqlstate = '42501'); end $$;
+select pg_temp.check('set_company_registry: A ruan pajisjet',
+  (select (j->>'rows')::int = 1 from public.set_company_registry(:'compA'::uuid, 'tcrs', '[{"TCRCode":"ab123cd456","x":"y"}]'::jsonb) j));
+do $$ begin
+  perform public.set_company_registry('cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'tcrs', '[]'::jsonb);
+  perform pg_temp.check('set_company_registry: accountant i A nuk shkruan në B', false);
+exception when others then perform pg_temp.check('set_company_registry: accountant i A nuk shkruan në B', sqlstate = '42501'); end $$;
+reset role;
+set role anon;
+do $$ begin
+  perform public.import_cis_invoices_user('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'sale', '[]'::jsonb, null);
+  perform pg_temp.check('import_cis_invoices_user: anon refuzohet', false);
+exception when others then perform pg_temp.check('import_cis_invoices_user: anon refuzohet', sqlstate = '42501'); end $$;
+reset role;
+
+-- =============================================================================
 -- Përmbledhje
 -- =============================================================================
 select name, ok, detail from t_results where not ok;

@@ -1130,6 +1130,9 @@ isOneToOne: false
 "import_cis_invoices":
 { Args: { "p_company_id": string,"p_direction": Database["public"]['Enums']["invoice_direction"],"p_invoices": Json,"p_label"?: string }; Returns: Json
                            },
+"import_cis_invoices_user":
+{ Args: { "p_company_id": string,"p_direction": Database["public"]['Enums']["invoice_direction"],"p_invoices": Json,"p_label"?: string }; Returns: Json
+                           },
 "import_payroll_declarations":
 { Args: { "p_company_id": string,"p_rows": Json }; Returns: Json
                            },
@@ -1180,6 +1183,9 @@ isOneToOne: false
                            },
 "revoke_api_key":
 { Args: { "p_key_id": string }; Returns: undefined
+                           },
+"set_company_registry":
+{ Args: { "p_company_id": string,"p_kind": string,"p_rows": Json }; Returns: Json
                            },
 "set_declaration_status":
 { Args: { "p_id": string,"p_notes"?: string,"p_status": Database["public"]['Enums']["declaration_status"] }; Returns: {

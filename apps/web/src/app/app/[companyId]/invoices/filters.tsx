@@ -1,5 +1,6 @@
 "use client";
 
+import { CisFetchButton } from "@/components/cis/cis-fetch";
 import { useNav } from "@/components/app/nav-progress";
 import { useState } from "react";
 import Link from "next/link";
@@ -150,6 +151,7 @@ export function InvoiceFilterBar({
               <Button type="submit" loading={navigating} w={{ base: "100%", sm: "auto" }}>
                 Shfaq faturat
               </Button>
+              <CisFetchButton direction={f.direction} from={preset === "all" ? null : from} to={preset === "all" ? null : to} onDone={apply} />
             </Group>
           </form>
           <Divider orientation="vertical" visibleFrom="md" />

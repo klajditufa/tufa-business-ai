@@ -78,7 +78,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ compa
       </Card>
 
       <Card id="sync">
-        <CardTitle>Sinkronizimi i faturave nga fiskalizimi (TUFA Sync)</CardTitle>
+        <CardTitle>Sinkronizimi automatik me agjentin TUFA Sync (opsional)</CardTitle>
         <div className="mt-3">
           <ApiKeysPanel
             companyId={companyId}

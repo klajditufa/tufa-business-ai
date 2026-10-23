@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { IconArrowDownLeft as ArrowDownLeft, IconArrowUpRight as ArrowUpRight } from "@tabler/icons-react";
 import { getCompany } from "@/server/services/companies";
 import { filterRange, getSyncStatus, listInvoices, parseInvoiceFilters } from "@/server/services/invoices";
@@ -10,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 
 /**
  * Shitjet / Blerjet (pamja e cis-client-2): periudha, filtrat, katër kartat e totaleve dhe tabela.
- * Faturat vijnë nga fiskalizimi (CIS) përmes TUFA Sync; pagesat shënohen këtu.
+ * Faturat merren nga fiskalizimi (CIS) me “Merr nga CIS” (certifikata në shfletues) ose me TUFA Sync; pagesat shënohen këtu.
  */
 export default async function InvoicesPage({
   params,
@@ -60,7 +59,7 @@ export default async function InvoicesPage({
           hint={
             sync?.last_sync_at
               ? `Sinkronizimi i fundit: ${date(sync.last_sync_at)}. Provo një periudhë tjetër ose hiq filtrat.`
-              : "Faturat vijnë automatikisht nga fiskalizimi (CIS) pasi të lidhësh agjentin TUFA Sync te Cilësimet."
+              : "Zgjidh periudhën dhe shtyp “Merr nga CIS”: herën e parë kërkohet certifikata .p12 e subjektit dhe fjalëkalimi i saj."
           }
         />
       ) : (
@@ -78,9 +77,6 @@ export default async function InvoicesPage({
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
             <span className="tabular">{range ? `${dmy(range.from)} – ${dmy(range.to)}` : "Të gjitha periudhat"}</span>
-            {!sync?.last_sync_at && (
-              <Link href={`/app/${companyId}/settings#sync`} className="underline">Lidh TUFA Sync</Link>
-            )}
           </div>
 
           <InvoiceTable

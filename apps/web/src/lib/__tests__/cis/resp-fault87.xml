@@ -1,0 +1,1 @@
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/"><env:Header/><env:Body><env:Fault><faultcode>env:CLIENT</faultcode><faultstring>Excessive number of invoices detected! Please restrict the search period. Code=87 RequestUUID=x ResponseUUID=y</faultstring><detail><code>87</code></detail></env:Fault></env:Body></env:Envelope>
