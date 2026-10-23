@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type Hop = { url: string; status: number; location?: string; forms?: { action: string; method: string; fields: string[] }[]; links?: string[]; title?: string; captcha?: boolean; bytes?: number };
+type Hop = { body?: string; url: string; status: number; location?: string; forms?: { action: string; method: string; fields: string[] }[]; links?: string[]; title?: string; captcha?: boolean; bytes?: number };
 
 function forms(html: string) {
   return [...html.matchAll(/<form\b([^>]*)>([\s\S]*?)<\/form>/gi)].slice(0, 6).map((m) => ({
@@ -36,9 +36,14 @@ export async function GET() {
       const links = [...html.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)]
         .filter((m) => /albania/i.test(m[2] + m[1]))
         .map((m) => `${m[2].replace(/<[^>]+>/g, "").trim().slice(0, 40)} -> ${m[1].slice(0, 160)}`);
-      hops.push({ url: url.slice(0, 200), status: r.status, location: loc?.slice(0, 200), forms: html ? forms(html) : undefined, links: links.slice(0, 5), title: /<title>([^<]*)/i.exec(html)?.[1]?.trim(), captcha: /recaptcha|hcaptcha|turnstile|captcha/i.test(html), bytes: html.length });
+      hops.push({ url: url.slice(0, 200), status: r.status, location: loc?.slice(0, 200), forms: html ? forms(html) : undefined, links: links.slice(0, 5), title: /<title>([^<]*)/i.exec(html)?.[1]?.trim(), captcha: /recaptcha|hcaptcha|turnstile|captcha/i.test(html), bytes: html.length, ...(html.length < 2000 ? { body: html.replace(/\s+/g, " ").slice(0, 600) } : {}) } as Hop);
       if (loc) {
         url = new URL(loc, url).href;
+        continue;
+      }
+      const refresh = /http-equiv=["']?refresh["']?[^>]*url=([^"'>]+)/i.exec(html)?.[1] ?? /location(?:\.href)?\s*=\s*["']([^"']+)["']/i.exec(html)?.[1];
+      if (refresh && html.length < 2000) {
+        url = new URL(refresh.replace(/&amp;/g, "&"), url).href;
         continue;
       }
       // Ndjek lidhjen "E-Albania Login" një herë
