@@ -7,6 +7,7 @@ import { Badge, Card, Empty } from "@/components/ui";
 import { monthLabelSq } from "@/components/app/month-picker";
 import { date, money } from "@/lib/format";
 import { CatsImport } from "./cats-import";
+import { getCompany } from "@/server/services/companies";
 
 const statusTone = (s: string | null) =>
   !s ? "neutral" : /refuz|gabime/i.test(s) ? "danger" : /paguar/i.test(s) && !/papaguar/i.test(s) ? "success" : /regjistruar|aprovuar|dërgua pa gabime/i.test(s) ? "info" : "warning";
@@ -15,8 +16,10 @@ const statusTone = (s: string | null) =>
  * Listëpagesat siç janë deklaruar në C@TS (importi i eksportit Excel të e-Filing).
  * Nuk ka llogaritje lokale: vlerat janë ato zyrtare.
  */
-export default async function PayrollPage({ params }: { params: Promise<{ companyId: string }> }) {
+export default async function PayrollPage({ params, searchParams }: { params: Promise<{ companyId: string }>; searchParams: Promise<{ capture?: string }> }) {
   const { companyId } = await params;
+  const { capture } = await searchParams;
+  const company = await getCompany(companyId);
   const supabase = await createClient();
   const [{ rows, error }, { data: perms }] = await Promise.all([listPayrollDeclarations(companyId), supabase.rpc("my_permissions", { p_company_id: companyId })]);
   const canWrite = (perms ?? []).some((p) => p.module === "payroll" && p.action === "write");
@@ -32,12 +35,20 @@ export default async function PayrollPage({ params }: { params: Promise<{ compan
         title="Listëpagesa (E-SIG 025)"
         subtitle="Vlerat zyrtare nga C@TS. Importi shënon edhe deklarimin e muajit si “deklaruar” dhe shton detyrimet me afatin nga e-Filing."
       >
+        <a
+          href="/tufa-efiling.zip"
+          download
+          title="Shtesa e Chrome që dërgon këtu faqet e listëpagesës nga e-Filing"
+          className="inline-flex h-9 items-center rounded-lg border border-border bg-card px-3 text-sm font-semibold hover:bg-muted"
+        >
+          Shtesa e-Filing
+        </a>
         <Link href={`/app/${companyId}/tools/net-gross`} className="inline-flex h-9 items-center rounded-lg border border-border bg-card px-3 text-sm font-semibold hover:bg-muted">
           Neto / bruto
         </Link>
       </PageTitle>
 
-      <CatsImport companyId={companyId} canWrite={canWrite} />
+      <CatsImport companyId={companyId} canWrite={canWrite} companyNipt={company?.nipt} captureId={capture && /^[0-9a-f-]{36}$/.test(capture) ? capture : undefined} />
       {error && <p className="text-sm text-danger">{error.message}</p>}
 
       {rows.length === 0 ? (

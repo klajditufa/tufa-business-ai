@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "TUFA · e-Filing",
+  "version": "1.0.0",
+  "description": "Dërgon te TUFA Business AI faqet që hap vetë në e-Filing (listëpagesat e dorëzuara dhe detajet E-SIG 025). Vetëm lexim.",
+  "permissions": ["storage", "activeTab"],
+  "background": { "service_worker": "worker.js" },
+  "action": { "default_popup": "popup.html", "default_title": "Dërgo në TUFA" },
+  "icons": { "128": "icon-128.png" },
+  "content_scripts": [
+    {
+      "matches": ["https://efiling.tatime.gov.al/cats_public/*"],
+      "js": ["capture.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://tufa-business-ai.vercel.app/*", "http://localhost:3000/*"],
+      "js": ["bridge.js"],
+      "run_at": "document_start"
+    }
+  ]
+}

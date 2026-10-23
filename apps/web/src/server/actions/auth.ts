@@ -5,6 +5,12 @@ import { headers } from "next/headers";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
+/** Vetëm rrugë të brendshme ("/app/..."); "//host" ose "/\\host" do të çonin jashtë TUFA. */
+function safeNext(next: string | undefined): string | null {
+  if (!next || !next.startsWith("/") || next.startsWith("//") || next.includes("\\") || /[\u0000-\u001f]/.test(next)) return null;
+  return next.slice(0, 1000);
+}
+
 export type ActionResult = { ok: true; message?: string } | { ok: false; error: string; field?: string };
 
 const loginSchema = z.object({
@@ -30,7 +36,7 @@ export async function loginAction(_prev: ActionResult | null, formData: FormData
   });
   if (error) return { ok: false, error: "Email ose fjalëkalim i gabuar." };
 
-  const next = parsed.data.next && parsed.data.next.startsWith("/") ? parsed.data.next : "/app";
+  const next = safeNext(parsed.data.next) ?? "/app";
   redirect(next);
 }
 
@@ -47,13 +53,13 @@ export async function registerAction(_prev: ActionResult | null, formData: FormD
     password: parsed.data.password,
     options: {
       data: { full_name: parsed.data.fullName },
-      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(parsed.data.next && parsed.data.next.startsWith("/") ? parsed.data.next : "/onboarding")}`,
+      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(safeNext(parsed.data.next) ?? "/onboarding")}`,
     },
   });
   if (error) return { ok: false, error: error.message };
 
   // Nëse konfirmimi i email-it është i çaktivizuar (dev), sesioni ekziston → vazhdo
-  if (data.session) redirect(parsed.data.next && parsed.data.next.startsWith("/") ? parsed.data.next : "/onboarding");
+  if (data.session) redirect(safeNext(parsed.data.next) ?? "/onboarding");
   return { ok: true, message: "Kontrollo email-in për linkun e konfirmimit." };
 }
 

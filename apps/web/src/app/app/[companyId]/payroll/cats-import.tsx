@@ -2,10 +2,10 @@
 
 import { MonthPickerInput } from "@mantine/dates";
 import { IconCalendar } from "@tabler/icons-react";
-import { useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { IconFileUpload as FileUp, IconShieldCheck as ShieldCheck, IconUpload as Upload } from "@tabler/icons-react";
-import { detectKind, findPeriodInGrid, parseCsv, parseLines, parseSummary, type Grid, type LineRow, type SummaryRow } from "@/lib/cats-payroll";
+import { detectKind, findPeriodInGrid, mergeTables, parseCsv, parseLines, parseSummary, type Grid, type LineRow, type SummaryRow } from "@/lib/cats-payroll";
 import { importPayrollLinesAction, importPayrollSummaryAction } from "@/server/actions/payroll";
 import { Alert, Button, Card } from "@/components/ui";
 import { money } from "@/lib/format";
@@ -37,19 +37,22 @@ type Parsed =
   | { kind: "summary"; rows: SummaryRow[] }
   | { kind: "lines"; rows: LineRow[]; year: number; month: number };
 
-export function CatsImport({ companyId, canWrite }: { companyId: string; canWrite: boolean }) {
+type Snapshot = { url: string; title: string; nipt: string; tables: string[][][]; capturedAt: number };
+
+/**
+ * Importi i listëpagesës nga C@TS: me skedarin e eksportit, ose direkt nga shtesa "TUFA · e-Filing"
+ * (faqja e hapur nga përdoruesi pas hyrjes me e-Albania; kapja merret një herë, me id).
+ */
+export function CatsImport({ companyId, canWrite, companyNipt, captureId }: { companyId: string; canWrite: boolean; companyNipt?: string; captureId?: string }) {
   const router = useRouter();
   const [parsed, setParsed] = useState<Parsed | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ tone: "success" | "danger" | "warning"; text: string } | null>(null);
   const [pending, start] = useTransition();
-  const now = new Date();
 
-  const onFile = async (file?: File) => {
-    if (!file) return;
-    setMsg(null); setParsed(null); setFileName(file.name);
+  const onGrid = useCallback((grid: Grid) => {
+    const now = new Date();
     try {
-      const grid = await fileToGrid(file);
       const kind = detectKind(grid);
       if (kind === "summary") {
         const rows = parseSummary(grid);
@@ -62,12 +65,59 @@ export function CatsImport({ companyId, canWrite }: { companyId: string; canWrit
         setParsed({ kind, rows, ...p });
         if (!findPeriodInGrid(grid)) setMsg({ tone: "warning", text: "Muaji nuk u gjet në skedar — kontrolloje më poshtë para importit." });
       } else {
-        throw new Error("Skedari nuk duket si eksport nga e-Filing (Listëpagesa të Dorëzuara ose Shfaq Detajet).");
+        throw new Error("Kjo nuk duket si Listëpagesa të Dorëzuara ose Shfaq Detajet nga e-Filing.");
       }
     } catch (e) {
       setMsg({ tone: "danger", text: (e as Error).message });
     }
+  }, []);
+
+  const onFile = async (file?: File) => {
+    if (!file) return;
+    setMsg(null); setParsed(null); setFileName(file.name);
+    try {
+      onGrid(await fileToGrid(file));
+    } catch (e) {
+      setMsg({ tone: "danger", text: (e as Error).message });
+    }
   };
+
+  // Kapja nga shtesa e Chrome: kërkohet një herë sipas id-së dhe kontrollohet NIPT-i dhe adresa.
+  const requested = useRef(false);
+  useEffect(() => {
+    if (!captureId || !canWrite || requested.current) return;
+    requested.current = true;
+    const timer = setTimeout(() => setMsg({ tone: "warning", text: "Shtesa “TUFA · e-Filing” nuk u përgjigj. Kontrollo që është e instaluar dhe dërgoje faqen sërish." }), 4000);
+    const onMessage = (event: MessageEvent) => {
+      const data = event.data as { source?: string; type?: string; id?: string; result?: { ok: boolean; code?: string; snapshot?: Snapshot } };
+      if (event.source !== window || event.origin !== window.location.origin || data?.source !== "tufa-extension" || data.type !== "cats-capture" || data.id !== captureId) return;
+      clearTimeout(timer);
+      window.removeEventListener("message", onMessage);
+      const snap = data.result?.snapshot;
+      if (!data.result?.ok || !snap) {
+        setMsg({ tone: "danger", text: "Faqja nga e-Filing ka skaduar ose është marrë tashmë (vlen 15 minuta). Dërgoje sërish nga shtesa." });
+        return;
+      }
+      if (!snap.url.startsWith("https://efiling.tatime.gov.al/cats_public/")) {
+        setMsg({ tone: "danger", text: "Faqja nuk vjen nga e-Filing." });
+        return;
+      }
+      if (companyNipt && snap.nipt.toUpperCase() !== companyNipt.toUpperCase()) {
+        setMsg({ tone: "danger", text: `Faqja është e subjektit ${snap.nipt}, jo e ${companyNipt}.` });
+        return;
+      }
+      setFileName(`e-Filing · ${snap.title || "faqja e hapur"}`);
+      onGrid(mergeTables(snap.tables));
+      // Hiq id-në nga adresa që rifreskimi të mos e kërkojë sërish.
+      window.history.replaceState(null, "", window.location.pathname);
+    };
+    window.addEventListener("message", onMessage);
+    window.postMessage({ source: "tufa-app", type: "cats-request", id: captureId }, window.location.origin);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("message", onMessage);
+    };
+  }, [captureId, canWrite, companyNipt, onGrid]);
 
   const doImport = () =>
     start(async () => {
