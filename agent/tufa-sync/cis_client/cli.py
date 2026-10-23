@@ -432,7 +432,7 @@ def _tufa_connect(args: argparse.Namespace):
 def command_push(args: argparse.Namespace) -> int:
     """Read SALES and/or PURCHASES from CIS and send them to TUFA Business AI.
 
-    With --details every invoice is fetched complete (items and VAT per rate), so TUFA
+    By default every invoice is fetched complete (items and VAT per rate), so TUFA
     splits VAT by rate exactly; this takes one extra CIS call per invoice.
     """
     tufa, client = _tufa_connect(args)
@@ -454,7 +454,14 @@ def command_push(args: argparse.Namespace) -> int:
             def detail_progress(done: int, total: int, kind=kind) -> None:
                 print(f"\r{kind.lower()}: details {done}/{total}", end="", file=sys.stderr, flush=True)
 
-            rows = client.get_invoice_details(rows, kind, detail_progress)
+            try:
+                rows = client.get_invoice_details(rows, kind, detail_progress)
+            except CisClientError as error:
+                # Without items TUFA still gets every invoice; the next run adds the items.
+                print(
+                    f"\n{kind.lower()}: items not available now ({error}); sending the invoices without them",
+                    file=sys.stderr,
+                )
             print(file=sys.stderr)
         label = f"CIS {kind.lower()} {args.date_from or ''}..{args.date_to or ''}".strip()
         result = tufa.push(
@@ -592,8 +599,10 @@ def build_parser() -> argparse.ArgumentParser:
     push.add_argument("--to", dest="date_to", metavar="YYYY-MM-DD", help="last day (default: last day of this month)")
     push.add_argument(
         "--details",
-        action="store_true",
-        help="send complete invoices (items, VAT per rate); one extra CIS call per invoice",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="send complete invoices with items and VAT per rate (default); --no-details sends the period list only, "
+        "faster but TUFA then has no items",
     )
     push.add_argument("--tufa-url", default=None, metavar="URL", help="TUFA address; default: $TUFA_URL")
     push.add_argument(

@@ -31,6 +31,8 @@ import certifi
 from .errors import CisClientError
 
 BATCH_SIZE = 500
+# Complete invoices (with Items) are much larger; smaller batches stay well under the 4.5 MB request limit.
+DETAILED_BATCH_SIZE = 100
 KINDS = {"SALES": "sale", "PURCHASES": "purchase"}
 REGISTRIES = ("units", "tcrs", "operators")
 
@@ -133,8 +135,9 @@ class TufaClient:
             raise TufaError(f"Unknown invoice kind {kind!r}; expected SALES or PURCHASES")
         rows = list(invoices)
         result = PushResult(direction=direction, sent=len(rows))
-        for start in range(0, len(rows), BATCH_SIZE):
-            chunk = rows[start : start + BATCH_SIZE]
+        size = DETAILED_BATCH_SIZE if any("Items" in row for row in rows) else BATCH_SIZE
+        for start in range(0, len(rows), size):
+            chunk = rows[start : start + size]
             response = self._request(
                 "POST", "/api/sync/invoices", {"direction": direction, "invoices": chunk, "label": label}
             )
@@ -142,7 +145,7 @@ class TufaClient:
                 raise TufaError(f"TUFA refused the batch: {response.get('error') or response}")
             result.merge(response)
             if progress:
-                progress(min(start + BATCH_SIZE, len(rows)), len(rows))
+                progress(min(start + size, len(rows)), len(rows))
         if not rows:
             result.batches = 0
         return result

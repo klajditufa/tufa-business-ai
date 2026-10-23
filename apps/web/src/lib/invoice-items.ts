@@ -1,5 +1,5 @@
 /**
- * Artikujt e faturave CIS (fusha `Items` e faturës së plotë, që vjen me `push --details`).
+ * Artikujt e faturave CIS (fusha `Items` e faturës së plotë, që agjenti e dërgon si parazgjedhje).
  * Përshtatur nga cis-client-2 (`frontend/src/lib/items.ts`): rreshtat me të njëjtin emër
  * (pa dallim shkronjash/theksash) dhe njësi janë i njëjti artikull; kodet ndryshojnë sipas lëshuesit.
  * Shumat mblidhen në qindarka; faturat korrigjuese kanë rreshta negativë dhe i zbresin.

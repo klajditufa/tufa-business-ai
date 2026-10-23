@@ -128,6 +128,8 @@ class TufaTest(unittest.TestCase):
         self.assertEqual(code, 0, stderr.getvalue())
         summary = json.loads(stdout.getvalue())
         self.assertEqual([s["direction"] for s in summary], ["sale", "purchase"])
+        # Items come by default, without --details.
+        self.assertTrue(all("Items" in inv for body in FakeTufa.received for inv in body["invoices"] if inv.get("FIC")))
         self.assertEqual(summary[0]["sent"], 6)
         self.assertIn("key accepted for TEST SHPK", stderr.getvalue())
         self.assertEqual({b["direction"] for b in FakeTufa.received}, {"sale", "purchase"})
@@ -154,6 +156,31 @@ class TufaTest(unittest.TestCase):
         sent = [inv for body in FakeTufa.received for inv in body["invoices"]]
         self.assertTrue(sent)
         self.assertTrue(all("Items" in inv for inv in sent if inv.get("FIC")), "complete invoices carry their items")
+
+    def test_detailed_invoices_go_in_smaller_batches(self) -> None:
+        client = TufaClient(self.url, GOOD_KEY)
+        rows = [{"FIC": f"f{i}", "Items": [{"N": "x"}]} for i in range(tufa.DETAILED_BATCH_SIZE + 1)]
+        result = client.push("SALES", rows)
+        self.assertEqual(result.batches, 2)
+        self.assertEqual(len(FakeTufa.received[0]["invoices"]), tufa.DETAILED_BATCH_SIZE)
+
+    def test_cli_push_no_details_sends_the_list_only(self) -> None:
+        stderr = io.StringIO()
+        fake = FakeCis()
+        environment = {
+            "CIS_CERT_PASSWORD": TEST_P12_PASSWORD,
+            "CIS_CERT": str(TEST_P12),
+            "TUFA_URL": self.url,
+            "TUFA_API_KEY": GOOD_KEY,
+        }
+        with (
+            mock.patch.dict(os.environ, environment),
+            mock.patch.object(cli, "CisClient", lambda c, e, **o: CisClient(c, e, poster=fake, retries=0)),
+            contextlib.redirect_stderr(stderr),
+        ):
+            code = cli.main(["push", "sales", "--no-details", "--from", "2026-09-01", "--to", "2026-09-02"])
+        self.assertEqual(code, 0, stderr.getvalue())
+        self.assertFalse(any("Items" in inv for body in FakeTufa.received for inv in body["invoices"]))
 
     def test_cli_push_refuses_nipt_mismatch(self) -> None:
         stderr = io.StringIO()

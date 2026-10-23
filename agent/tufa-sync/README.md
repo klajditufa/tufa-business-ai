@@ -41,9 +41,9 @@ computer and go directly to the tax authority.
    ./start.sh push --from 2026-01-01 --to 2026-10-31
    ```
 
-   Për subjektet në TVSH me disa norma shto `--details`: dërgohen faturat e plota
-   (artikujt dhe TVSH sipas normës), një thirrje shtesë në CIS për çdo faturë.
-   Me artikujt, TUFA plotëson edhe **Raporte & mjete → Faturat sipas artikujve**.
+   Dërgohen faturat e plota, me artikujt dhe TVSH-në sipas normës (një thirrje
+   shtesë në CIS për çdo faturë), që TUFA të plotësojë edhe **Shitjet / Blerjet →
+   Sipas artikujve**. Me `--no-details` dërgohet vetëm lista, më shpejt, por pa artikuj.
 
    Për njësitë e biznesit, pajisjet (TCR) dhe operatorët (TUFA → **Raporte & mjete →
    Operatorët, njësitë & pajisjet**):
