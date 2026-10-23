@@ -5,7 +5,7 @@ import { NextResponse, type NextRequest } from "next/server";
  * Proxy (ish-middleware) · rifreskon sesionin Supabase dhe mbron rrugët /app dhe /onboarding.
  * Verifikimi i anëtarësisë për subjektin aktiv bëhet në layout-in e /app/[companyId] (me RLS), jo këtu.
  */
-const PUBLIC_PATHS = ["/login", "/register", "/forgot-password", "/invite", "/auth", "/api/sync", "/_next", "/favicon.ico", "/manifest.webmanifest", "/icons"];
+const PUBLIC_PATHS = ["/login", "/register", "/forgot-password", "/invite", "/auth", "/api/sync", "/api/filing/probe", "/_next", "/favicon.ico", "/manifest.webmanifest", "/icons"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
