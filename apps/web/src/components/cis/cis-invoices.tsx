@@ -59,7 +59,7 @@ export function CisInvoices({ kind, paymentsHref }: { kind: Kind; paymentsHref: 
                       ? "Artikujt dhe PDF-ja zyrtare merren nga fiskalizimi: shto certifikatën e subjektit në këtë shfletues."
                       : "Pa certifikatë CIS në këtë shfletues: shfaqen faturat që janë në TUFA. Me certifikatën, “Merr faturat” i merr nga fiskalizimi."}
                   </Text>
-                  <Button size="xs" variant="light" leftSection={<IconCertificate size={14} />} onClick={openDialog}>
+                  <Button size="xs" variant="light" leftSection={<IconCertificate size={14} />} onClick={() => openDialog()}>
                     Shto certifikatën CIS
                   </Button>
                 </Group>

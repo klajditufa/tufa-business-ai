@@ -13,23 +13,30 @@ const DB = "tufa-cis";
 const STORE = "certificates";
 const memory = new Map<string, StoredCertificate>();
 
+/** v2 shton "filing": kredencialet e e-Albania, vetëm të enkriptuara (shih lib/filing/vault.ts). */
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB, 1);
-    req.onupgradeneeded = () => req.result.createObjectStore(STORE, { keyPath: "nipt" });
+    const req = indexedDB.open(DB, 2);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: "nipt" });
+      if (!db.objectStoreNames.contains("filing")) db.createObjectStore("filing", { keyPath: "id" });
+    };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
 }
 
-async function tx<T>(mode: IDBTransactionMode, run: (s: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+export async function idb<T>(store: string, mode: IDBTransactionMode, run: (s: IDBObjectStore) => IDBRequest<T>): Promise<T> {
   const db = await open();
   return new Promise<T>((resolve, reject) => {
-    const r = run(db.transaction(STORE, mode).objectStore(STORE));
+    const r = run(db.transaction(store, mode).objectStore(store));
     r.onsuccess = () => resolve(r.result);
     r.onerror = () => reject(r.error);
   }).finally(() => db.close());
 }
+
+const tx = <T,>(mode: IDBTransactionMode, run: (s: IDBObjectStore) => IDBRequest<T>) => idb(STORE, mode, run);
 
 export async function loadCertificate(nipt: string): Promise<StoredCertificate | null> {
   const key = nipt.toUpperCase();

@@ -10,6 +10,7 @@ import { importPayrollLinesAction, importPayrollSummaryAction } from "@/server/a
 import { Alert, Button, Card } from "@/components/ui";
 import { money } from "@/lib/format";
 import { monthLabelSq } from "@/components/app/month-picker";
+import { FilingConnect } from "@/components/cis/filing-connect";
 
 /** Skedari → tabelë qelizash. xlsx (read-excel-file), "xls" HTML (DOMParser) ose CSV/TSV. Asgjë nuk dërgohet në server. */
 async function fileToGrid(file: File): Promise<Grid> {
@@ -82,6 +83,25 @@ export function CatsImport({ companyId, canWrite, companyNipt, captureId }: { co
     }
   };
 
+  /** Faqja e portalit (nga shtesa): kontrollohen adresa dhe NIPT-i, pastaj lexohen tabelat. */
+  const acceptSnapshot = useCallback(
+    (snap: Snapshot) => {
+      setMsg(null);
+      setParsed(null);
+      if (!snap.url.startsWith("https://efiling.tatime.gov.al/cats_public/")) {
+        setMsg({ tone: "danger", text: "Faqja nuk vjen nga e-Filing." });
+        return;
+      }
+      if (companyNipt && snap.nipt.toUpperCase() !== companyNipt.toUpperCase()) {
+        setMsg({ tone: "danger", text: `Faqja është e subjektit ${snap.nipt}, jo e ${companyNipt}.` });
+        return;
+      }
+      setFileName(`e-Filing · ${snap.title || "faqja e hapur"}`);
+      onGrid(mergeTables(snap.tables));
+    },
+    [companyNipt, onGrid],
+  );
+
   // Kapja nga shtesa e Chrome: kërkohet një herë sipas id-së dhe kontrollohet NIPT-i dhe adresa.
   const requested = useRef(false);
   useEffect(() => {
@@ -98,16 +118,7 @@ export function CatsImport({ companyId, canWrite, companyNipt, captureId }: { co
         setMsg({ tone: "danger", text: "Faqja nga e-Filing ka skaduar ose është marrë tashmë (vlen 15 minuta). Dërgoje sërish nga shtesa." });
         return;
       }
-      if (!snap.url.startsWith("https://efiling.tatime.gov.al/cats_public/")) {
-        setMsg({ tone: "danger", text: "Faqja nuk vjen nga e-Filing." });
-        return;
-      }
-      if (companyNipt && snap.nipt.toUpperCase() !== companyNipt.toUpperCase()) {
-        setMsg({ tone: "danger", text: `Faqja është e subjektit ${snap.nipt}, jo e ${companyNipt}.` });
-        return;
-      }
-      setFileName(`e-Filing · ${snap.title || "faqja e hapur"}`);
-      onGrid(mergeTables(snap.tables));
+      acceptSnapshot(snap);
       // Hiq id-në nga adresa që rifreskimi të mos e kërkojë sërish.
       window.history.replaceState(null, "", window.location.pathname);
     };
@@ -117,7 +128,7 @@ export function CatsImport({ companyId, canWrite, companyNipt, captureId }: { co
       clearTimeout(timer);
       window.removeEventListener("message", onMessage);
     };
-  }, [captureId, canWrite, companyNipt, onGrid]);
+  }, [captureId, canWrite, acceptSnapshot]);
 
   const doImport = () =>
     start(async () => {
@@ -136,6 +147,7 @@ export function CatsImport({ companyId, canWrite, companyNipt, captureId }: { co
 
   return (
     <Card className="no-print space-y-3">
+      <FilingConnect onSnapshot={acceptSnapshot} />
       <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border px-4 py-6 text-center text-sm hover:bg-muted/40">
         <FileUp className="h-6 w-6 text-muted-foreground" />
         <span className="font-medium">{fileName ?? "Ngarko eksportin Excel nga C@TS"}</span>

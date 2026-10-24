@@ -2,7 +2,7 @@ const TUFA = "https://tufa-business-ai.vercel.app";
 const main = document.getElementById("main");
 const ERRORS = {
   unsupported: "Hap një faqe të e-Filing (efiling.tatime.gov.al/cats_public).",
-  login: "Hyr fillimisht në e-Filing me e-Albania.",
+  login: "Hyr fillimisht në e-Filing me e-Albania (nga TUFA → Listëpagesa → Hyr në e-Filing).",
   taxpayer: "NIPT-i i subjektit nuk u gjet në kokën e faqes.",
   nopage: "Hap faqen e e-Filing në skedën aktive dhe provo sërish.",
 };

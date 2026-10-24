@@ -1,9 +1,15 @@
 {
   "manifest_version": 3,
   "name": "TUFA · e-Filing",
-  "version": "1.0.0",
-  "description": "Dërgon te TUFA Business AI faqet që hap vetë në e-Filing (listëpagesat e dorëzuara dhe detajet E-SIG 025). Vetëm lexim.",
+  "version": "1.1.0",
+  "description": "Hyrja në e-Filing me e-Albania (si cis-client-2) dhe dërgimi te TUFA i faqeve që hap përdoruesi (listëpagesat, E-SIG 025). Pa dorëzime.",
   "permissions": ["storage", "activeTab"],
+  "host_permissions": [
+    "https://efiling.tatime.gov.al/*",
+    "https://e-albania.gov.al/*",
+    "https://auth.e-albania.gov.al/*",
+    "https://e-albania.al/*"
+  ],
   "background": { "service_worker": "worker.js" },
   "action": { "default_popup": "popup.html", "default_title": "Dërgo në TUFA" },
   "icons": { "128": "icon-128.png" },
@@ -12,6 +18,12 @@
       "matches": ["https://efiling.tatime.gov.al/cats_public/*"],
       "js": ["capture.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://e-albania.gov.al/*", "https://auth.e-albania.gov.al/*", "https://e-albania.al/*"],
+      "js": ["login.js"],
+      "run_at": "document_idle",
+      "all_frames": false
     },
     {
       "matches": ["https://tufa-business-ai.vercel.app/*", "http://localhost:3000/*"],
