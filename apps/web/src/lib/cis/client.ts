@@ -5,7 +5,7 @@
  * kalon nga /api/cis dhe lexon përgjigjen. Asnjë sekret nuk largohet nga ky kompjuter.
  */
 import { bodies, buildSignedRequest, cisDateTime, type CisEnvironment, type CisOperation, type Signer, type XmlNode } from "./sign";
-import { CisFault, CisXmlError, invoicesFrom, listFrom, operatorsFrom, responseBody, type CisInvoice, type XmlEl } from "./parse";
+import { CisFault, CisXmlError, einvoicePdfFrom, invoicesFrom, listFrom, operatorsFrom, responseBody, type CisInvoice, type XmlEl } from "./parse";
 
 export const PAGE_SIZE = 1000;
 const DETAIL_WORKERS = 4;
@@ -118,5 +118,14 @@ export const registry = {
   units: async (s: CisSession) => listFrom(await call(s, "GetBusinessUnits", bodies.none()), "BusinessUnits", "BusinessUnit"),
   tcrs: async (s: CisSession) => listFrom(await call(s, "GetTCRs", bodies.none()), "TCRs", "TCR"),
 };
+
+/** Një faturë e plotë sipas FIC (me artikujt), ose null kur CIS nuk e gjen. */
+export async function fetchByFic(session: CisSession, kind: Kind, fic: string): Promise<CisInvoice | null> {
+  return invoicesFrom(await call(session, "GetInvoices", bodies.invoiceByFic(kind, fic))).invoices[0] ?? null;
+}
+
+export async function fetchEinvoicePdf(session: CisSession, eic: string, partyType: "BUYER" | "SELLER"): Promise<string | null> {
+  return einvoicePdfFrom(await call(session, "GetEinvoices", bodies.einvoicePdf(eic, partyType)));
+}
 
 export { CisFault };

@@ -49,6 +49,7 @@ export const OPERATIONS = {
   GetBusinessUnits: { service: "fiscalization", version: "3" },
   GetTCRs: { service: "fiscalization", version: "3" },
   GetTaxpayers: { service: "einvoice", version: "1" },
+  GetEinvoices: { service: "einvoice", version: "1" },
 } as const satisfies Record<string, { service: CisService; version: string }>;
 export type CisOperation = keyof typeof OPERATIONS;
 
@@ -157,4 +158,8 @@ export const bodies = {
     { name: "Filter", children: [{ name: /^[A-Za-z]\d{8}[A-Za-z]$/.test(term) ? "Tin" : "Name", children: [/^[A-Za-z]\d{8}[A-Za-z]$/.test(term) ? term.toUpperCase() : term] }] },
   ],
   none: (): XmlNode[] => [],
+  einvoicePdf: (eic: string, partyType: "BUYER" | "SELLER"): XmlNode[] => [
+    { name: "EIC", children: [eic] },
+    { name: "PartyType", children: [partyType] },
+  ],
 };

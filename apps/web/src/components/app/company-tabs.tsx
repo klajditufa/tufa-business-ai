@@ -17,8 +17,8 @@ export function CompanyTabs({ companyId, studioCount, vatRegistered = true }: { 
   const base = `/app/${companyId}`;
   const allTabs: { value: string; href: string; label: string; icon: Icon; match: (p: string) => boolean }[] = [
     { value: "dashboard", href: `${base}/dashboard`, label: "Paneli", icon: IconLayoutDashboard, match: (p) => p.startsWith(`${base}/dashboard`) },
-    { value: "sales", href: `${base}/invoices?direction=sale`, label: "Shitjet", icon: IconArrowUpRight, match: (p) => p === `${base}/invoices` && direction !== "purchase" },
-    { value: "purchases", href: `${base}/invoices?direction=purchase`, label: "Blerjet", icon: IconArrowDownLeft, match: (p) => p === `${base}/invoices` && direction === "purchase" },
+    { value: "sales", href: `${base}/invoices?direction=sale`, label: "Shitjet", icon: IconArrowUpRight, match: (p) => (p === `${base}/invoices` || p === `${base}/invoices/payments`) && direction !== "purchase" },
+    { value: "purchases", href: `${base}/invoices?direction=purchase`, label: "Blerjet", icon: IconArrowDownLeft, match: (p) => (p === `${base}/invoices` || p === `${base}/invoices/payments`) && direction === "purchase" },
     { value: "vat", href: `${base}/vat`, label: "TVSH", icon: IconPercentage, match: (p) => p.startsWith(`${base}/vat`) },
     { value: "payroll", href: `${base}/payroll`, label: "Listëpagesa", icon: IconWallet, match: (p) => p.startsWith(`${base}/payroll`) },
     { value: "declarations", href: `${base}/declarations`, label: "Deklarimet", icon: IconBuildingBank, match: (p) => p.startsWith(`${base}/declarations`) },
@@ -27,7 +27,7 @@ export function CompanyTabs({ companyId, studioCount, vatRegistered = true }: { 
       href: `${base}/tools`,
       label: "Raporte & mjete",
       icon: IconCalculator,
-      match: (p) => ["/tools", "/reports", "/parties", "/invoices/"].some((x) => p.startsWith(base + x)),
+      match: (p) => ["/tools", "/reports", "/parties", "/invoices/bank"].some((x) => p.startsWith(base + x)),
     },
     { value: "documents", href: `${base}/documents`, label: "Dokumentet", icon: IconArchive, match: (p) => p.startsWith(`${base}/documents`) },
     { value: "settings", href: `${base}/settings`, label: "Cilësimet", icon: IconSettings, match: (p) => p.startsWith(`${base}/settings`) },

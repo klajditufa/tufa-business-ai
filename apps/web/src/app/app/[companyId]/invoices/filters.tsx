@@ -1,6 +1,5 @@
 "use client";
 
-import { CisFetchButton } from "@/components/cis/cis-fetch";
 import { useNav } from "@/components/app/nav-progress";
 import { useState } from "react";
 import Link from "next/link";
@@ -71,6 +70,8 @@ export function InvoiceFilterBar({
   range: { from: string; to: string } | null;
 }) {
   const { navigate, navigating } = useNav();
+  // Faqja e pagesave jeton te /invoices/payments; eksporti dhe banka mbeten te /invoices.
+  const root = basePath.replace(/\/payments$/, "");
   const [preset, setPreset] = useState<Preset>(detect(range));
   const [from, setFrom] = useState<string | null>(range?.from ?? presetRange("thisMonth")!.from);
   const [to, setTo] = useState<string | null>(range?.to ?? presetRange("thisMonth")!.to);
@@ -151,14 +152,13 @@ export function InvoiceFilterBar({
               <Button type="submit" loading={navigating} w={{ base: "100%", sm: "auto" }}>
                 Shfaq faturat
               </Button>
-              <CisFetchButton direction={f.direction} from={preset === "all" ? null : from} to={preset === "all" ? null : to} onDone={apply} />
             </Group>
           </form>
           <Divider orientation="vertical" visibleFrom="md" />
           <Group gap="xs" visibleFrom="md" align="flex-end">
             <Button
               component={Link}
-              href={`${basePath}/bank`}
+              href={`${root}/bank`}
               variant="default"
               leftSection={<IconBuildingBank size={16} stroke={1.8} />}
             >
@@ -244,13 +244,13 @@ export function InvoiceFilterBar({
         <Group gap="xs" ml={{ base: 0, md: "auto" }}>
           <Button
             component="a"
-            href={`${basePath}/export?${range ? new URLSearchParams({ ...Object.fromEntries(url({ from: range.from, to: range.to, all: false })) }) : url({ all: true })}`}
+            href={`${root}/export?${range ? new URLSearchParams({ ...Object.fromEntries(url({ from: range.from, to: range.to, all: false })) }) : url({ all: true })}`}
             variant="default"
             leftSection={<IconDownload size={16} stroke={1.8} />}
           >
             CSV
           </Button>
-          <Button component={Link} href={`${basePath}/bank`} variant="default" hiddenFrom="md" leftSection={<IconBuildingBank size={16} stroke={1.8} />}>
+          <Button component={Link} href={`${root}/bank`} variant="default" hiddenFrom="md" leftSection={<IconBuildingBank size={16} stroke={1.8} />}>
             Banka
           </Button>
         </Group>

@@ -149,3 +149,10 @@ export function operatorsFrom(response: XmlEl) {
 export function listFrom(response: XmlEl, container: string, item: string): Record<string, string>[] {
   return (child(response, container)?.children ?? []).filter((c) => c.name === item).map((c) => ({ ...c.attrs }));
 }
+
+/** PDF-ja zyrtare e e-faturës (GetEinvoices): base64 ose null kur CIS nuk e ka. */
+export function einvoicePdfFrom(response: XmlEl): string | null {
+  const first = child(response, "Einvoices")?.children.find((c) => c.name === "Einvoice");
+  const pdf = child(first, "Pdf")?.text.replace(/\s+/g, "");
+  return pdf || null;
+}
