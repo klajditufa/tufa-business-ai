@@ -22,6 +22,13 @@
       "filing-otp": () => ({ type: "filing-otp", id, code: str(data.code, 8) }),
       "filing-cancel": () => ({ type: "filing-cancel", id }),
       "filing-capture": () => ({ type: "filing-capture", id, nipt: str(data.nipt, 10) }),
+      "filing-command": () => ({
+        type: "filing-command",
+        id,
+        kind: ["capture", "navigate", "apply", "focus"].includes(data.kind) ? data.kind : "",
+        nipt: str(data.nipt, 10),
+        payload: data.payload && typeof data.payload === "object" ? JSON.parse(JSON.stringify(data.payload)) : {},
+      }),
     }[data.type];
     if (!forward || !id) return;
     chrome.runtime.sendMessage(forward(), (result) => {

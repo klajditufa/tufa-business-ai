@@ -132,6 +132,29 @@ export const filingEn = {
   "filing.report": "Portal table report",
   "filing.reportNote":
     "Copy of the captured portal table. Includes the visible page only; amounts and labels are preserved as displayed.",
+  // TUFA: lidhja përmes shtesës së Chrome në vend të shfletuesit lokal të cis-client.
+  "filing.auth.otp-wrong": "The code was not accepted. Enter the new code e-Albania sent you.",
+  "filing.auth.otp-failed": "The code was rejected several times. Retry the connection.",
+  "filing.auth.verifying": "Verifying the code…",
+  "filing.auth.portal": "Signed in, but the business NIPT was not found in the portal header. Check the portal tab.",
+  "filing.auth.login": "Complete e-Albania authentication in the official portal.",
+  "filing.auth.unsupported": "This login variant is not supported. Complete the sign-in in the official portal.",
+  "filing.auth.cancelled": "Sign-in cancelled.",
+  "filing.auth.closed": "The portal tab was closed.",
+  "filing.auth.noextension": "The “TUFA · e-Filing” extension did not respond.",
+  "filing.connect": "Connect to e-Filing",
+  "filing.managedError.extension": "Install the “TUFA · e-Filing” extension once in Chrome (Advanced below), then return to this page.",
+  "filing.managedError.extensionOld": "Update the “TUFA · e-Filing” extension to the latest version (Advanced below).",
+  "filing.cancelConnect": "Cancel",
+  "filing.tufaBrowserHelp":
+    "TUFA signs in to e-Filing through the “TUFA · e-Filing” Chrome extension, in your own browser. Install it once; keep the portal tab open while you work.",
+  "filing.extensionMissing": "Install the “TUFA · e-Filing” extension once in Chrome, then reload this page.",
+  "filing.extensionOld": "Update the “TUFA · e-Filing” extension (you have {have}, {need} is required).",
+  "filing.extensionReady": "Extension {version} connected",
+  "filing.outcome.nopage": "Open the e-Filing portal in Chrome (or connect) and try again.",
+  "filing.outcome.noextension": "The “TUFA · e-Filing” extension did not respond.",
+  "filing.payrollDetected": "This page looks like a C@TS payroll. You can import it into TUFA's payroll.",
+  "filing.openPayroll": "Import into payroll",
 } as const;
 
 export const filingSq: Record<keyof typeof filingEn, string> = {
@@ -271,4 +294,26 @@ export const filingSq: Record<keyof typeof filingEn, string> = {
   "filing.report": "Raport i tabelës së portalit",
   "filing.reportNote":
     "Kopje e tabelës së marrë nga portali. Përfshin vetëm faqen e dukshme; shumat dhe emërtimet ruhen siç shfaqen.",
+  "filing.auth.otp-wrong": "Kodi nuk u pranua. Shkruani kodin e ri që ju dërgoi e-Albania.",
+  "filing.auth.otp-failed": "Kodi u refuzua disa herë. Riprovoni lidhjen.",
+  "filing.auth.verifying": "Po verifikohet kodi…",
+  "filing.auth.portal": "Hyrja u krye, por NIPT-i i subjektit nuk u gjet te kreu i portalit. Kontrolloni skedën e portalit.",
+  "filing.auth.login": "Përfundoni identifikimin me e-Albania në portalin zyrtar.",
+  "filing.auth.unsupported": "Ky variant hyrjeje nuk mbështetet. Përfundoni hyrjen në portalin zyrtar.",
+  "filing.auth.cancelled": "Hyrja u anulua.",
+  "filing.auth.closed": "Skeda e portalit u mbyll.",
+  "filing.auth.noextension": "Shtesa “TUFA · e-Filing” nuk u përgjigj.",
+  "filing.connect": "Lidhu me e-Filing",
+  "filing.managedError.extension": "Instaloni një herë shtesën “TUFA · e-Filing” në Chrome (Të avancuara më sipër), pastaj kthehuni te kjo faqe.",
+  "filing.managedError.extensionOld": "Përditësoni shtesën “TUFA · e-Filing” në versionin e fundit (Të avancuara më sipër).",
+  "filing.cancelConnect": "Anulo",
+  "filing.tufaBrowserHelp":
+    "TUFA hyn në e-Filing përmes shtesës “TUFA · e-Filing” të Chrome, në shfletuesin tuaj. Instalojeni një herë; mbajeni skedën e portalit të hapur gjatë punës.",
+  "filing.extensionMissing": "Instaloni një herë shtesën “TUFA · e-Filing” në Chrome, pastaj rifreskoni këtë faqe.",
+  "filing.extensionOld": "Përditësoni shtesën “TUFA · e-Filing” (keni {have}, duhet {need}).",
+  "filing.extensionReady": "Shtesa {version} është e lidhur",
+  "filing.outcome.nopage": "Hapni portalin e-Filing në Chrome (ose lidhuni) dhe provoni sërish.",
+  "filing.outcome.noextension": "Shtesa “TUFA · e-Filing” nuk u përgjigj.",
+  "filing.payrollDetected": "Kjo faqe duket si listëpagesë e C@TS. Mund ta importoni te Listëpagesa e TUFA.",
+  "filing.openPayroll": "Importo te Listëpagesa",
 };

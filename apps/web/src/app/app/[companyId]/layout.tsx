@@ -5,7 +5,7 @@ import { getCompany, getMyRole, getProfile, listMyCompanies } from "@/server/ser
 import { getSyncStatus } from "@/server/services/invoices";
 import { Header } from "@/components/app/header";
 import { CisProvider } from "@/components/cis/cis-provider";
-import { CisStatus } from "@/components/cis/cis-status";
+import { CisAddCertificate, CisStatus } from "@/components/cis/cis-status";
 import { CompanyTabs } from "@/components/app/company-tabs";
 import { createClient } from "@/lib/supabase/server";
 import { date } from "@/lib/format";
@@ -46,9 +46,12 @@ export default async function CompanyLayout({
       <Container size={1440} px={{ base: "xs", sm: "md" }} pt="lg" pb="xl">
         <Stack gap="lg">
           <Group justify="space-between" gap="xs">
-            <Text size="sm" c="dimmed" ff="monospace">
-              {company.nipt}
-            </Text>
+            <Group gap="xs">
+              <Text size="sm" c="dimmed" ff="monospace">
+                {company.nipt}
+              </Text>
+              <CisAddCertificate />
+            </Group>
             <Group gap="xs">
               {sync?.last_sync_at && (
                 <Badge variant="light" color="gray" title={`${sync.sales_count} shitje, ${sync.purchases_count} blerje`}>

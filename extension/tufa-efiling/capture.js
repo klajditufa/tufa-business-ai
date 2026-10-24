@@ -42,6 +42,21 @@
 
   chrome.runtime.onMessage.addListener((message, _sender, reply) => {
     if (message && message.type === "tufa-capture") reply(capture());
+    // Komandat e e-Filing nga TUFA (si content.ts i cis-client-2): lexim, destinacioni i navigimit,
+    // zbatimi i ndryshimeve të rishikuara në fushat e formularit. Asgjë nuk dorëzohet.
+    if (message && message.type === "filing-portal" && typeof message.nipt === "string") {
+      const run = async () => {
+        if (message.kind === "capture") return { ok: true, snapshot: await TufaPortal.capture(message.nipt) };
+        if (message.kind === "destination") return { ok: true, url: await TufaPortal.destination(message.nipt, message.payload) };
+        if (message.kind === "apply") return { ok: true, snapshot: await TufaPortal.apply(message.nipt, message.payload) };
+        throw new Error("unsupported");
+      };
+      run().then(reply, (error) => {
+        const code = error instanceof Error ? error.message : "unsupported";
+        reply({ ok: false, code: ["changed", "taxpayer", "login", "unsupported"].includes(code) ? code : "unsupported" });
+      });
+      return true;
+    }
   });
 
   // Hyrja e nisur nga TUFA (si cis-client-2): në portal vetëm klikohet lidhja "e-Albania".

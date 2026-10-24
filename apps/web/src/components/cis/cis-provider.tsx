@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { signWith } from "@/lib/cis/cert";
 import type { CisSession } from "@/lib/cis/client";
 import { loadCertificate, removeCertificate, type StoredCertificate } from "@/lib/cis/store";
@@ -25,6 +26,7 @@ type CisContext = {
   unlockFiling: (passphrase: string) => Promise<void>;
   forgetFiling: () => Promise<void>;
   filingCredentials: () => vault.FilingCredentials | null;
+  refreshFiling: () => void;
 };
 
 const Ctx = createContext<CisContext | null>(null);
@@ -39,7 +41,8 @@ export function useCis() {
 export function CisProvider({ company, children }: { company: CisCompany; children: React.ReactNode }) {
   const [certificate, setCertificate] = useState<StoredCertificate | null>(null);
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
-  const [dialog, setDialog] = useState<SetupMode | null>(null);
+  const [dialog, setDialog] = useState(false);
+  const router = useRouter();
   const [remembered, setRemembered] = useState<{ nipt: string; value: boolean } | null>(null);
   const [filingVersion, setFilingVersion] = useState(0);
 
@@ -98,7 +101,8 @@ export function CisProvider({ company, children }: { company: CisCompany; childr
       certificate: current,
       ready: loadedFor === company.nipt,
       session: current ? { companyId: company.id, environment: current.info.environment, signer: { sign: signWith(current.key), certificateB64: current.info.certificateB64 } } : null,
-      openDialog: (mode: SetupMode = "certificate") => setDialog(mode),
+      // Certifikata: dritarja "Shto certifikatën për këtë subjekt"; e-Albania: skeda e-Filing (si cis-client).
+      openDialog: (mode: SetupMode = "certificate") => (mode === "filing" ? router.push(`/app/${company.id}/filing`) : setDialog(true)),
       remove,
       setCertificate,
       filing: { configured: !!creds, username: creds?.username ?? null, remembered: remembered?.nipt === company.nipt && remembered.value },
@@ -106,13 +110,17 @@ export function CisProvider({ company, children }: { company: CisCompany; childr
       unlockFiling,
       forgetFiling,
       filingCredentials: () => vault.sessionCredentials(company.nipt),
+      refreshFiling: () => {
+        setFilingVersion((v) => v + 1);
+        void vault.isRemembered(company.nipt).then((value) => setRemembered({ nipt: company.nipt, value }));
+      },
     };
-  }, [company, current, loadedFor, remove, remembered, filingVersion, saveFiling, unlockFiling, forgetFiling]);
+  }, [company, current, loadedFor, remove, remembered, filingVersion, saveFiling, unlockFiling, forgetFiling, router]);
 
   return (
     <Ctx.Provider value={value}>
       {children}
-      <CertificateDialog mode={dialog} onClose={() => setDialog(null)} />
+      <CertificateDialog opened={dialog} onClose={() => setDialog(false)} />
     </Ctx.Provider>
   );
 }

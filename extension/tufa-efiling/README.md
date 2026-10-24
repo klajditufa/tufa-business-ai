@@ -1,12 +1,12 @@
-# TUFA · e-Filing (shtesë Chrome) · v1.1
+# TUFA · e-Filing (shtesë Chrome) · v1.2
 
 Lidh TUFA Business AI me e-Filing (C@TS) në shfletuesin e përdoruesit, si lidhja e cis-client-2.
 
 ## Hyrja me e-Albania
-- Te TUFA, në dritaren e certifikatës, shto **të dhënat e e-Albania** të subjektit (NUIS = NIPT i subjektit
+- Te TUFA, te "Shtoni një subjekt" / "Shto certifikatën" ose te skeda **e-Filing**, shto **të dhënat e e-Albania** të subjektit (NUIS = NIPT i subjektit
   dhe fjalëkalimi). Ato mbahen vetëm në këtë shfletues: për sesionin, ose të enkriptuara me
   "fjalëkalimin e kasafortës" (AES-GCM, PBKDF2). Nuk dërgohen kurrë te serveri i TUFA.
-- **Hyr në e-Filing** (Listëpagesa): shtesa hap portalin, klikon "e-Albania", zgjedh "Biznes", plotëson
+- **Lidhu me e-Filing** (skeda e-Filing): shtesa hap portalin, klikon "e-Albania", zgjedh "Biznes", plotëson
   NUIS-in dhe fjalëkalimin dhe dërgon formularin **një herë**.
   - Kodi i verifikimit (OTP) shkruhet nga përdoruesi te TUFA.
   - CAPTCHA nuk prekët: përdoruesi e plotëson vetë në portal.
@@ -14,10 +14,17 @@ Lidh TUFA Business AI me e-Filing (C@TS) në shfletuesin e përdoruesit, si lidh
 - Fjalëkalimi qëndron te shtesa vetëm në `chrome.storage.session` (në kujtesë, i palexueshëm nga
   faqet) dhe fshihet sapo plotësohet, ose kur hyrja mbaron (maksimumi 4 minuta).
 
+## Skeda e-Filing te TUFA (si FilingView i cis-client-2)
+- `portal.js` gjenerohet nga `extension/src/portal.ts` (portal.ts i cis-client-2, pa ndryshime logjike):
+  lexon formularët (pa fjalëkalime/CSRF/OTP), tabelat dhe lidhjet e sigurta të menysë së C@TS.
+- **Menuja C@ts:** hap vetëm lidhjet që portal.js nxori nga i njëjti rishikim i faqes (jo dorëzim, pagesë, fshirje, dalje).
+- **Rishiko draftin → Zbato:** vendos vlerat e rishikuara në fushat e formularit, vetëm nëse faqja nuk ka ndryshuar;
+  formulari nuk dërgohet. Vlerësimi, dorëzimi dhe pagesa bëhen nga përdoruesi në portal.
+
 ## Leximi i faqeve
-- **Vetëm lexim:** URL-ja, titulli, NIPT-i i vetëm në kokën e faqes dhe tabelat e dukshme.
-  Fushat e formularëve, fjalëkalimet dhe cookies nuk lexohen. Nuk dorëzohet asnjë deklaratë.
-- Te TUFA: **Merr faqen e portalit**, ose ikona TUFA në Chrome → "Dërgo në TUFA".
+- Popup-i "Dërgo në TUFA": URL-ja, titulli, NIPT-i i vetëm në kokën e faqes dhe tabelat e dukshme.
+  Fjalëkalimet dhe cookies nuk lexohen kurrë. Nuk dorëzohet asnjë deklaratë.
+- Te skeda e-Filing: **Rifresko të dhënat e portalit**; listëpagesat kalojnë me "Importo te Listëpagesa".
 - NIPT-i i faqes duhet të jetë i njëjtë me subjektin në TUFA.
 
 ## Instalimi (pa Chrome Web Store)

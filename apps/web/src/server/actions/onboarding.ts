@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "./auth";
 import { companySchema } from "@/lib/schemas/company";
@@ -63,4 +64,55 @@ export async function addCompanyAction(_prev: ActionResult | null, formData: For
     return { ok: false, error: error.message };
   }
   redirect(`/app/${data.id}/dashboard`);
+}
+
+const setupSchema = z.object({
+  nipt: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z]\d{8}[A-Z]$/, "NIPT duhet të jetë si K12345678L"),
+  name: z.string().trim().max(200).optional(),
+});
+
+/**
+ * "Shtoni një subjekt" (si SetupForm i cis-client-2): subjekti krijohet nga certifikata (NIPT + emri në të)
+ * ose nga NIPT-i për e-Filing. Të dhënat e tjera të QKB plotësohen më vonë te Cilësimet.
+ */
+export async function createCompanyFromSetupAction(input: {
+  nipt: string;
+  name?: string;
+}): Promise<{ ok: true; id: string; existing: boolean } | { ok: false; error: string }> {
+  const parsed = setupSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+  const supabase = await createClient();
+  // Subjekti ekziston dhe e sheh ky përdorues: certifikata i shtohet atij (si attachTo i cis-client).
+  const { data: existing } = await supabase.from("companies").select("id").eq("nipt", parsed.data.nipt).maybeSingle();
+  if (existing) return { ok: true, id: existing.id, existing: true };
+  const { data: orgs } = await supabase.from("organization_memberships").select("organization_id").eq("role", "org_owner").limit(1);
+  const orgId = orgs?.[0]?.organization_id;
+  if (!orgId) return { ok: false, error: "Vetëm pronari i organizatës mund të shtojë subjekte." };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { nipt, name } = parsed.data;
+  const { data, error } = await supabase
+    .from("companies")
+    .insert({
+      organization_id: orgId,
+      nipt,
+      legal_name: name || nipt,
+      legal_form: "shpk",
+      tax_regime: "standard",
+      vat_registered: false,
+      base_currency: "ALL",
+      created_by: user?.id,
+    })
+    .select("id")
+    .single();
+  if (error) {
+    if (error.code === "23505") return { ok: false, error: "Ky NIPT është regjistruar tashmë në platformë." };
+    return { ok: false, error: error.message };
+  }
+  return { ok: true, id: data.id, existing: false };
 }

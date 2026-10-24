@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Badge, Loader, Tabs } from "@mantine/core";
 import { useNav } from "./nav-progress";
 import {
-  IconArchive, IconArrowDownLeft, IconArrowUpRight, IconBuildingBank, IconCalculator, IconLayoutDashboard, IconLayoutGrid,
+  IconArchive, IconArrowDownLeft, IconFileDescription, IconArrowUpRight, IconBuildingBank, IconCalculator, IconLayoutDashboard, IconLayoutGrid,
   IconPercentage, IconSettings, IconWallet, type Icon,
 } from "@tabler/icons-react";
 
@@ -22,6 +22,7 @@ export function CompanyTabs({ companyId, studioCount, vatRegistered = true }: { 
     { value: "vat", href: `${base}/vat`, label: "TVSH", icon: IconPercentage, match: (p) => p.startsWith(`${base}/vat`) },
     { value: "payroll", href: `${base}/payroll`, label: "Listëpagesa", icon: IconWallet, match: (p) => p.startsWith(`${base}/payroll`) },
     { value: "declarations", href: `${base}/declarations`, label: "Deklarimet", icon: IconBuildingBank, match: (p) => p.startsWith(`${base}/declarations`) },
+    { value: "filing", href: `${base}/filing`, label: "e-Filing", icon: IconFileDescription, match: (p) => p.startsWith(`${base}/filing`) },
     {
       value: "tools",
       href: `${base}/tools`,

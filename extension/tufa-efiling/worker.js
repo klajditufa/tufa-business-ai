@@ -230,6 +230,68 @@ async function onCapture(m) {
   return result;
 }
 
+/** Skeda e lidhur e portalit: ajo e hyrjes, ose skeda e fundit e e-Filing. */
+async function portalTabFor() {
+  const tabs = await chrome.tabs.query({ url: "https://efiling.tatime.gov.al/cats_public/*" });
+  if (!tabs.length) return null;
+  const { portalTab } = await chrome.storage.session.get("portalTab");
+  const tab = tabs.find((t) => t.id === portalTab) || tabs.sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0))[0];
+  await chrome.storage.session.set({ portalTab: tab.id });
+  return tab;
+}
+
+function waitForLoad(tabId, timeout = 30000) {
+  return new Promise((resolve) => {
+    const done = (ok) => {
+      clearTimeout(timer);
+      chrome.tabs.onUpdated.removeListener(listener);
+      resolve(ok);
+    };
+    const listener = (id, info) => {
+      if (id === tabId && info.status === "complete") done(true);
+    };
+    const timer = setTimeout(() => done(false), timeout);
+    chrome.tabs.onUpdated.addListener(listener);
+  });
+}
+
+const portal = (tabId, kind, nipt, payload) =>
+  chrome.tabs.sendMessage(tabId, { type: "filing-portal", kind, nipt, payload }, { frameId: 0 }).catch(() => ({ ok: false, code: "login" }));
+
+/**
+ * Komandat e e-Filing nga TUFA (si komandat "capture | navigate | apply | focus" të cis-client-2).
+ * navigate: vetëm lidhjet e menysë që portal.js nxori nga i njëjti rishikim i faqes.
+ * apply: vetëm fushat e rishikuara, pa dërguar formularin.
+ */
+async function onCommand(m) {
+  if (typeof m.nipt !== "string" || !NIPT.test(m.nipt)) return { ok: false, code: "taxpayer" };
+  const tab = await portalTabFor();
+  if (!tab) return { ok: false, code: "nopage" };
+  if (m.kind === "focus") {
+    await chrome.tabs.update(tab.id, { active: true });
+    await chrome.windows.update(tab.windowId, { focused: true }).catch(() => {});
+    return { ok: true };
+  }
+  const payload = m.payload && typeof m.payload === "object" ? m.payload : {};
+  if (m.kind === "capture") return portal(tab.id, "capture", m.nipt);
+  if (m.kind === "apply") {
+    if (typeof payload.revision !== "string" || !payload.edits || typeof payload.edits !== "object") return { ok: false, code: "unsupported" };
+    return portal(tab.id, "apply", m.nipt, { revision: payload.revision, edits: payload.edits });
+  }
+  if (m.kind === "navigate") {
+    if (typeof payload.revision !== "string" || typeof payload.key !== "string") return { ok: false, code: "unsupported" };
+    const target = await portal(tab.id, "destination", m.nipt, { revision: payload.revision, key: payload.key });
+    if (!target.ok) return target;
+    if (!isPortalUrl(target.url)) return { ok: false, code: "unsupported" };
+    const loaded = waitForLoad(tab.id);
+    await chrome.tabs.update(tab.id, { url: target.url });
+    if (!(await loaded)) return { ok: false, code: "unsupported" };
+    await new Promise((r) => setTimeout(r, 400));
+    return portal(tab.id, "capture", m.nipt);
+  }
+  return { ok: false, code: "unsupported" };
+}
+
 chrome.runtime.onMessage.addListener((message, sender, reply) => {
   if (!message || typeof message !== "object") return;
   const run = (promise) => {
@@ -261,6 +323,8 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
       return fromTufa(sender) ? run(onCancel(message)) : undefined;
     case "filing-capture":
       return fromTufa(sender) ? run(onCapture(message)) : undefined;
+    case "filing-command":
+      return fromTufa(sender) ? run(onCommand(message)) : undefined;
     case "filing-page":
       return sender.id === chrome.runtime.id ? run(onPage(message, sender)) : undefined;
     case "filing-result":

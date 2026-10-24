@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TUFA · e-Filing",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Hyrja në e-Filing me e-Albania (si cis-client-2) dhe dërgimi te TUFA i faqeve që hap përdoruesi (listëpagesat, E-SIG 025). Pa dorëzime.",
   "permissions": ["storage", "activeTab"],
   "host_permissions": [
@@ -16,7 +16,7 @@
   "content_scripts": [
     {
       "matches": ["https://efiling.tatime.gov.al/cats_public/*"],
-      "js": ["capture.js"],
+      "js": ["portal.js", "capture.js"],
       "run_at": "document_idle"
     },
     {

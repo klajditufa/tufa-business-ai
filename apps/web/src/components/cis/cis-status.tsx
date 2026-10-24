@@ -15,14 +15,6 @@ export function CisStatus() {
   const [unlocking, setUnlocking] = useState(false);
   if (!ready) return null;
 
-  if (!certificate && !filing.configured && !filing.remembered) {
-    return (
-      <Button size="compact-sm" variant="light" leftSection={<IconCertificate size={14} stroke={1.8} />} onClick={() => openDialog()}>
-        Shto certifikatën CIS
-      </Button>
-    );
-  }
-
   const unlock = async () => {
     setUnlocking(true);
     setUnlockError(null);
@@ -48,7 +40,7 @@ export function CisStatus() {
               </Badge>
             ) : (
               <Badge variant="light" color="gray">
-                Pa certifikatë CIS
+                Mungon certifikata CIS
               </Badge>
             )}
             {(filing.configured || filing.remembered) && (
@@ -118,7 +110,7 @@ export function CisStatus() {
           </form>
         )}
         <Menu.Item leftSection={<IconKey size={16} />} onClick={() => openDialog("filing")}>
-          {filing.configured || filing.remembered ? "Ndrysho të dhënat e e-Albania" : "Shto të dhënat e e-Albania"}
+          {filing.configured || filing.remembered ? "Hap e-Filing" : "Shto të dhënat e e-Albania (e-Filing)"}
         </Menu.Item>
         {(filing.configured || filing.remembered) && (
           <Menu.Item color="red" leftSection={<IconTrash size={16} />} onClick={() => void forgetFiling()}>
@@ -127,5 +119,16 @@ export function CisStatus() {
         )}
       </Menu.Dropdown>
     </Menu>
+  );
+}
+
+/** "Shto certifikatën për këtë subjekt" pranë NIPT-it kur subjekti nuk ka certifikatë (si Workspace i cis-client). */
+export function CisAddCertificate() {
+  const { certificate, ready, openDialog } = useCis();
+  if (!ready || certificate) return null;
+  return (
+    <Button size="xs" variant="default" leftSection={<IconCertificate size={16} />} onClick={() => openDialog()}>
+      Shto certifikatën për këtë subjekt
+    </Button>
   );
 }

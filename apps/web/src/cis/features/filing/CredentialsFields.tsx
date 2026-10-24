@@ -1,29 +1,37 @@
-"use client";
-
 import { Checkbox, PasswordInput, Stack, Text, TextInput } from "@mantine/core";
+import { useI18n } from "../../i18n";
 
-/** Fushat e e-Albania (si CredentialsFields i cis-client-2). */
-export type CredentialsValue = { username: string; password: string; remember: boolean; passphrase: string };
+export interface FilingCredentials {
+  username: string;
+  password: string;
+  remember: boolean;
+  passphrase: string;
+}
 
-export const emptyCredentials = (username = ""): CredentialsValue => ({ username, password: "", remember: false, passphrase: "" });
+export const emptyCredentials = (): FilingCredentials => ({
+  username: "",
+  password: "",
+  remember: false,
+  passphrase: "",
+});
 
 export function CredentialsFields({
   value,
   onChange,
   disabled = false,
 }: {
-  value: CredentialsValue;
-  onChange: (next: CredentialsValue) => void;
+  value: FilingCredentials;
+  onChange: (next: FilingCredentials) => void;
   disabled?: boolean;
 }) {
+  const { t } = useI18n();
   return (
     <Stack gap="sm">
       <Text size="sm" c="dimmed">
-        Përdorni NUIS-in dhe fjalëkalimin e e-Albania të subjektit. TUFA hyn automatikisht në e-Filing përmes e-Albania (me shtesën e Chrome). Faturat
-        merren me certifikatën e fiskalizimit.
+        {t("filing.credentialsHelp")}
       </Text>
       <TextInput
-        label="NUIS / NIPT i e-Albania"
+        label={t("filing.username")}
         value={value.username}
         autoComplete="off"
         disabled={disabled}
@@ -34,7 +42,7 @@ export function CredentialsFields({
         onChange={(event) => onChange({ ...value, username: event.currentTarget.value.trim().toUpperCase() })}
       />
       <PasswordInput
-        label="Fjalëkalimi i e-Albania"
+        label={t("filing.password")}
         value={value.password}
         autoComplete="new-password"
         disabled={disabled}
@@ -42,16 +50,16 @@ export function CredentialsFields({
         onChange={(event) => onChange({ ...value, password: event.currentTarget.value })}
       />
       <Checkbox
-        label="Ruaji të enkriptuara në këtë kompjuter"
-        description="Pa këtë zgjedhje, të dhënat përdoren vetëm për këtë sesion. Përdorni “Harro” për t'i fshirë."
+        label={t("filing.remember")}
+        description={t("filing.rememberHelp")}
         checked={value.remember}
         disabled={disabled}
         onChange={(event) => onChange({ ...value, remember: event.currentTarget.checked, passphrase: "" })}
       />
       {value.remember && (
         <PasswordInput
-          label="Fjalëkalimi i kasafortës"
-          description="Të paktën 12 karaktere. Kërkohet pas rifreskimit të faqes; mbajeni të ndarë nga fjalëkalimi i portalit."
+          label={t("filing.passphrase")}
+          description={t("filing.passphraseHelp")}
           value={value.passphrase}
           autoComplete="new-password"
           minLength={12}

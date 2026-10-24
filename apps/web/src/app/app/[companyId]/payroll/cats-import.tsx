@@ -10,7 +10,10 @@ import { importPayrollLinesAction, importPayrollSummaryAction } from "@/server/a
 import { Alert, Button, Card } from "@/components/ui";
 import { money } from "@/lib/format";
 import { monthLabelSq } from "@/components/app/month-picker";
-import { FilingConnect } from "@/components/cis/filing-connect";
+import Link from "next/link";
+import { Button as MantineButton, Group, Text } from "@mantine/core";
+import { IconFileDescription } from "@tabler/icons-react";
+import { takeHandOff } from "@/lib/filing/handoff";
 
 /** Skedari → tabelë qelizash. xlsx (read-excel-file), "xls" HTML (DOMParser) ose CSV/TSV. Asgjë nuk dërgohet në server. */
 async function fileToGrid(file: File): Promise<Grid> {
@@ -102,6 +105,16 @@ export function CatsImport({ companyId, canWrite, companyNipt, captureId }: { co
     [companyNipt, onGrid],
   );
 
+  // Faqja e sjellë nga skeda e-Filing ("Importo te Listëpagesa").
+  useEffect(() => {
+    if (!canWrite) return;
+    const timer = setTimeout(() => {
+      const snap = takeHandOff(companyId);
+      if (snap) acceptSnapshot(snap);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [companyId, canWrite, acceptSnapshot]);
+
   // Kapja nga shtesa e Chrome: kërkohet një herë sipas id-së dhe kontrollohet NIPT-i dhe adresa.
   const requested = useRef(false);
   useEffect(() => {
@@ -147,7 +160,15 @@ export function CatsImport({ companyId, canWrite, companyNipt, captureId }: { co
 
   return (
     <Card className="no-print space-y-3">
-      <FilingConnect onSnapshot={acceptSnapshot} />
+      <Group justify="space-between" gap="sm" className="rounded-lg border border-border px-4 py-3">
+        <Text size="sm">
+          Direkt nga C@TS: te skeda <b>e-Filing</b> hyni me e-Albania, hapni Listëpagesa të Dorëzuara (ose Shfaq Detajet) dhe shtypni
+          “Importo te Listëpagesa”.
+        </Text>
+        <MantineButton component={Link} href={`/app/${companyId}/filing`} size="xs" variant="light" leftSection={<IconFileDescription size={14} />}>
+          Hap e-Filing
+        </MantineButton>
+      </Group>
       <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border px-4 py-6 text-center text-sm hover:bg-muted/40">
         <FileUp className="h-6 w-6 text-muted-foreground" />
         <span className="font-medium">{fileName ?? "Ngarko eksportin Excel nga C@TS"}</span>
